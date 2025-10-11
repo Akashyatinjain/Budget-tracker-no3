@@ -6,7 +6,8 @@ import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-
+import AccountHolderPage from "./pages/AccountHolder"; // 👈 we'll create this
+import TransactionPage from "./pages/TransactionPage";
 function App() {
   return (
     <Routes>
@@ -14,8 +15,11 @@ function App() {
       <Route path="/dashBoard" element={<DashBoard />} />
       <Route path="/sign-in" element={<SignIn />} />
       <Route path="/sign-up" element={<SignUp />} />
+      <Route path="/transactions" element={<TransactionPage />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/app/account" element={<AccountHolderPage />} />
+
     </Routes>
 
   )

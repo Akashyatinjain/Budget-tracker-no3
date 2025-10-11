@@ -161,7 +161,7 @@ export default function SignIn() {
         {/* Sign Up */}
         <p className="text-sm text-gray-400 text-center mt-6">
           Don’t have an account?{" "}
-          <a href="/sign-up" className="text-purple-400 hover:underline">
+          <a href="/Finance-Tracker/sign-up" className="text-purple-400 hover:underline">
             Sign up
           </a>
         </p>
