@@ -4,15 +4,17 @@ import bcrypt from "bcryptjs";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import dotenv from "dotenv";
-import connectDB, { pool } from "./config/db.js";
+import pool from "./config/db.js";
 import cors from "cors";
 import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import session from "express-session";
+import  verifyToken  from "./middlewares/authMiddleware.js";
+import transactionRoutes from "./routes/transactionRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
 dotenv.config();
-connectDB();
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -22,7 +24,22 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 const BASE_URL = process.env.BASE_URL || `http://localhost:${port}`;
 
 // ================= Middleware =================
-app.use(cors({ origin: FRONTEND_URL, credentials: true }));
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://your-deployed-site-url.com'
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -41,6 +58,9 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use(errorHandler);
+app.use("/api/transactions", transactionRoutes);
+app.use("/api/users", userRoutes);
+
 
 // ---------------- Helper: sign JWT & set cookie ----------------
 function createAndSetToken(res, user) {
@@ -58,6 +78,55 @@ function createAndSetToken(res, user) {
 
   return token;
 }
+
+app.get("/transactions", verifyToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT t.*, c.name AS category_name 
+       FROM transactions t
+       LEFT JOIN categories c ON t.category_id = c.category_id
+       WHERE t.user_id = $1
+       ORDER BY t.transaction_date DESC`,
+      [req.user.id]
+    );
+    res.json({ transactions: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+app.get("/categories", verifyToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM categories WHERE user_id=$1",
+      [req.user.id]
+    );
+    res.json({ categories: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+app.post("/transactions", verifyToken, async (req, res) => {
+  try {
+    const { category_id, type, amount, currency, description, merchant, transaction_date } = req.body;
+
+    const result = await pool.query(
+      `INSERT INTO transactions (user_id, category_id, type, amount, currency, description, merchant, transaction_date, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8, NOW(), NOW()) RETURNING *`,
+      [req.user.id, category_id, type, amount, currency, description, merchant, transaction_date]
+    );
+
+    res.status(201).json({ transaction: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+
 
 // ================= SIGN UP =================
 app.post("/sign-up", async (req, res) => {
@@ -161,7 +230,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: `${process.env.BASE_URL}/auth/google/callback`
+      callbackURL: `${process.env.VITE_BASE_URL}/auth/google/callback`
     },
     async (accessToken, refreshToken, profile, done) => {
       try {

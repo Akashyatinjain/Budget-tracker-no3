@@ -1,12 +1,16 @@
-const express = require('express');
-const app = express();
-const transactionRoutes = require('./routes/transactionRoutes');
-const authMiddleware = require('./middleware/authMiddleware');
+import express from "express";
+import {
+  addTransactionController,
+  getTransactionsController,
+  deleteTransactionController,
+} from "../controllers/transactionController.js";
+import authMiddleware from "../middlewares/authMiddleware.js";
 
-app.use(express.json());
+const router = express.Router();
 
-// Protect transaction routes with auth
-app.use('/api/transactions', authMiddleware, transactionRoutes);
+router.post("/", authMiddleware, addTransactionController);
+router.get("/", authMiddleware, getTransactionsController);
+router.delete("/:id", authMiddleware, deleteTransactionController);
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+export default router;

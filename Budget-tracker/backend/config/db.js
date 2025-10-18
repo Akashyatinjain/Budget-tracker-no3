@@ -1,3 +1,4 @@
+// backend/config/db.js
 import pkg from "pg";
 import dotenv from "dotenv";
 
@@ -23,15 +24,12 @@ const pool = new Pool(
       }
 );
 
-const connectDB = async () => {
-  try {
-    await pool.query("SELECT NOW()");
-    console.log("✅ PostgreSQL Connected");
-  } catch (err) {
-    console.error("❌ PostgreSQL connection failed:", err.message);
-    process.exit(1);
-  }
-};
+// ✅ Optional connection test
+pool
+  .connect()
+  .then(() => console.log("✅ PostgreSQL connected successfully"))
+  .catch((err) =>
+    console.error("❌ Database connection error:", err.message)
+  );
 
-export { pool };
-export default connectDB;
+export default pool;  // ✅ Default export only

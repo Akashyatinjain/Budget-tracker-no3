@@ -4,7 +4,7 @@ import Particles from "../components/Particles.jsx";
 import { useNavigate } from "react-router-dom";
 
 export default function SignIn() {
-  const [form, setForm] = useState({ usernameOrEmail: "", password: "" });
+const [form, setForm] = useState({ usernameOrEmail: "", password: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
@@ -94,10 +94,10 @@ export default function SignIn() {
               Username or Email
             </label>
             <input
-              type="text"
-              name="usernameOrEmail"
-              value={form.usernameOrEmail}
-              onChange={handleChange}
+             type="text"
+  name="emailOrName"
+  value={form.emailOrName}
+  onChange={handleChange}
               required
               className="w-full px-4 py-3 rounded-xl bg-gray-800/80 border border-gray-700 text-gray-200 focus:ring-2 focus:ring-purple-500 focus:outline-none transition"
               placeholder="john_doe or you@example.com"

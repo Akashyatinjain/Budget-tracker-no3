@@ -8,6 +8,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import AccountHolderPage from "./pages/AccountHolder"; // 👈 we'll create this
 import TransactionPage from "./pages/TransactionPage";
+import AnalyticsPage from './pages/AnalyticsPage';
 function App() {
   return (
     <Routes>
@@ -19,7 +20,7 @@ function App() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/app/account" element={<AccountHolderPage />} />
-
+      <Route path="/analytics" element={<AnalyticsPage />} /> 
     </Routes>
 
   )

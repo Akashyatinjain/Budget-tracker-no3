@@ -1,5 +1,5 @@
 // src/models/userModel.js
-import { pool } from "../config/db.js";
+import pool from "../config/db.js"; // PostgreSQL connection pool
 
 // ✅ Create a new user
 export const createUser = async ({ name, email, password, role }) => {

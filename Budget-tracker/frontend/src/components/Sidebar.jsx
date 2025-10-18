@@ -62,7 +62,7 @@ const menuStructure = (role) => [
 ];
 
 export default function AdvancedSidebar({
-  user = { name: "Guest", avatarUrl: "" },
+  user = { username: "Guest", avatarUrl: "" },
   role = "user",
   collapsed: collapsedProp = false,
   onNavigate = (r) => console.log("navigate", r),
@@ -72,6 +72,8 @@ export default function AdvancedSidebar({
 }) {
   const [collapsed, setCollapsed] = useState(collapsedProp);
   const [query, setQuery] = useState("");
+  const avatar = user?.avatarUrl || "/default-avatar.png";
+  const username = user?.username || "Guest";
 
   const menus = menuStructure(role);
   const filteredMenus = menus.map((group) => ({
@@ -81,14 +83,12 @@ export default function AdvancedSidebar({
     ),
   }));
 
- const navigate = useNavigate();
-
-const handleNav = (route) => {
-  navigate(route);   // <-- this actually changes the route
-  onMobileClose();   // close mobile drawer if open
-  document.body.style.overflow = "auto";
-};
-
+  const navigate = useNavigate();
+  const handleNav = (route) => {
+    navigate(route);
+    onMobileClose();
+    document.body.style.overflow = "auto";
+  };
 
   return (
     <>
@@ -109,15 +109,12 @@ const handleNav = (route) => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <img
-                src={
-                  user.avatarUrl ||
-                  `https://avatars.dicebear.com/api/identicon/${user.name || "guest"}.svg`
-                }
-                alt="avatar"
-                className="w-10 h-10 rounded-full border-2 border-purple-500 shadow-md"
+                src={avatar}
+                alt={username}
+                className="w-10 h-10 rounded-full object-cover"
               />
               <div>
-                <div className="font-semibold text-white">{user.name}</div>
+                <div className="font-semibold text-white">{username}</div>
                 <div className="text-xs text-purple-300 capitalize">{role}</div>
               </div>
             </div>
