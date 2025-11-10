@@ -30,11 +30,10 @@ if (process.env.DATABASE_URL) {
   // When using a connection string (Heroku/Render/Atlas style)
   poolConfig = {
     connectionString: process.env.DATABASE_URL,
-    // enable SSL in production-like environments. Many PaaS require this.
-    ssl:
-      process.env.NODE_ENV === "production"
-        ? { rejectUnauthorized: false }
-        : undefined,
+    // enable SSL when DB_SSL=true (explicit); many managed DBs require SSL
+    ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : undefined,
+    // connection/timeouts to be explicit
+    connectionTimeoutMillis: Number(process.env.DB_CONN_TIMEOUT_MS || 5000),
   };
 } else {
   // local / explicit settings
@@ -44,6 +43,8 @@ if (process.env.DATABASE_URL) {
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
+    ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : undefined,
+    connectionTimeoutMillis: Number(process.env.DB_CONN_TIMEOUT_MS || 5000),
   };
 }
 
