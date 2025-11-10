@@ -328,6 +328,16 @@ app.post("/api/debug/notifications", verifyToken, async (req, res) => {
   }
 });
 
+app.get("/api/debug/db", async (req, res) => {
+  try {
+    const r = await pool.query("SELECT 1 as ok");
+    res.json({ db: r.rows[0] });
+  } catch (err) {
+    console.error("DB test error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Start server
 const PORT = process.env.PORT || 5000; // Render provides PORT
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
