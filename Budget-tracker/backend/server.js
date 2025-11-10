@@ -43,7 +43,10 @@ app.use(cors({
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true
+  origin: 'https://frontend-two-pi-14.vercel.app', // or ['https://...','http://localhost:3000']
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization'],
+  credentials: true // if you need cookies
 }));
 
 app.use(express.json());

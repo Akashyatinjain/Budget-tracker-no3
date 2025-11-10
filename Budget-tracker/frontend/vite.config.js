@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default defineConfig({
-  base: "./", // ✅ relative paths for Vercel / Netlify / local builds
+  base: "./",  // ✅ relative paths
   plugins: [react()],
   resolve: {
     alias: {
