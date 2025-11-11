@@ -1,41 +1,45 @@
+// src/pages/SignIn.jsx
 import React, { useState, useEffect } from "react";
 import { FcGoogle } from "react-icons/fc";
 import Particles from "../components/Particles.jsx";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/$/, "");
+
 export default function SignIn() {
-const [form, setForm] = useState({ usernameOrEmail: "", password: "" });
+  const [form, setForm] = useState({ emailOrName: "", password: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  // ✅ Handle input changes
+  // Handle input changes
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm((s) => ({ ...s, [e.target.name]: e.target.value }));
   };
 
-  // ✅ Handle form submit
+  // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const res = await fetch("http://localhost:5000/sign-in", {
+      const res = await fetch(`${API_BASE}/sign-in`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(form),
-        credentials: "include", // ✅ allow cookies (JWT token)
+        body: JSON.stringify({ emailOrName: form.emailOrName, password: form.password }),
+        credentials: "include", // allow cookies (JWT token) to be set by server
       });
 
-      const data = await res.json();
-      console.log("Response:", data);
+      const data = await res.json().catch(() => ({}));
+      console.log("Response:", res.status, data);
 
       if (res.ok) {
-        localStorage.setItem("token", data.token); // ✅ save token
-        navigate("/DashBoard"); // ✅ redirect
+        // server returns token and user — save token if present (optional)
+        if (data.token) localStorage.setItem("token", data.token);
+        navigate("/DashBoard");
       } else {
-        alert(data.error || "Sign in failed");
+        alert(data.error || data.message || "Sign in failed");
       }
     } catch (err) {
       console.error("Error submitting form:", err);
@@ -45,20 +49,21 @@ const [form, setForm] = useState({ usernameOrEmail: "", password: "" });
     }
   };
 
-  // ✅ Google Login Redirect
+  // Google Login Redirect (use deployed backend URL)
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:5000/auth/google";
+    window.location.href = `${API_BASE}/auth/google`;
   };
 
-  // ✅ Capture token from URL after Google redirect
+  // Capture token from URL after Google redirect (if backend appends token in query)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
 
     if (token) {
       localStorage.setItem("token", token);
-      navigate("/DashBoard"); // redirect to home
-      window.history.replaceState({}, document.title, "/DashBoard"); // clean URL
+      navigate("/DashBoard");
+      // clean URL
+      window.history.replaceState({}, document.title, "/DashBoard");
     }
   }, [navigate]);
 
@@ -90,14 +95,12 @@ const [form, setForm] = useState({ usernameOrEmail: "", password: "" });
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Username or Email */}
           <div className="text-left">
-            <label className="block text-gray-300 text-sm mb-2">
-              Username or Email
-            </label>
+            <label className="block text-gray-300 text-sm mb-2">Username or Email</label>
             <input
-             type="text"
-  name="emailOrName"
-  value={form.emailOrName}
-  onChange={handleChange}
+              type="text"
+              name="emailOrName"
+              value={form.emailOrName}
+              onChange={handleChange}
               required
               className="w-full px-4 py-3 rounded-xl bg-gray-800/80 border border-gray-700 text-gray-200 focus:ring-2 focus:ring-purple-500 focus:outline-none transition"
               placeholder="john_doe or you@example.com"

@@ -16,4 +16,4 @@ api.interceptors.request.use(
 );
 
 export const getUser = () => api.get("/users/me");
-export const updateUser = (data) => api.put("/users/me", data);
+export const updateUser = (data) => api.put("/api/users/me", data);

@@ -19,10 +19,8 @@ api.interceptors.request.use((config) => {
 });
 
 
-export const getNotifications = async () => {
-  const res = await api.get("/api/notifications");
-  return res.data;
-};
+export const getNotifications = async () => (await api.get("/api/notifications")).data;
+
 export const createNotification = async (payload) => {
   const res = await api.post("/api/notifications", payload);
   return res.data;

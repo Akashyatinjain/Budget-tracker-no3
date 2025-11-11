@@ -1,30 +1,30 @@
+// src/pages/SignUp.jsx
 import React, { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import Particles from "../components/Particles.jsx";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/$/, "");
+
 export default function SignUp() {
   const navigate = useNavigate();
-
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   // Handle input change
- const handleChange = (e) => {
-  const { name, value } = e.target; // ✅ Correct
-  setForm((prev) => ({ ...prev, [name]: value }));
-
-  // Clear error for this field
-  setErrors((prev) => ({ ...prev, [name]: "" }));
-};
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
 
   // Validate fields
   const validateForm = (values) => {
     const newErrors = {};
-    if (!values.username.trim()) newErrors.username = "Username is required.";
-    if (!values.email.trim()) newErrors.email = "Email is required.";
-    if (!values.password.trim()) newErrors.password = "Password is required.";
+    if (!values.username?.trim()) newErrors.username = "Username is required.";
+    if (!values.email?.trim()) newErrors.email = "Email is required.";
+    if (!values.password?.trim()) newErrors.password = "Password is required.";
     else if (values.password.length < 6)
       newErrors.password = "Password must be at least 6 characters long.";
     return newErrors;
@@ -41,25 +41,30 @@ export default function SignUp() {
     setLoading(true);
 
     try {
-      // Send `username` as `name` to backend
       const payload = {
         username: form.username,
         email: form.email,
         password: form.password,
       };
 
-      const res = await fetch("http://localhost:5000/sign-up", {
+      const res = await fetch(`${API_BASE}/sign-up`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        credentials: "include", // important for cookie-based auth
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
-      if (!res.ok) return alert(data.error || "Sign up failed");
+      if (!res.ok) {
+        // show server message if present
+        return alert(data.error || data.message || "Sign up failed");
+      }
+
+      // If server returns token, store it; backend also sets cookie
+      if (data.token) localStorage.setItem("token", data.token);
 
       alert("✅ Sign Up Successful!");
-      localStorage.setItem("token", data.token);
       navigate("/DashBoard");
     } catch (err) {
       console.error("Signup error:", err);
@@ -69,10 +74,10 @@ export default function SignUp() {
     }
   };
 
-  // Google login
+  // Google login (use deployed backend)
   const handleGoogleLogin = () => {
-  window.location.href = "http://localhost:5000/auth/google";
-};
+    window.location.href = `${API_BASE}/auth/google`;
+  };
 
   return (
     <div className="relative flex items-center justify-center min-h-screen bg-black overflow-hidden">
