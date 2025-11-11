@@ -10,7 +10,8 @@ import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import session from "express-session";
-import  verifyToken  from "./middlewares/authMiddleware.js";
+import connectPgSimple from "connect-pg-simple";
+import verifyToken from "./middlewares/authMiddleware.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import budgetRoutes from "./routes/budgetRoutes.js";
@@ -23,115 +24,150 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000;
 const saltRounds = 15;
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
-const BASE_URL = process.env.BASE_URL || `http://localhost:${port}`;
+const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
 // ================= Middleware =================
 const allowedOrigins = [
+  FRONTEND_URL,
   'http://localhost:5173',
-  'https://your-deployed-site-url.com'
+  'https://your-deployed-site-url.com',
+  'https://frontend-two-pi-14.vercel.app'
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
+    // Allow non-browser tools (no origin) and allowedOrigins
     if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+      return callback(null, true);
     }
+    return callback(new Error('Not allowed by CORS'));
   },
-  origin: 'https://frontend-two-pi-14.vercel.app', // or ['https://...','http://localhost:3000']
   methods: ['GET','POST','PUT','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization'],
-  credentials: true // if you need cookies
+  credentials: true
 }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// --------- Production-ready session store (Postgres) ----------
+const PgSession = connectPgSimple(session);
 app.use(
   session({
-    secret: process.env.JWT_SECRET,
+    store: new PgSession({
+      pool: pool,                // use the same pool object
+      tableName: 'session'
+    }),
+    secret: process.env.SESSION_SECRET || process.env.JWT_SECRET || 'please-change-this',
     resave: false,
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === "production",
+      // If frontend is cross-site (different domain) and you need cookies sent from browser, use:
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000, // 1 day
     },
   })
 );
+
 app.use(passport.initialize());
 app.use(passport.session());
 
 app.use(errorHandler);
+
+// ---------------- Passport serialize/deserialize ----------------
+passport.serializeUser((user, done) => {
+  // store canonical id in session
+  done(null, user.user_id ?? user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    // attempt to find by user_id or id to be robust
+    const result = await pool.query("SELECT * FROM users WHERE user_id=$1 OR id=$1", [id]);
+    if (result.rows.length === 0) return done(null, null);
+    const user = result.rows[0];
+    delete user.password_hash;
+    done(null, user);
+  } catch (err) {
+    done(err, null);
+  }
+});
+
+// ---------------- Routes ----------------
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/users", userRoutes);
-app.use('/api/budgets', budgetRoutes); // Add this line
+app.use("/api/users/settings", settingsRouter); // mount settings under a subpath to avoid collisions
+app.use('/api/budgets', budgetRoutes);
 app.use("/api/currencies", currenciesRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
-app.use('/api/users', settingsRouter);
 app.use('/api/reports', reportsRouter);
 app.use("/api/notifications", notificationRoutes);
-// ---------------- Helper: sign JWT & set cookie ----------------
-// ...existing code...
+
+// ---------------- Helper: create JWT & set cookie ----------------
 function createAndSetToken(res, user) {
   const token = jwt.sign(
-    { user_id: user.user_id, email: user.email }, // use user_id consistently
+    { user_id: user.user_id ?? user.id, email: user.email },
     process.env.JWT_SECRET,
     { expiresIn: "7d" }
   );
 
+  // cross-site cookies require secure:true and sameSite:'none'
   res.cookie("token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   });
 
   return token;
 }
-// ...existing code...
 
+// ---------------- Example endpoints (kept from your original file) ----------------
 app.get("/transactions", verifyToken, async (req, res) => {
   try {
+    const userId = req.user?.user_id ?? req.user?.id;
     const result = await pool.query(
       `SELECT t.*, c.name AS category_name 
        FROM transactions t
        LEFT JOIN categories c ON t.category_id = c.category_id
        WHERE t.user_id = $1
        ORDER BY t.transaction_date DESC`,
-      [req.user.id]
+      [userId]
     );
     res.json({ transactions: result.rows });
   } catch (err) {
+    console.error("GET /transactions error:", err);
     res.status(500).json({ error: err.message });
   }
 });
-
 
 app.get("/categories", verifyToken, async (req, res) => {
   try {
+    const userId = req.user?.user_id ?? req.user?.id;
     const result = await pool.query(
       "SELECT * FROM categories WHERE user_id=$1",
-      [req.user.id]
+      [userId]
     );
     res.json({ categories: result.rows });
   } catch (err) {
+    console.error("GET /categories error:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-
 app.post("/transactions", verifyToken, async (req, res) => {
   try {
-    console.log("POST /transactions req.user:", req.user); // <-- debug
+    console.log("POST /transactions req.user:", req.user); // debug
     const {
       category_id, type, amount, currency, description, merchant, transaction_date,
     } = req.body;
     const userId = req.user?.user_id ?? req.user?.id;
-    console.log("Resolved userId:", userId); // <-- debug
+    console.log("Resolved userId:", userId); // debug
 
     const result = await pool.query(
       `INSERT INTO transactions
@@ -163,8 +199,7 @@ app.post("/transactions", verifyToken, async (req, res) => {
   }
 });
 
-
-
+// ---------------- Auth endpoints ----------------
 app.post("/sign-up", async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -211,7 +246,6 @@ app.post("/sign-up", async (req, res) => {
   }
 });
 
-// ================= SIGN IN =================
 app.post("/sign-in", async (req, res) => {
   try {
     const { emailOrName, password } = req.body;
@@ -247,26 +281,13 @@ app.post("/sign-in", async (req, res) => {
   }
 });
 
-// ================= Google OAuth =================
-passport.serializeUser((user, done) => done(null, user.user_id));
-passport.deserializeUser(async (id, done) => {
-  try {
-    const result = await pool.query("SELECT * FROM users WHERE user_id=$1", [id]);
-    if (result.rows.length === 0) return done(null, null);
-    const user = result.rows[0];
-    delete user.password_hash;
-    done(null, user);
-  } catch (err) {
-    done(err, null);
-  }
-});
-
+// ----- Google OAuth -----
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: `${process.env.VITE_BASE_URL}/auth/google/callback`
+      callbackURL: `${process.env.BASE_URL || BASE_URL}/auth/google/callback`
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
@@ -297,7 +318,6 @@ passport.use(
   )
 );
 
-// Google routes
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 app.get(
   "/auth/google/callback",
@@ -309,10 +329,11 @@ app.get(
   }
 );
 
-// Health check
+// Health endpoints
+app.get("/_health", (req, res) => res.status(200).send("ok"));
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 
-// Debug endpoint: create a test notification for the authenticated user
+// Debug endpoints
 app.post("/api/debug/notifications", verifyToken, async (req, res) => {
   try {
     const userId = req.user?.user_id ?? req.user?.id;
@@ -339,7 +360,6 @@ app.get("/api/debug/db", async (req, res) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 5000; // Render provides PORT
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 export default app;
