@@ -1,5 +1,5 @@
 // src/api/transactions.js
-import api, { API_BASE } from "../lib/api";
+import api, { API_BASE } from "./api.js";
 
 
 

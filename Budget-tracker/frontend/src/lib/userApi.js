@@ -1,4 +1,4 @@
-import axios from "../api/api.js";
+import axios from "./api.js";
 
 const api = axios.create({
   baseURL: "http://localhost:5000/api",
@@ -14,6 +14,7 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
+
 
 // Get logged-in user
 export const getUser = () => api.get("/api/users/me");

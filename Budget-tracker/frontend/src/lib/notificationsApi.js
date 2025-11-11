@@ -1,25 +1,10 @@
-import axios from "axios";
-import api from "../api/api.js";
+// src/api/notificationsApi.js
+import api from "../lib/api";
 
-const API_BASE = (import.meta.env.VITE_BASE_URL && import.meta.env.VITE_BASE_URL.replace(/\/$/, "")) || "http://localhost:5000";
-
-// axios instance using absolute backend URL
-const api = axios.create({
-  baseURL: API_BASE,
-  withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
-
-
-export const getNotifications = async () => (await api.get("/api/notifications")).data;
+export const getNotifications = async () => {
+  const res = await api.get("/api/notifications");
+  return res.data;
+};
 
 export const createNotification = async (payload) => {
   const res = await api.post("/api/notifications", payload);
@@ -56,4 +41,13 @@ export const updateNotificationSettings = async (settings) => {
   return res.data;
 };
 
-export default api;
+export default {
+  getNotifications,
+  createNotification,
+  markAsRead,
+  markAllRead,
+  deleteNotification,
+  clearNotifications,
+  getNotificationSettings,
+  updateNotificationSettings,
+};
