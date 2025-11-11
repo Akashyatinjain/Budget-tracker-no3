@@ -1,5 +1,5 @@
 import axios from "axios";
-import api from "../lib/api";
+import api from "../api/api.js";
 
 const API_BASE = (import.meta.env.VITE_BASE_URL && import.meta.env.VITE_BASE_URL.replace(/\/$/, "")) || "http://localhost:5000";
 

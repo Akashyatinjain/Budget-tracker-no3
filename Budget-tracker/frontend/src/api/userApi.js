@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "../api/api.js";
 
 const api = axios.create({
   baseURL: "http://localhost:5000/api",
@@ -15,5 +15,8 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-export const getUser = () => api.get("/users/me");
+// Get logged-in user
+export const getUser = () => api.get("/api/users/me");
+
+// Update user data
 export const updateUser = (data) => api.put("/api/users/me", data);
