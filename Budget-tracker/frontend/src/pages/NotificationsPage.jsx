@@ -8,9 +8,7 @@ import {
   markAsRead,
   markAllRead,
   deleteNotification,
-  getNotificationSettings,
-  updateNotificationSettings,
-} from "../api/notificationsApi";
+} from "../lib/notificationsApi.js";
 
 const NotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
