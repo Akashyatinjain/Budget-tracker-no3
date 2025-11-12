@@ -4,7 +4,7 @@ import { FcGoogle } from "react-icons/fc";
 import Particles from "../components/Particles.jsx";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/$/, "");
+const API_BASE = (import.meta.env.VITE_BASE_URL || "http://localhost:5000").replace(/\/$/, "");
 
 export default function SignIn() {
   const [form, setForm] = useState({ emailOrName: "", password: "" });
