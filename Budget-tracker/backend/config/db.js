@@ -27,7 +27,7 @@ if (process.env.DATABASE_URL) {
   poolConfig = {
     connectionString: process.env.DATABASE_URL,
     // If DB_SSL env is "true" enable ssl with rejectUnauthorized:false for common PaaS setups
-    ssl: process.env.DB_SSL === "false" ? { rejectUnauthorized: false } : undefined,
+    ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : undefined,
     connectionTimeoutMillis: 5000,
     idleTimeoutMillis: 30000,
     max: 10,
