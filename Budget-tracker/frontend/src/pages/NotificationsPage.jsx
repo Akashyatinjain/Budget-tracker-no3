@@ -4,7 +4,6 @@ import axios from "axios";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
 import {
-  getNotifications,
   markAsRead,
   markAllRead,
   deleteNotification,
@@ -48,80 +47,6 @@ const NotificationsPage = () => {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  };
-
-  // Fetch user & notifications on mount
-  useEffect(() => {
-    console.log('Token:', token); // Debug log
-    if (token) {
-      fetchUser();
-      fetchNotifications();
-      fetchNotificationSettings();
-    }
-  }, [token]); // Add token as dependency
-
-  // Lock body scroll when sidebar open
-  useEffect(() => {
-    document.body.style.overflow = mobileSidebarOpen ? "hidden" : "auto";
-  }, [mobileSidebarOpen]);
-
-  const fetchUser = async () => {
-    if (!token) return;
-    try {
-      const res = await axios.get(`${VITE_BASE_URL}/api/users/me`, axiosConfig);
-      setUser(res.data.user);
-    } catch (err) {
-      console.error("Fetch user error:", err);
-    }
-  };
-
-  const fetchNotifications = async () => {
-    if (!token) return;
-    setLoading(true);
-    try {
-      console.log('Fetching notifications...'); // Debug log
-      const res = await axios.get(`${VITE_BASE_URL}/api/notifications`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        withCredentials: true
-      });
-      console.log('Notifications response:', res.data); // Debug log
-      
-      // Fallback to sample notifications if backend returns nothing
-      const backendNotifications = res.data.notifications || res.data || [];
-      setNotifications(backendNotifications.length > 0 ? backendNotifications : generateSampleNotifications());
-    } catch (err) {
-      console.error("Fetch notifications error:", err.response?.data || err.message);
-      // fallback locally so UI remains usable during backend work
-      setNotifications(generateSampleNotifications());
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchNotificationSettings = async () => {
-    if (!token) return;
-    try {
-      // Fix: Change endpoint from notification-settings to notifications/settings
-      const res = await axios.get(`${VITE_BASE_URL}/api/notifications/settings`, axiosConfig);
-      setNotificationSettings(res.data.settings || notificationSettings);
-    } catch (err) {
-      console.error("Fetch notification settings error:", err);
-    }
-  };
-
-  const updateNotificationSettings = async (newSettings) => {
-    try {
-      // Fix: Change endpoint from notification-settings to notifications/settings
-      await axios.put(`${VITE_BASE_URL}/api/notifications/settings`, newSettings, axiosConfig);
-      setNotificationSettings(newSettings);
-      setShowSettings(false);
-    } catch (err) {
-      console.error("Update notification settings error:", err);
-      setNotificationSettings(newSettings);
-      setShowSettings(false);
-    }
   };
 
   // Generate sample notifications for demonstration
@@ -208,17 +133,82 @@ const NotificationsPage = () => {
     }
   ];
 
+  // Fetch user & notifications on mount
   useEffect(() => {
-    async function load() {
-      try {
-        const { notifications } = await getNotifications();
-        setNotifications(notifications || []);
-      } catch (err) {
-        console.error("Failed to load notifications", err);
-      }
+    console.log('Token:', token); // Debug log
+    if (token) {
+      fetchUser();
+      fetchNotifications();
+      fetchNotificationSettings();
+    } else {
+      setLoading(false);
     }
-    load();
-  }, []);
+  }, [token]);
+
+  // Lock body scroll when sidebar open
+  useEffect(() => {
+    document.body.style.overflow = mobileSidebarOpen ? "hidden" : "auto";
+  }, [mobileSidebarOpen]);
+
+  const fetchUser = async () => {
+    if (!token) return;
+    try {
+      const res = await axios.get(`${VITE_BASE_URL}/api/users/me`, axiosConfig);
+      setUser(res.data.user);
+    } catch (err) {
+      console.error("Fetch user error:", err);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      console.log('Fetching notifications...'); // Debug log
+      const res = await axios.get(`${VITE_BASE_URL}/api/notifications`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        withCredentials: true
+      });
+      console.log('Notifications response:', res.data); // Debug log
+      
+      // Ensure notifications is always an array
+      const backendNotifications = res.data.notifications || res.data;
+      const notifArray = Array.isArray(backendNotifications) ? backendNotifications : [];
+      
+      // Fallback to sample notifications if backend returns empty array
+      setNotifications(notifArray.length > 0 ? notifArray : generateSampleNotifications());
+    } catch (err) {
+      console.error("Fetch notifications error:", err.response?.data || err.message);
+      // fallback locally so UI remains usable during backend work
+      setNotifications(generateSampleNotifications());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchNotificationSettings = async () => {
+    if (!token) return;
+    try {
+      const res = await axios.get(`${VITE_BASE_URL}/api/notifications/settings`, axiosConfig);
+      setNotificationSettings(res.data.settings || notificationSettings);
+    } catch (err) {
+      console.error("Fetch notification settings error:", err);
+    }
+  };
+
+  const updateNotificationSettings = async (newSettings) => {
+    try {
+      await axios.put(`${VITE_BASE_URL}/api/notifications/settings`, newSettings, axiosConfig);
+      setNotificationSettings(newSettings);
+      setShowSettings(false);
+    } catch (err) {
+      console.error("Update notification settings error:", err);
+      setNotificationSettings(newSettings);
+      setShowSettings(false);
+    }
+  };
 
   const markAsReadHandler = async (notificationId) => {
     try {
@@ -317,7 +307,7 @@ const NotificationsPage = () => {
         />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-purple-400 text-xl">
-            Loading notifications... {/* Show this text while loading */}
+            Loading notifications...
           </div>
         </div>
       </div>

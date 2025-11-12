@@ -1,4 +1,4 @@
-// TransactionPage.jsx
+// TransactionPage.jsx (fixed & resilient)
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Header from "../components/Header";
@@ -47,10 +47,29 @@ const TransactionPage = () => {
     return cat ? cat.name : "Unknown";
   };
 
+  // safe parse for numbers/amounts
+  const safeParseAmount = (val) => {
+    if (val == null) return 0;
+    const n = parseFloat(typeof val === "object" ? val.amount : val);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  // normalize API response to ALWAYS be an array
+  const normalizeTransactionsResponse = (resData) => {
+    if (!resData) return [];
+    if (Array.isArray(resData)) return resData;
+    if (Array.isArray(resData.transactions)) return resData.transactions;
+    // sometimes api returns { data: { ... } } or single object
+    // try to find a plausible array inside common keys
+    if (Array.isArray(resData.data)) return resData.data;
+    return []; // fallback safe array
+  };
+
   // Fetch data
   useEffect(() => {
     fetchUser();
     fetchTransactions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Disable body scroll when sidebar/modal open
@@ -62,9 +81,10 @@ const TransactionPage = () => {
     if (!token) return;
     try {
       const res = await axios.get(`${VITE_BASE_URL}/api/users/me`, axiosConfig);
-      setUser(res.data.user);
+      setUser(res.data?.user || res.data || null);
     } catch (err) {
       console.error("Fetch user error:", err);
+      setUser(null);
     }
   };
 
@@ -72,9 +92,12 @@ const TransactionPage = () => {
     if (!token) return;
     try {
       const res = await axios.get(`${VITE_BASE_URL}/api/transactions`, axiosConfig);
-      setTransactions(res.data.transactions || res.data);
+      const list = normalizeTransactionsResponse(res.data);
+      setTransactions(list);
     } catch (err) {
       console.error("Fetch transactions error:", err);
+      // keep empty array on error so UI won't crash
+      setTransactions([]);
     }
   };
 
@@ -82,7 +105,7 @@ const TransactionPage = () => {
     e.preventDefault();
     try {
       await axios.post(`${VITE_BASE_URL}/api/transactions`, newTransaction, axiosConfig);
-      fetchTransactions();
+      await fetchTransactions();
       setShowModal(false);
       setNewTransaction({
         merchant: "",
@@ -98,10 +121,44 @@ const TransactionPage = () => {
     }
   };
 
-  const filteredTransactions = transactions
-    .filter((t) => filter === "all" || t.type.toLowerCase() === filter)
-    .filter((t) => categoryFilter === "all" || parseInt(t.category_id) === parseInt(categoryFilter))
-    .filter((t) => t.merchant.toLowerCase().includes(searchQuery.toLowerCase()));
+  // Always use safeTransactions (guaranteed array)
+  const safeTransactions = Array.isArray(transactions) ? transactions : [];
+
+  // Filtering with guards (make types lowercase safely)
+  const filteredTransactions = safeTransactions
+    .filter((t) => {
+      if (!t) return false;
+      if (filter === "all") return true;
+      const type = (t.type || "").toString().toLowerCase();
+      return type === filter;
+    })
+    .filter((t) => {
+      if (categoryFilter === "all") return true;
+      return parseInt(t.category_id) === parseInt(categoryFilter);
+    })
+    .filter((t) => {
+      const merchant = (t.merchant || "").toString().toLowerCase();
+      return merchant.includes(searchQuery.toString().toLowerCase());
+    });
+
+  // Stats: use safeTransactions and safe parsing
+  const totalBalance = safeTransactions.reduce((sum, t) => {
+    const amt = safeParseAmount(t.amount ?? t);
+    return (t?.type === "income") ? sum + amt : sum - amt;
+  }, 0);
+
+  const totalIncome = safeTransactions
+    .filter((t) => (t?.type || "").toString().toLowerCase() === "income")
+    .reduce((s, t) => s + safeParseAmount(t.amount ?? t), 0);
+
+  const totalExpenses = safeTransactions
+    .filter((t) => (t?.type || "").toString().toLowerCase() === "expense")
+    .reduce((s, t) => s + safeParseAmount(t.amount ?? t), 0);
+
+  // Recent sorted (guarded)
+  const recent = [...filteredTransactions]
+    .sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date))
+    .slice(0, 5);
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-black via-[#0a0014] to-[#1a002a] text-gray-100 overflow-hidden">
@@ -138,36 +195,22 @@ const TransactionPage = () => {
               {
                 title: "Total Balance",
                 color: "text-purple-300",
-                value: transactions
-                  .reduce(
-                    (sum, t) =>
-                      t.type === "income"
-                        ? sum + parseFloat(t.amount)
-                        : sum - parseFloat(t.amount),
-                    0
-                  )
-                  .toLocaleString("en-IN"),
+                value: totalBalance,
               },
               {
                 title: "Total Income",
                 color: "text-green-400",
-                value: transactions
-                  .filter((t) => t.type === "income")
-                  .reduce((sum, t) => sum + parseFloat(t.amount), 0)
-                  .toLocaleString("en-IN"),
+                value: totalIncome,
               },
               {
                 title: "Total Expenses",
                 color: "text-red-400",
-                value: transactions
-                  .filter((t) => t.type === "expense")
-                  .reduce((sum, t) => sum + parseFloat(t.amount), 0)
-                  .toLocaleString("en-IN"),
+                value: totalExpenses,
               },
               {
                 title: "Total Transactions",
                 color: "text-indigo-400",
-                value: transactions.length,
+                value: safeTransactions.length,
               },
             ].map((item, i) => (
               <div
@@ -176,7 +219,7 @@ const TransactionPage = () => {
               >
                 <p className="text-sm text-gray-400">{item.title}</p>
                 <h2 className={`text-xl sm:text-2xl font-semibold mt-1 ${item.color}`}>
-                  ₹{item.value}
+                  ₹{Number(item.value || 0).toLocaleString("en-IN")}
                 </h2>
               </div>
             ))}
@@ -233,26 +276,21 @@ const TransactionPage = () => {
               <tbody>
                 {filteredTransactions.map((t) => (
                   <tr
-                    key={t.transaction_id}
+                    key={t.transaction_id || t.id || Math.random()}
                     className="border-t border-purple-800/30 hover:bg-purple-900/20 transition"
                   >
-                    <td className="py-2 px-3 break-words">{t.merchant}</td>
+                    <td className="py-2 px-3 break-words">{t.merchant || "-"}</td>
                     <td className="py-2 px-3 text-purple-300">
                       {getCategoryName(t.category_id)}
                     </td>
                     <td className="py-2 px-3 text-gray-400 whitespace-nowrap">
-                      {new Date(t.transaction_date).toLocaleDateString()}
+                      {t.transaction_date ? new Date(t.transaction_date).toLocaleDateString() : "-"}
                     </td>
-                    <td
-                      className={`py-2 px-3 ${
-                        t.type === "income" ? "text-green-400" : "text-red-400"
-                      }`}
-                    >
-                      {t.type}
+                    <td className={`py-2 px-3 ${(t?.type === "income") ? "text-green-400" : "text-red-400"}`}>
+                      {t.type || "-"}
                     </td>
                     <td className="py-2 px-3 font-semibold whitespace-nowrap">
-                      {t.type === "income" ? "+" : "-"}₹
-                      {parseFloat(t.amount).toLocaleString("en-IN")}
+                      {(t.type === "income" ? "+" : "-")}₹{Number(safeParseAmount(t.amount ?? t)).toLocaleString("en-IN")}
                     </td>
                   </tr>
                 ))}

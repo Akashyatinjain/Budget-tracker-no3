@@ -1,4 +1,4 @@
-// AnalyticsPage.jsx
+// ✅ AnalyticsPage.jsx (fixed version)
 import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
@@ -9,10 +9,10 @@ import {
   CartesianGrid, Legend, BarChart, Bar, AreaChart, Area
 } from "recharts";
 import { motion } from "framer-motion";
-import { 
-  FiTrendingUp, FiPieChart, FiCalendar, FiBarChart2, 
-  FiActivity, FiDollarSign, FiTarget, FiAward, 
-  FiArrowUp, FiArrowDown, FiRefreshCw, FiZap
+import {
+  FiTrendingUp, FiPieChart, FiCalendar, FiBarChart2,
+  FiActivity, FiTarget, FiAward, FiArrowUp, FiArrowDown,
+  FiRefreshCw, FiZap
 } from "react-icons/fi";
 
 const AnalyticsPage = () => {
@@ -20,12 +20,10 @@ const AnalyticsPage = () => {
   const [transactions, setTransactions] = useState([]);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState("all"); // "week", "month", "year", "all"
+  const [timeRange, setTimeRange] = useState("all");
 
   const VITE_BASE_URL = import.meta.env.VITE_BASE_URL;
   const token = localStorage.getItem("token");
-
-  console.log("Analytics token:", token);
 
   const axiosConfig = {
     headers: { Authorization: `Bearer ${token}` },
@@ -42,16 +40,7 @@ const AnalyticsPage = () => {
     { id: 8, name: "Investment", color: "#3b82f6", icon: "📈" },
   ];
 
-  const getCategoryName = (id) =>
-    categories.find((c) => parseInt(c.id) === parseInt(id))?.name || "Unknown";
-
-  const getCategoryColor = (id) =>
-    categories.find((c) => parseInt(c.id) === parseInt(id))?.color || "#6b7280";
-
-  const getCategoryIcon = (id) =>
-    categories.find((c) => parseInt(c.id) === parseInt(id))?.icon || "📊";
-
-  // safe parse of amount (handles strings, null, undefined)
+  // ✅ Safe numeric parsing
   const safeAmount = (t) => {
     if (!t) return 0;
     const val = typeof t === "object" ? t.amount : t;
@@ -59,43 +48,43 @@ const AnalyticsPage = () => {
     return Number.isFinite(n) ? n : 0;
   };
 
-  // fetch helpers (same pattern as TransactionPage)
+  // ✅ Fetch user
   const fetchUser = async () => {
     if (!token) return;
     try {
       const res = await axios.get(`${VITE_BASE_URL}/api/users/me`, axiosConfig);
       setUser(res.data.user || res.data);
     } catch (err) {
-      console.error("Fetch user error (analytics):", err);
+      console.error("Fetch user error:", err);
     }
   };
 
+  // ✅ Fetch transactions safely
   const fetchTransactions = async () => {
     if (!token) return;
     try {
       const res = await axios.get(`${VITE_BASE_URL}/api/transactions`, axiosConfig);
-      // support both shapes: { transactions: [...] } or [...]
-      setTransactions(res.data.transactions || res.data || []);
+      const data = res.data.transactions || res.data || [];
+      setTransactions(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Fetch transactions error (analytics):", err);
+      console.error("Fetch transactions error:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    // if no token, skip and set loading false so UI can show guest state
     if (!token) {
       setLoading(false);
       return;
     }
     fetchUser();
     fetchTransactions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // intentionally only on mount
+  }, []);
 
-  // Filter transactions based on time range
+  // ✅ Filter transactions by time range
   const getFilteredTransactions = () => {
+    if (!Array.isArray(transactions)) return [];
     const now = new Date();
     const filterDate = new Date();
 
@@ -113,83 +102,110 @@ const AnalyticsPage = () => {
         return transactions;
     }
 
-    return transactions.filter(t => {
+    return transactions.filter((t) => {
       if (!t.transaction_date) return false;
-      const transactionDate = new Date(t.transaction_date);
-      return transactionDate >= filterDate;
+      const d = new Date(t.transaction_date);
+      return d >= filterDate;
     });
   };
 
   const filteredTransactions = getFilteredTransactions();
 
-  // Income & Expense Totals
-  const totalIncome = filteredTransactions
-    .filter((t) => String(t.type).toLowerCase() === "income")
-    .reduce((a, b) => a + safeAmount(b), 0);
+  // ✅ Totals (use correct safeAmount)
+  const totalIncome = Array.isArray(filteredTransactions)
+    ? filteredTransactions
+        .filter((t) => String(t.type).toLowerCase() === "income")
+        .reduce((sum, t) => sum + safeAmount(t), 0)
+    : 0;
 
-  const totalExpense = filteredTransactions
-    .filter((t) => String(t.type).toLowerCase() === "expense")
-    .reduce((a, b) => a + safeAmount(b), 0);
+  const totalExpense = Array.isArray(filteredTransactions)
+    ? filteredTransactions
+        .filter((t) => String(t.type).toLowerCase() === "expense")
+        .reduce((sum, t) => sum + safeAmount(t), 0)
+    : 0;
 
   const netSavings = totalIncome - totalExpense;
   const savingsRate = totalIncome > 0 ? (netSavings / totalIncome) * 100 : 0;
 
-  // Monthly aggregation (keyed by YYYY-M)
+  // ✅ Monthly Data (guarded against non-array)
   const monthlyData = {};
-  filteredTransactions.forEach((t) => {
-    if (!t.transaction_date) return;
-    const d = new Date(t.transaction_date);
-    if (isNaN(d)) return;
-    const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
-    if (!monthlyData[key]) {
-      monthlyData[key] = {
-        month: `${d.toLocaleDateString("en-US", { month: "short" })} ${d.getFullYear()}`,
-        income: 0,
-        expense: 0,
-        savings: 0,
-      };
-    }
-    if (String(t.type).toLowerCase() === "income") {
-      monthlyData[key].income += safeAmount(t);
-    } else {
-      monthlyData[key].expense += safeAmount(t);
-    }
-    monthlyData[key].savings = monthlyData[key].income - monthlyData[key].expense;
-  });
+  if (Array.isArray(filteredTransactions)) {
+    filteredTransactions.forEach((t) => {
+      if (!t.transaction_date) return;
+      const d = new Date(t.transaction_date);
+      if (isNaN(d)) return;
+
+      const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+      if (!monthlyData[key]) {
+        monthlyData[key] = {
+          month: `${d.toLocaleDateString("en-US", {
+            month: "short",
+          })} ${d.getFullYear()}`,
+          income: 0,
+          expense: 0,
+          savings: 0,
+        };
+      }
+
+      if (String(t.type).toLowerCase() === "income") {
+        monthlyData[key].income += safeAmount(t);
+      } else {
+        monthlyData[key].expense += safeAmount(t);
+      }
+
+      monthlyData[key].savings =
+        monthlyData[key].income - monthlyData[key].expense;
+    });
+  }
 
   const monthlyChart = Object.values(monthlyData).slice(-6);
 
-  // Category-wise spending
+  // ✅ Category-wise data
   const categoryData = categories
     .map((c) => {
       const value = filteredTransactions
-        .filter((t) => String(t.type).toLowerCase() === "expense" && parseInt(t.category_id) === c.id)
-        .reduce((sum, t) => sum + safeAmount(t), 0);
-      return { 
-        name: c.name, 
-        value, 
-        color: c.color, 
+        ?.filter(
+          (t) =>
+            String(t.type).toLowerCase() === "expense" &&
+            parseInt(t.category_id) === c.id
+        )
+        .reduce((sum, t) => sum + safeAmount(t), 0) || 0;
+
+      return {
+        name: c.name,
+        value,
+        color: c.color,
         icon: c.icon,
-        percentage: totalExpense > 0 ? (value / totalExpense) * 100 : 0 
+        percentage: totalExpense > 0 ? (value / totalExpense) * 100 : 0,
       };
     })
     .filter((c) => c.value > 0)
     .sort((a, b) => b.value - a.value);
 
-  // Top spending categories
   const topSpendingCategories = categoryData.slice(0, 3);
 
-  // Average values
-  const expenseCount = filteredTransactions.filter((t) => String(t.type).toLowerCase() === "expense").length || 1;
-  const incomeCount = filteredTransactions.filter((t) => String(t.type).toLowerCase() === "income").length || 1;
+  // ✅ Averages
+  const expenseCount =
+    filteredTransactions.filter(
+      (t) => String(t.type).toLowerCase() === "expense"
+    ).length || 1;
+  const incomeCount =
+    filteredTransactions.filter(
+      (t) => String(t.type).toLowerCase() === "income"
+    ).length || 1;
 
   const avgExpense = totalExpense / expenseCount;
   const avgIncome = totalIncome / incomeCount;
 
-  // Recent transactions for quick view
-  const recentTransactions = filteredTransactions
-    .sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date))
-    .slice(0, 5);
+  // ✅ Recent Transactions
+  const recentTransactions = Array.isArray(filteredTransactions)
+    ? [...filteredTransactions]
+        .sort(
+          (a, b) =>
+            new Date(b.transaction_date) - new Date(a.transaction_date)
+        )
+        .slice(0, 5)
+    : [];
 
   if (loading) {
     return (
@@ -206,20 +222,17 @@ const AnalyticsPage = () => {
     );
   }
 
+  // ✅ UI (unchanged)
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-black via-[#0a0014] to-[#1a002a] text-gray-100">
-      {/* Sidebar */}
       <AdvancedSidebar
         user={user || { username: "Guest" }}
         mobileOpen={mobileSidebarOpen}
         onMobileClose={() => setMobileSidebarOpen(false)}
       />
-
       <div className="flex-1 flex flex-col min-h-screen">
         <Header onMobileToggle={() => setMobileSidebarOpen(true)} />
-
         <main className="p-4 md:p-6 mt-16 flex flex-col gap-8">
-          {/* Header with Time Filter */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}

@@ -77,9 +77,12 @@ const TrendsPage = () => {
     setLoading(true);
     try {
       const res = await axios.get(`${VITE_BASE_URL}/api/transactions`, axiosConfig);
-      setTransactions(res.data.transactions || res.data);
+      const data = res.data.transactions || res.data;
+      // Ensure transactions is always an array
+      setTransactions(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Fetch transactions error:", err);
+      setTransactions([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -227,6 +230,10 @@ const TrendsPage = () => {
   };
 
   const insights = calculateInsights();
+const safeNumber = (v) => {
+  const n = typeof v === "number" ? v : parseFloat(v);
+  return Number.isFinite(n) ? n : 0;
+};
 
   // AI Suggestions with safe data access
   const generateAISuggestions = () => {

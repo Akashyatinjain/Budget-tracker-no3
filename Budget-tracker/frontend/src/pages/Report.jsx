@@ -89,11 +89,13 @@ const ReportsPage = () => {
     }
   };
 
-  const fetchTransactions = async () => {
+ const fetchTransactions = async () => {
     if (!token) return;
     try {
       const res = await axios.get(`${VITE_BASE_URL}/api/transactions`, axiosConfig);
-      setTransactions(res.data.transactions || res.data || []);
+      const data = res.data.transactions || res.data;
+      // Ensure transactions is always an array
+      setTransactions(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Fetch transactions error:", err);
       // Fallback to sample data
@@ -107,11 +109,15 @@ const ReportsPage = () => {
     if (!token) return;
     try {
       const res = await axios.get(`${VITE_BASE_URL}/api/subscriptions`, axiosConfig);
-      setSubscriptions(res.data.subscriptions || res.data || []);
+      const data = res.data.subscriptions || res.data;
+      // Ensure subscriptions is always an array
+      setSubscriptions(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Fetch subscriptions error:", err);
+      setSubscriptions([]); // Set empty array on error
     }
   };
+
 
   // Generate sample data for demonstration
   const generateSampleTransactions = () => {
