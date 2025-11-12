@@ -32,7 +32,8 @@ const BASE_URL = process.env.BASE_URL || `http://localhost:${port}`;
 // ================= Middleware =================
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://your-deployed-site-url.com'
+  'https://your-deployed-site-url.com',
+  `${process.env.FRONTEND_URL}`,
 ];
 
 app.use(cors({
