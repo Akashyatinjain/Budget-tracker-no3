@@ -53,83 +53,13 @@ const NotificationsPage = () => {
   const generateSampleNotifications = () => [
     {
       id: 1,
-      title: "Subscription Renewal",
+      title: "Sample Notification",
       message: "Your Netflix subscription will renew in 3 days for ₹649",
       type: "subscription",
       priority: "medium",
       is_read: false,
       created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
       action_url: "/subscriptions"
-    },
-    {
-      id: 2,
-      title: "Budget Alert",
-      message: "You've exceeded your Food & Dining budget by ₹1,200",
-      type: "budget",
-      priority: "high",
-      is_read: false,
-      created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-      action_url: "/budgets"
-    },
-    {
-      id: 3,
-      title: "Large Transaction",
-      message: "Unusual spending of ₹8,500 detected at Electronics Store",
-      type: "security",
-      priority: "high",
-      is_read: true,
-      created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      action_url: "/transactions"
-    },
-    {
-      id: 4,
-      title: "Weekly Report Ready",
-      message: "Your weekly spending report is now available",
-      type: "report",
-      priority: "low",
-      is_read: true,
-      created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      action_url: "/reports"
-    },
-    {
-      id: 5,
-      title: "Bill Payment Due",
-      message: "Electricity bill of ₹2,300 due tomorrow",
-      type: "billing",
-      priority: "medium",
-      is_read: true,
-      created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      action_url: "/transactions"
-    },
-    {
-      id: 6,
-      title: "System Maintenance",
-      message: "Scheduled maintenance this weekend. Service may be temporarily unavailable.",
-      type: "system",
-      priority: "low",
-      is_read: true,
-      created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-      action_url: null
-    },
-    {
-      id: 7,
-      title: "Low Balance Alert",
-      message: "Your account balance is below ₹5,000",
-      type: "budget",
-      priority: "medium",
-      is_read: false,
-      created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-      action_url: "/dashboard"
-    },
-    {
-      id: 8,
-      title: "New Feature Available",
-      message: "Check out the new budget forecasting feature in Analytics",
-      type: "system",
-      priority: "low",
-      is_read: true,
-      created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      action_url: "/analytics"
     }
   ];
 
