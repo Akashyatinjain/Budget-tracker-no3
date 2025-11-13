@@ -1,12 +1,13 @@
 // controllers/transactionController.js
 import pool from "../config/db.js";
 import { addTransaction, getTransactions, deleteTransaction,updateTransaction  } from "../models/transactionModel.js";
+import { checkBudgetsAndNotify } from "../utils/budgetNotifications.js";
 
 // ✅ Add Transaction Controller
 export const addTransactionController = async (req, res) => {
   try {
     const { merchant, amount, category_id, transaction_date, description, currency, type } = req.body;
-    const userId = req.user?.id;
+    const userId = req.user?.id ?? req.user?.user_id; // support both shapes
 
     if (!merchant || !amount || !category_id || !transaction_date) {
       return res.status(400).json({ message: "All required fields must be filled" });
@@ -23,6 +24,31 @@ export const addTransactionController = async (req, res) => {
       currency || "INR"
     );
 
+    // Create a simple in-app notification for the new transaction (so UI shows immediate feedback)
+    try {
+      const title = `New transaction: ${merchant || description || "Transaction"}`;
+      const message = `You spent ₹${Number(amount).toLocaleString("en-IN")} on ${merchant || description || "an item"}`;
+      const notifRes = await pool.query(
+        `INSERT INTO notifications (user_id, title, message, type, priority, action_url, created_at)
+         VALUES ($1,$2,$3,$4,$5,$6,NOW()) RETURNING *`,
+        [userId, title, message, 'transaction', 'low', '/transactions']
+      );
+      console.log("Inserted txn notification:", notifRes.rows[0]);
+    } catch (notifErr) {
+      console.warn("Failed to insert transaction notification:", notifErr?.message || notifErr);
+      // don't fail txn for this
+    }
+
+    // Call budget check to possibly create budget warning/exceeded notifications
+    try {
+      // newTransaction should be the inserted row returned by addTransaction
+await checkBudgetsAndNotify(userId, newTransaction);
+      console.log("checkBudgetsAndNotify ran for user:", userId);
+    } catch (budgetErr) {
+      console.warn("Budget notification failed:", budgetErr?.message || budgetErr);
+    }
+
+    // Return created transaction (keep original shape)
     res.status(201).json(newTransaction);
   } catch (error) {
     console.error("Add Transaction Error:", error);

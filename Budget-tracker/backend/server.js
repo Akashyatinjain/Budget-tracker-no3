@@ -19,6 +19,7 @@ import subscriptionRoutes from "./routes/SubscriptionRoute.js";
 import settingsRouter from './routes/settingsRoute.js';
 import reportsRouter from './routes/reportsRoute.js';
 import notificationRoutes from "./routes/notificationRoutes.js";
+import { checkBudgetsAndNotify } from "./utils/budgetNotifications.js";
 
 dotenv.config();
 
@@ -138,7 +139,9 @@ app.post("/transactions", verifyToken, async (req, res) => {
        RETURNING *`,
       [userId, category_id, type, amount, currency, description, merchant, transaction_date]
     );
+ const insertedTxn = result.rows[0];
 
+    // --- existing notification creation (kept) ---
     let createdNotification = null;
     try {
       const title = `New transaction: ${merchant || description || "Transaction"}`;
@@ -154,7 +157,15 @@ app.post("/transactions", verifyToken, async (req, res) => {
       console.warn("Failed to insert notification:", notifErr?.message || notifErr);
     }
 
-    res.status(201).json({ transaction: result.rows[0], notification: createdNotification });
+    // --- NEW: check budgets and create budget notifications if thresholds crossed ---
+    try {
+      await checkBudgetsAndNotify(userId, insertedTxn);
+    } catch (budgetErr) {
+      console.warn("Budget notification failed:", budgetErr?.message || budgetErr);
+      // don't fail the transaction because of budget notification failure
+    }
+
+    res.status(201).json({ transaction: insertedTxn, notification: createdNotification });
   } catch (err) {
     console.error("POST /transactions error:", err);
     res.status(500).json({ error: err.message });
@@ -311,20 +322,19 @@ app.get(
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 
 // Debug endpoint: create a test notification for the authenticated user
-app.post("/api/debug/notifications", verifyToken, async (req, res) => {
+app.post("/api/debug/create-budget-notif", verifyToken, async (req, res) => {
   try {
     const userId = req.user?.user_id ?? req.user?.id;
-    const { title = "Debug notification", message = "This is a test", priority = "low" } = req.body;
-    const q = `INSERT INTO notifications (user_id, title, message, type, priority, action_url, created_at)
-               VALUES ($1,$2,$3,$4,$5,$6, NOW()) RETURNING *`;
-    const r = await pool.query(q, [userId, title, message, "debug", priority, "/debug"]);
-    console.log("Debug notification created for user:", userId, r.rows[0]);
+    const { title="Debug Budget", message="Debug message", priority="medium" } = req.body;
+    const r = await pool.query(
+      `INSERT INTO notifications (user_id, title, message, type, priority, action_url, created_at)
+       VALUES ($1,$2,$3,$4,$5,$6,NOW()) RETURNING *`,
+      [userId, title, message, "budget", priority, "/budgets"]
+    );
     res.status(201).json({ notification: r.rows[0] });
-  } catch (err) {
-    console.error("DEBUG /api/debug/notifications error:", err);
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
+
 
 // Start server
 const PORT = process.env.PORT || 5000; // Render provides PORT
