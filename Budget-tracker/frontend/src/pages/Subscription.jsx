@@ -569,33 +569,106 @@ const SubscriptionsPage = () => {
         </main>
 
         {/* Add Modal */}
-        {showAddModal && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[11000] p-4">
-            <div className="bg-[#1b0128] border border-purple-700/50 rounded-xl w-full max-w-md p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-              <h2 className="text-xl font-semibold text-purple-300 mb-4">Add New Subscription</h2>
-              <form onSubmit={handleAddSubscription} className="flex flex-col gap-3">
-                <input type="text" placeholder="Service Name (e.g., Netflix)" value={newSubscription.name} onChange={(e) => setNewSubscription({ ...newSubscription, name: e.target.value })} required className="bg-transparent border border-purple-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500" />
-                <input type="number" step="0.01" placeholder="Amount" value={newSubscription.amount} onChange={(e) => setNewSubscription({ ...newSubscription, amount: e.target.value })} required className="bg-transparent border border-purple-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500" />
-                <select value={newSubscription.billing_cycle} onChange={(e) => setNewSubscription({ ...newSubscription, billing_cycle: e.target.value })} className="bg-transparent border border-purple-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500">
-                  {billingCycles.map(cycle => <option key={cycle.value} value={cycle.value}>{cycle.label}</option>)}
-                </select>
-                <select value={newSubscription.category} onChange={(e) => setNewSubscription({ ...newSubscription, category: e.target.value })} className="bg-transparent border border-purple-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500">
-                  {categories.map(cat => <option key={cat.value} value={cat.value}>{cat.label}</option>)}
-                </select>
-                <input type="date" value={newSubscription.next_billing_date} onChange={(e) => setNewSubscription({ ...newSubscription, next_billing_date: e.target.value })} required className="bg-transparent border border-purple-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500" />
-                <select value={newSubscription.status} onChange={(e) => setNewSubscription({ ...newSubscription, status: e.target.value })} className="bg-transparent border border-purple-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500">
-                  {statusOptions.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                </select>
-                <textarea placeholder="Description (optional)" value={newSubscription.description} onChange={(e) => setNewSubscription({ ...newSubscription, description: e.target.value })} className="bg-transparent border border-purple-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 resize-none" rows={3}></textarea>
+       {showAddModal && (
+  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[11000] p-4">
+    <div className="bg-[#14001f] border border-purple-800/40 p-6 rounded-xl w-full max-w-md">
+      <h2 className="text-xl font-bold text-purple-300 mb-4">Add New Subscription</h2>
 
-                <div className="flex justify-end gap-3 mt-4">
-                  <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 text-sm border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-800 transition-all">Cancel</button>
-                  <button type="submit" className="px-4 py-2 text-sm rounded-lg bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white transition-all">Add Subscription</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+      <form onSubmit={handleAddSubscription} className="space-y-4">
+        <input
+          type="text"
+          placeholder="Service Name (e.g., Netflix)"
+          value={newSubscription.name}
+          onChange={(e) => setNewSubscription({ ...newSubscription, name: e.target.value })}
+          required
+          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
+        />
+
+        <input
+          type="number"
+          step="0.01"
+          placeholder="Amount"
+          value={newSubscription.amount}
+          onChange={(e) => setNewSubscription({ ...newSubscription, amount: e.target.value })}
+          required
+          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
+        />
+
+        <select
+          value={newSubscription.billing_cycle}
+          onChange={(e) => setNewSubscription({ ...newSubscription, billing_cycle: e.target.value })}
+          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
+        >
+          <option value="">Select Billing Cycle</option>
+          {billingCycles.map((cycle) => (
+            <option key={cycle.value} value={cycle.value}>
+              {cycle.label}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={newSubscription.category}
+          onChange={(e) => setNewSubscription({ ...newSubscription, category: e.target.value })}
+          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
+        >
+          <option value="">Select Category</option>
+          {categories.map((cat) => (
+            <option key={cat.value} value={cat.value}>
+              {cat.label}
+            </option>
+          ))}
+        </select>
+
+        <input
+          type="date"
+          value={newSubscription.next_billing_date}
+          onChange={(e) => setNewSubscription({ ...newSubscription, next_billing_date: e.target.value })}
+          required
+          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
+        />
+
+        <select
+          value={newSubscription.status}
+          onChange={(e) => setNewSubscription({ ...newSubscription, status: e.target.value })}
+          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
+        >
+          <option value="">Select Status</option>
+          {statusOptions.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+
+        <textarea
+          placeholder="Description (optional)"
+          value={newSubscription.description}
+          onChange={(e) => setNewSubscription({ ...newSubscription, description: e.target.value })}
+          rows={3}
+          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200 resize-none"
+        />
+
+        <div className="flex justify-end gap-3 mt-4">
+          <button
+            type="button"
+            onClick={() => setShowAddModal(false)}
+            className="px-4 py-2 bg-red-600 rounded-lg text-white"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-green-600 rounded-lg text-white"
+          >
+            Add Subscription
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
       </div>
     </div>
   );

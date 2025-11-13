@@ -386,110 +386,95 @@ const BudgetPage = () => {
         </main>
 
         {/* Modal */}
-        {showModal && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[11000] p-4">
-            <div className="bg-[#1b0128] border border-purple-700/50 rounded-xl w-full max-w-md p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-              <h2 className="text-xl font-semibold text-purple-300 mb-4">
-                Create New Budget
-              </h2>
-              <form onSubmit={handleAddBudget} className="flex flex-col gap-3">
-                <div>
-                  <label className="text-sm text-gray-400 mb-1 block">
-                    Category
-                  </label>
-                  <select
-                    value={newBudget.category_id}
-                    onChange={(e) =>
-                      setNewBudget({
-                        ...newBudget,
-                        category_id: e.target.value,
-                      })
-                    }
-                    required
-                    className="w-full bg-transparent border border-purple-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500"
-                  >
-                    <option value="">Select Category</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+     {showModal && (
+  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[11000] p-4">
+    <div className="bg-[#14001f] border border-purple-800/40 p-6 rounded-xl w-full max-w-md">
+      <h2 className="text-xl font-bold text-purple-300 mb-4">Create New Budget</h2>
 
-                <div>
-                  <label className="text-sm text-gray-400 mb-1 block">
-                    Amount
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="0.00"
-                    value={newBudget.amount}
-                    onChange={(e) =>
-                      setNewBudget({
-                        ...newBudget,
-                        amount: e.target.value,
-                      })
-                    }
-                    required
-                    min="0"
-                    step="0.01"
-                    className="w-full bg-transparent border border-purple-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
+      <form onSubmit={handleAddBudget} className="space-y-4">
+        <div>
+          <label className="text-sm text-gray-400 mb-1 block">Category</label>
+          <select
+            value={newBudget.category_id}
+            onChange={(e) =>
+              setNewBudget({ ...newBudget, category_id: e.target.value })
+            }
+            required
+            className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
+          >
+            <option value="">Select Category</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
-                <div>
-                  <label className="text-sm text-gray-400 mb-1 block">
-                    Month
-                  </label>
-                  <input
-                    type="month"
-                    value={newBudget.month}
-                    onChange={(e) =>
-                      setNewBudget({ ...newBudget, month: e.target.value })
-                    }
-                    required
-                    className="w-full bg-transparent border border-purple-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
+        <div>
+          <label className="text-sm text-gray-400 mb-1 block">Amount</label>
+          <input
+            type="number"
+            placeholder="0.00"
+            value={newBudget.amount}
+            onChange={(e) =>
+              setNewBudget({ ...newBudget, amount: e.target.value })
+            }
+            required
+            min="0"
+            step="0.01"
+            className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
+          />
+        </div>
 
-                <div>
-                  <label className="text-sm text-gray-400 mb-1 block">
-                    Description (Optional)
-                  </label>
-                  <textarea
-                    value={newBudget.description}
-                    onChange={(e) =>
-                      setNewBudget({
-                        ...newBudget,
-                        description: e.target.value,
-                      })
-                    }
-                    placeholder="Add a short description..."
-                    rows={3}
-                    className="w-full bg-transparent border border-purple-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 resize-none"
-                  ></textarea>
-                </div>
+        <div>
+          <label className="text-sm text-gray-400 mb-1 block">Month</label>
+          <input
+            type="month"
+            value={newBudget.month}
+            onChange={(e) =>
+              setNewBudget({ ...newBudget, month: e.target.value })
+            }
+            required
+            className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
+          />
+        </div>
 
-                <div className="flex justify-end gap-2 mt-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="px-4 py-2 text-sm border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-800"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-sm rounded-lg bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white"
-                  >
-                    Create Budget
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        <div>
+          <label className="text-sm text-gray-400 mb-1 block">
+            Description (Optional)
+          </label>
+          <textarea
+            value={newBudget.description}
+            onChange={(e) =>
+              setNewBudget({ ...newBudget, description: e.target.value })
+            }
+            placeholder="Add a short description..."
+            rows={3}
+            className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200 resize-none"
+          />
+        </div>
+
+        <div className="flex justify-end gap-3 mt-2">
+          <button
+            type="button"
+            onClick={() => setShowModal(false)}
+            className="px-4 py-2 bg-red-600 rounded-lg text-white"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-green-600 rounded-lg text-white"
+          >
+            Create Budget
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
       </div>
     </div>
   );

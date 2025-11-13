@@ -361,7 +361,7 @@ const ReportsPage = () => {
                 <select
                   value={reportType}
                   onChange={(e) => setReportType(e.target.value)}
-                  className="w-full bg-transparent border border-purple-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500"
+                  className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
                 >
                   {reportTypes.map(type => (
                     <option key={type.value} value={type.value}>{type.label}</option>
@@ -374,7 +374,7 @@ const ReportsPage = () => {
                 <select
                   value={timeRange}
                   onChange={(e) => setTimeRange(e.target.value)}
-                  className="w-full bg-transparent border border-purple-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500"
+                  className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
                 >
                   {timeRanges.map(range => (
                     <option key={range.value} value={range.value}>{range.label}</option>
@@ -387,7 +387,7 @@ const ReportsPage = () => {
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full bg-transparent border border-purple-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500"
+                  className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
                 >
                   <option value="all">All Categories</option>
                   {categories.map(category => (

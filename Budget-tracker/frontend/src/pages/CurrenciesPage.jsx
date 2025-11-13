@@ -523,84 +523,105 @@ const CurrenciesPage = () => {
         </main>
 
         {/* Add Currency Modal */}
-        {showAddCurrency && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[11000] p-4">
-            <div className="bg-[#1b0128] border border-purple-700/50 rounded-xl w-full max-w-md p-6 shadow-2xl">
-              <h2 className="text-xl font-semibold text-purple-300 mb-4">Add New Currency</h2>
-              <form onSubmit={handleAddCurrency} className="flex flex-col gap-3">
-                <select
-                  value={newCurrency.code}
-                  onChange={(e) => {
-                    const selected = popularCurrencies.find(c => c.code === e.target.value);
-                    setNewCurrency({
-                      ...newCurrency,
-                      code: e.target.value,
-                      name: selected?.name || "",
-                      rate_to_inr: selected?.rate_to_inr || ""
-                    });
-                  }}
-                  required
-                  className="bg-transparent border border-purple-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="">Select Currency</option>
-                  {popularCurrencies.map(currency => (
-                    <option key={currency.code} value={currency.code}>
-                      {currency.flag} {currency.code} - {currency.name}
-                    </option>
-                  ))}
-                </select>
+       {showAddCurrency && (
+  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[11000] p-4">
+    <div className="bg-[#14001f] border border-purple-800/40 p-6 rounded-xl w-full max-w-md">
+      <h2 className="text-xl font-bold text-purple-300 mb-4">Add New Currency</h2>
 
-                <input
-                  type="text"
-                  placeholder="Currency Name"
-                  value={newCurrency.name}
-                  onChange={(e) => setNewCurrency({ ...newCurrency, name: e.target.value })}
-                  required
-                  className="bg-transparent border border-purple-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500"
-                />
+      <form onSubmit={handleAddCurrency} className="space-y-4">
+        {/* Currency Select */}
+        <select
+          value={newCurrency.code}
+          onChange={(e) => {
+            const selected = popularCurrencies.find(
+              (c) => c.code === e.target.value
+            );
+            setNewCurrency({
+              ...newCurrency,
+              code: e.target.value,
+              name: selected?.name || "",
+              rate_to_inr: selected?.rate_to_inr || "",
+            });
+          }}
+          required
+          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
+        >
+          <option value="">Select Currency</option>
+          {popularCurrencies.map((currency) => (
+            <option key={currency.code} value={currency.code}>
+              {currency.flag} {currency.code} - {currency.name}
+            </option>
+          ))}
+        </select>
 
-                <input
-                  type="number"
-                  step="0.0001"
-                  placeholder="Rate to INR (e.g., 0.012 for USD)"
-                  value={newCurrency.rate_to_inr}
-                  onChange={(e) => setNewCurrency({ ...newCurrency, rate_to_inr: e.target.value })}
-                  required
-                  className="bg-transparent border border-purple-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500"
-                />
+        {/* Currency Name */}
+        <input
+          type="text"
+          placeholder="Currency Name"
+          value={newCurrency.name}
+          onChange={(e) =>
+            setNewCurrency({ ...newCurrency, name: e.target.value })
+          }
+          required
+          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
+        />
 
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="is_default"
-                    checked={newCurrency.is_default}
-                    onChange={(e) => setNewCurrency({ ...newCurrency, is_default: e.target.checked })}
-                    className="rounded border-purple-700 bg-transparent text-purple-500 focus:ring-purple-500"
-                  />
-                  <label htmlFor="is_default" className="text-sm text-gray-300">
-                    Set as default currency
-                  </label>
-                </div>
+        {/* Rate To INR */}
+        <input
+          type="number"
+          step="0.0001"
+          placeholder="Rate to INR (e.g., 0.012 for USD)"
+          value={newCurrency.rate_to_inr}
+          onChange={(e) =>
+            setNewCurrency({
+              ...newCurrency,
+              rate_to_inr: e.target.value,
+            })
+          }
+          required
+          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
+        />
 
-                <div className="flex flex-col sm:flex-row justify-end gap-3 mt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddCurrency(false)}
-                    className="w-full sm:w-auto px-4 py-2 text-sm border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-800 transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="w-full sm:w-auto px-4 py-2 text-sm rounded-lg bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white transition-all"
-                  >
-                    Add Currency
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        {/* Default Checkbox */}
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="is_default"
+            checked={newCurrency.is_default}
+            onChange={(e) =>
+              setNewCurrency({
+                ...newCurrency,
+                is_default: e.target.checked,
+              })
+            }
+            className="rounded border-purple-700 bg-[#1b0128] text-purple-500"
+          />
+          <label htmlFor="is_default" className="text-sm text-gray-300">
+            Set as default currency
+          </label>
+        </div>
+
+        {/* Buttons */}
+        <div className="flex justify-end gap-3 mt-4">
+          <button
+            type="button"
+            onClick={() => setShowAddCurrency(false)}
+            className="px-4 py-2 bg-red-600 rounded-lg text-white"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-green-600 rounded-lg text-white"
+          >
+            Add Currency
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
       </div>
     </div>
   );

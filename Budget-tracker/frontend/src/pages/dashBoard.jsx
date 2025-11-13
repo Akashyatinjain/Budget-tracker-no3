@@ -1,7 +1,8 @@
 // FinanceDashboard.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useRef  } from "react";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
+import Papa from "papaparse";
 import axios from "axios";
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, 
@@ -16,7 +17,84 @@ import {
   ArrowDownRight, PieChart as PieChartIcon,
   BarChart3, Download, PlusCircle, Import, Search
 } from "lucide-react";
+// put this ABOVE the FinanceDashboard component
+function ImportButton() {
+  const fileRef = useRef();
 
+  const openFilePicker = () => {
+    if (fileRef.current) fileRef.current.click();
+  };
+
+  const handleFile = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (result) => {
+        const rows = result.data;
+        try {
+          const token = localStorage.getItem("token");
+         const base = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
+// correct endpoint
+const response = await axios.post(
+  `${base}/api/transactions/import`,
+  { rows },
+  { headers: { Authorization: `Bearer ${token}` } }
+);
+console.log("Received CSV rows:", rows);
+          alert("Imported successfully: " + (response.data.inserted ?? response.data.insertedRows ?? 0) + " rows");
+        } catch (err) {
+          console.error("Import failed:", err);
+          alert("Import failed: " + (err?.response?.data?.message || err?.response?.data?.error || err.message));
+        }
+      },
+      error: (err) => {
+        console.error("CSV parse error:", err);
+        alert("CSV parse error: " + err.message);
+      },
+    });
+
+    // reset so same file can be selected again
+    e.target.value = "";
+  };
+
+  return (
+    <>
+      <input
+        type="file"
+        accept=".csv"
+        ref={fileRef}
+        onChange={handleFile}
+        style={{ display: "none" }}
+      />
+      <button
+        onClick={openFilePicker}
+        className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:from-blue-700 hover:to-cyan-600 transition-all"
+      >
+        <Import size={16} /> Import
+      </button>
+      <button
+  onClick={() => alert(
+    "📌 Required CSV Columns:\n\n" +
+    "• category_id\n" +
+    "• type\n" +
+    "• amount\n" +
+    "• currency\n" +
+    "• description\n" +
+    "• merchant\n" +
+    "• transaction_date\n\n" +
+    "⚠️ Column names must match exactly!"
+  )}
+  className="bg-purple-700 text-white px-3 py-2 rounded-lg text-sm hover:bg-purple-800"
+>
+  CSV Format
+</button>
+
+    </>
+  );
+}
 const FinanceDashboard = () => {
   const [user, setUser] = useState(null);
   const [transactions, setTransactions] = useState([]);
@@ -25,6 +103,19 @@ const FinanceDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [timeRange, setTimeRange] = useState("month");
   const [pieChartRadius, setPieChartRadius] = useState(80);
+  // inside FinanceDashboard component, with other useState calls
+const [showAddModal, setShowAddModal] = useState(false);
+
+const [newTransaction, setNewTransaction] = useState({
+  merchant: "",
+  amount: "",
+  category_id: "",
+  type: "",
+  currency: "INR",
+  description: "",
+  transaction_date: "",
+});
+
 
   const VITE_BASE_URL = import.meta.env.VITE_BASE_URL;
   const token = localStorage.getItem("token");
@@ -142,6 +233,7 @@ const FinanceDashboard = () => {
       setLoading(false);
     }
   };
+ 
 
   // 🔹 Mock data for fallback
   const getMockTransactions = () => {
@@ -353,6 +445,25 @@ const FinanceDashboard = () => {
 
     return weeklyData;
   };
+const handleAddTransaction = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const base = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
+
+    const res = await axios.post(
+      `${base}/api/transactions`,
+      newTransaction,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    alert("Transaction Added!");
+    setShowAddModal(false);
+    fetchTransactions(); // reload UI
+  } catch (err) {
+    console.log(err);
+    alert("Add failed: " + (err?.response?.data?.message || "Error"));
+  }
+};
 
   // 🔹 Data for Pie Chart (Expenses by Category) with safe handling
   const expenseByCategory = Array.isArray(transactions)
@@ -429,12 +540,14 @@ const FinanceDashboard = () => {
               <button onClick={exportCSV} className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:from-purple-700 hover:to-indigo-800 transition-all">
                 <Download size={16} /> Export CSV
               </button>
-              <button className="bg-gradient-to-r from-green-600 to-emerald-500 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:from-green-700 hover:to-emerald-600 transition-all">
-                <PlusCircle size={16} /> Add
-              </button>
-              <button onClick={handleImport} className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:from-blue-700 hover:to-cyan-600 transition-all">
-                <Import size={16} /> Import
-              </button>
+              <button
+  onClick={() => setShowAddModal(true)}
+  className="bg-gradient-to-r from-green-600 to-emerald-500 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:from-green-700 hover:to-emerald-600 transition-all"
+>
+  <PlusCircle size={16} /> Add
+</button>
+
+              <ImportButton />
             </div>
           </motion.div>
 
@@ -748,7 +861,86 @@ const FinanceDashboard = () => {
             </motion.div>
           </div>
         </main>
+
+{showAddModal && (
+  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+    <div className="bg-[#14001f] border border-purple-800/40 p-6 rounded-xl w-full max-w-md">
+      <h2 className="text-xl font-bold text-purple-300 mb-4">Add Transaction</h2>
+      <div className="space-y-4">
+        <input
+          type="text"
+          placeholder="Merchant"
+          value={newTransaction.merchant}
+          onChange={(e) => setNewTransaction({ ...newTransaction, merchant: e.target.value })}
+          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
+        />
+        <input
+          type="number"
+          placeholder="Amount"
+          value={newTransaction.amount}
+          onChange={(e) => setNewTransaction({ ...newTransaction, amount: e.target.value })}
+          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
+        />
+        <select
+          value={newTransaction.category_id}
+          onChange={(e) => setNewTransaction({ ...newTransaction, category_id: e.target.value })}
+          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
+        >
+          <option value="">Select Category</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+        <select
+          value={newTransaction.type}
+          onChange={(e) => setNewTransaction({ ...newTransaction, type: e.target.value })}
+          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
+        >
+          <option value="">Select Type</option>
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+        <input
+          type="text"
+          placeholder="Currency (INR)"
+          value={newTransaction.currency}
+          onChange={(e) => setNewTransaction({ ...newTransaction, currency: e.target.value })}
+          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
+        />
+        <textarea
+          placeholder="Description"
+          value={newTransaction.description}
+          onChange={(e) => setNewTransaction({ ...newTransaction, description: e.target.value })}
+          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
+        />
+        <input
+          type="date"
+          value={newTransaction.transaction_date}
+          onChange={(e) => setNewTransaction({ ...newTransaction, transaction_date: e.target.value })}
+          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
+        />
       </div>
+
+      <div className="flex justify-end gap-3 mt-6">
+        <button
+          onClick={() => setShowAddModal(false)}
+          className="px-4 py-2 bg-red-600 rounded-lg text-white"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleAddTransaction}
+          className="px-4 py-2 bg-green-600 rounded-lg text-white"
+        >
+          Add
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+      </div>
+      
     </div>
   );
 };
