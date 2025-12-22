@@ -6,22 +6,27 @@ dotenv.config();
 const { Pool } = pkg;
 
 if (!process.env.DATABASE_URL) {
-  console.error("❌ DATABASE_URL is missing");
+  console.error("❌ DATABASE_URL missing");
   process.exit(1);
 }
 
-console.log("✅ Using Supabase DATABASE_URL");
-
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }, // REQUIRED for Supabase
-  connectionTimeoutMillis: 5000,
+
+  // 🔥 FORCE IPv4 (THIS FIXES ENETUNREACH)
+  family: 4,
+
+  ssl: {
+    rejectUnauthorized: false,
+  },
+
+  connectionTimeoutMillis: 10000,
   idleTimeoutMillis: 30000,
   max: 10,
 });
 
 pool.on("connect", () => {
-  console.log("✅ PostgreSQL connected successfully");
+  console.log("✅ PostgreSQL connected (IPv4 forced)");
 });
 
 pool.on("error", (err) => {
