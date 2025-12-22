@@ -1,9 +1,9 @@
 // backend/config/db.js
-import pkg from "pg";
+import pg from "pg";
 import dotenv from "dotenv";
 
 dotenv.config();
-const { Pool } = pkg;
+const { Pool } = pg;
 
 if (!process.env.DATABASE_URL) {
   console.error("❌ DATABASE_URL missing");
@@ -12,21 +12,14 @@ if (!process.env.DATABASE_URL) {
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-
-  // 🔥 FORCE IPv4 (THIS FIXES ENETUNREACH)
-  family: 4,
-
-  ssl: {
-    rejectUnauthorized: false,
-  },
-
-  connectionTimeoutMillis: 10000,
+  ssl: true,                 // REQUIRED
+  max: 5,
   idleTimeoutMillis: 30000,
-  max: 10,
+  connectionTimeoutMillis: 10000,
 });
 
 pool.on("connect", () => {
-  console.log("✅ PostgreSQL connected (IPv4 forced)");
+  console.log("✅ PostgreSQL connected via Supabase pooler");
 });
 
 pool.on("error", (err) => {
