@@ -56,16 +56,17 @@ export default function SignIn() {
 
   // Capture token from URL after Google redirect (if backend appends token in query)
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
+  if (typeof window === "undefined") return;
 
-    if (token) {
-      localStorage.setItem("token", token);
-      navigate("/DashBoard");
-      // clean URL
-      window.history.replaceState({}, document.title, "/DashBoard");
-    }
-  }, [navigate]);
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("token");
+
+  if (token) {
+    localStorage.setItem("token", token);
+    navigate("/DashBoard", { replace: true });
+  }
+}, [navigate]);
+
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black">
