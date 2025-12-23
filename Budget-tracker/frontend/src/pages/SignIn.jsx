@@ -7,20 +7,16 @@ import { useNavigate } from "react-router-dom";
 const API_BASE = (import.meta.env.VITE_BASE_URL || "http://localhost:5000").replace(/\/$/, "");
 
 export default function SignIn() {
-  const [form, setForm] = useState({
-    emailOrName: "",
-    password: "",
-  });
+  const [form, setForm] = useState({ emailOrName: "", password: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   // Handle input changes
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((s) => ({ ...s, [e.target.name]: e.target.value }));
   };
 
-  // Handle normal sign-in
+  // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -31,51 +27,46 @@ export default function SignIn() {
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
-        body: JSON.stringify({
-          emailOrName: form.emailOrName,
-          password: form.password,
-        }),
+        body: JSON.stringify({ emailOrName: form.emailOrName, password: form.password }),
+        credentials: "include", // allow cookies (JWT token) to be set by server
       });
 
       const data = await res.json().catch(() => ({}));
-      console.log("Sign-in response:", res.status, data);
+      console.log("Response:", res.status, data);
 
-      if (!res.ok) {
+      if (res.ok) {
+        // server returns token and user — save token if present (optional)
+        if (data.token) localStorage.setItem("token", data.token);
+        navigate("/DashBoard");
+      } else {
         alert(data.error || data.message || "Sign in failed");
-        return;
       }
-
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
-
-      navigate("/DashBoard");
     } catch (err) {
-      console.error("Sign-in error:", err);
-      alert("Something went wrong. Please try again.");
+      console.error("Error submitting form:", err);
+      alert("Something went wrong. Try again!");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Google login redirect
+  // Google Login Redirect (use deployed backend URL)
   const handleGoogleLogin = () => {
     window.location.href = `${API_BASE}/auth/google`;
   };
 
-  // Handle Google callback token (?token=...)
+  // Capture token from URL after Google redirect (if backend appends token in query)
   useEffect(() => {
-    if (typeof window === "undefined") return;
+  if (typeof window === "undefined") return;
 
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("token");
 
-    if (token) {
-      localStorage.setItem("token", token);
-      navigate("/DashBoard", { replace: true });
-    }
-  }, [navigate]);
+  if (token) {
+    localStorage.setItem("token", token);
+    navigate("/DashBoard", { replace: true });
+  }
+}, [navigate]);
+
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black">
@@ -104,26 +95,22 @@ export default function SignIn() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Username or Email */}
-          <div>
-            <label className="block text-gray-300 text-sm mb-2">
-              Username or Email
-            </label>
+          <div className="text-left">
+            <label className="block text-gray-300 text-sm mb-2">Username or Email</label>
             <input
               type="text"
               name="emailOrName"
               value={form.emailOrName}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 rounded-xl bg-gray-800/80 border border-gray-700 text-gray-200 focus:ring-2 focus:ring-purple-500 focus:outline-none"
+              className="w-full px-4 py-3 rounded-xl bg-gray-800/80 border border-gray-700 text-gray-200 focus:ring-2 focus:ring-purple-500 focus:outline-none transition"
               placeholder="john_doe or you@example.com"
             />
           </div>
 
           {/* Password */}
-          <div>
-            <label className="block text-gray-300 text-sm mb-2">
-              Password
-            </label>
+          <div className="text-left">
+            <label className="block text-gray-300 text-sm mb-2">Password</label>
             <input
               type="password"
               name="password"
@@ -131,9 +118,20 @@ export default function SignIn() {
               onChange={handleChange}
               required
               minLength={6}
-              className="w-full px-4 py-3 rounded-xl bg-gray-800/80 border border-gray-700 text-gray-200 focus:ring-2 focus:ring-purple-500 focus:outline-none"
+              className="w-full px-4 py-3 rounded-xl bg-gray-800/80 border border-gray-700 text-gray-200 focus:ring-2 focus:ring-purple-500 focus:outline-none transition"
               placeholder="••••••••"
             />
+          </div>
+
+          {/* Options */}
+          <div className="flex items-center justify-between text-sm text-gray-400">
+            <label className="flex items-center space-x-2">
+              <input type="checkbox" className="accent-purple-600" />
+              <span>Remember me</span>
+            </label>
+            <a href="#" className="hover:text-purple-400 transition">
+              Forgot password?
+            </a>
           </div>
 
           {/* Submit Button */}
@@ -142,7 +140,7 @@ export default function SignIn() {
             disabled={isSubmitting}
             className={`w-full bg-gradient-to-r from-purple-600 to-purple-700 
               hover:from-purple-700 hover:to-purple-800 text-white font-semibold 
-              py-3 rounded-xl transition shadow-lg
+              py-3 rounded-xl transition transform hover:scale-[1.02] shadow-lg
               ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             {isSubmitting ? "Signing in..." : "Sign In"}
@@ -156,13 +154,12 @@ export default function SignIn() {
           <hr className="flex-grow border-gray-700" />
         </div>
 
-        {/* Google Sign In */}
+        {/* Google Sign in */}
         <button
           onClick={handleGoogleLogin}
           className="w-full flex items-center justify-center gap-3 bg-white text-gray-900 font-medium py-3 rounded-xl shadow-md hover:bg-gray-100 transition"
         >
-          <FcGoogle size={22} />
-          Continue with Google
+          <FcGoogle size={22} /> Continue with Google
         </button>
 
         {/* Sign Up */}
