@@ -77,16 +77,22 @@ app.use("/api/notifications", notificationRoutes);
 // ---------------- Helper: sign JWT & set cookie ----------------
 // ...existing code...
 function createAndSetToken(res, user) {
+  if (!user || !user.user_id) {
+    throw new Error("Invalid user");
+  }
+
   const token = jwt.sign(
-    { user_id: user.user_id, email: user.email }, // use user_id consistently
+    { userId: user.user_id },
     process.env.JWT_SECRET,
     { expiresIn: "7d" }
   );
 
+  // optional cookie
   res.cookie("token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    secure: true,
+    sameSite: "none",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
   return token;
