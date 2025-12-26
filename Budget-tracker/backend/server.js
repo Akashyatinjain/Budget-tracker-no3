@@ -122,6 +122,18 @@ app.get("/categories", verifyToken, async (req, res) => {
   }
 });
 
+app.get("/db-test", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT 1");
+    res.json({ db: "connected" });
+  } catch (err) {
+    res.status(500).json({
+      db: "failed",
+      error: err.message
+    });
+  }
+});
+
 
 app.post("/transactions", verifyToken, async (req, res) => {
   try {
