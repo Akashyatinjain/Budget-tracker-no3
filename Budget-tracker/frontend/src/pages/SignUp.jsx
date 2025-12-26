@@ -69,6 +69,8 @@ export default function SignUp() {
     } catch (err) {
       console.error("Signup error:", err);
       alert("Something went wrong. Please check your connection.");
+      console.error("SIGNUP FULL ERROR STACK:", err.stack);
+  res.status(500).json({ error: err.message });
     } finally {
       setLoading(false);
     }
