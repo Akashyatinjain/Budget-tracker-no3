@@ -44,6 +44,8 @@ export default function SignIn() {
     } catch (err) {
       console.error("Error submitting form:", err);
       alert("Something went wrong. Try again!");
+      console.error("SIGNUP FULL ERROR STACK:", err.stack);
+  res.status(500).json({ error: err.message });
     } finally {
       setIsSubmitting(false);
     }
