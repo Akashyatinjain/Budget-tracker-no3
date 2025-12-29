@@ -35,17 +35,18 @@ if (process.env.DATABASE_URL) {
   console.log("✅ Using CONNECTION_STRING mode (DATABASE_URL)");
 } else if (process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME) {
   poolConfig = {
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD || "",
-    port: Number(process.env.DB_PORT || 5432),
-    ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : undefined,
-    connectionTimeoutMillis: 5000,
-    idleTimeoutMillis: 30000,
-    max: 10,
-  };
-  console.log("✅ Using INDIVIDUAL VARS mode (DB_HOST, DB_USER, etc.)");
+  connectionString: process.env.DATABASE_URL,
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? { rejectUnauthorized: false }
+      : false,
+  connectionTimeoutMillis: 5000,
+  idleTimeoutMillis: 30000,
+  max: 10,
+};
+
+console.log("✅ Using CONNECTION_STRING mode (DATABASE_URL)");
+
 } else {
   console.error("❌ No database configuration found. Set either DATABASE_URL or DB_HOST/DB_USER/DB_NAME");
   process.exit(1);
