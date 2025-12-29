@@ -20,6 +20,7 @@ import settingsRouter from './routes/settingsRoute.js';
 import reportsRouter from './routes/reportsRoute.js';
 import notificationRoutes from "./routes/notificationRoutes.js";
 import { checkBudgetsAndNotify } from "./utils/budgetNotifications.js";
+import connectPgSimple from "connect-pg-simple";
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ const saltRounds = 15;
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 const BASE_URL = process.env.BASE_URL || `http://localhost:${port}`;
+const PgSession = connectPgSimple(session);
 
 // ================= Middleware =================
 const allowedOrigins = [
@@ -61,13 +63,14 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true,          // HTTPS only (Render)
+      secure: true,
       httpOnly: true,
-      sameSite: "none",      // Required for Vercel frontend
-      maxAge: 1000 * 60 * 60 * 24, // 1 day
+      sameSite: "none",
+      maxAge: 1000 * 60 * 60 * 24,
     },
   })
 );
+
 app.use(passport.initialize());
 app.use(passport.session());
 
