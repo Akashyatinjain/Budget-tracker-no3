@@ -53,12 +53,18 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(
   session({
-    secret: process.env.JWT_SECRET,
+    store: new PgSession({
+      pool,
+      tableName: "session",
+    }),
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      secure: true,          // HTTPS only (Render)
+      httpOnly: true,
+      sameSite: "none",      // Required for Vercel frontend
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
     },
   })
 );
