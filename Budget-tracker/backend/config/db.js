@@ -12,17 +12,6 @@ if (!process.env.DATABASE_URL) {
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-
-  // 🔥 CRITICAL FIX FOR SUPABASE + PGBOUNCER
-  ssl: {
-    rejectUnauthorized: false,
-    requestCert: true,
-  },
-
-  // 🔥 REQUIRED for PgBouncer
-  statement_timeout: 0,
-  query_timeout: 0,
-
   max: 5,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
