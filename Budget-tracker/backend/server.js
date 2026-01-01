@@ -21,6 +21,9 @@ import reportsRouter from './routes/reportsRoute.js';
 import notificationRoutes from "./routes/notificationRoutes.js";
 import { checkBudgetsAndNotify } from "./utils/budgetNotifications.js";
 import connectPgSimple from "connect-pg-simple";
+import dns from "dns";
+
+dns.setDefaultResultOrder("ipv4first");
 
 dotenv.config();
 
