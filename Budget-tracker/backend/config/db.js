@@ -5,16 +5,20 @@ import dotenv from "dotenv";
 dotenv.config();
 const { Pool } = pg;
 
-if (!process.env.DATABASE_URL) {
-  console.error("❌ DATABASE_URL missing");
-  process.exit(1);
-}
-
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-    ssl: {
-    rejectUnauthorized: false, // 🔥 MOST IMPORTANT LINE
+  host: "db.tuvonxsygikbkzsjopkl.supabase.co", // direct DB host
+  port: 5432,
+  user: "postgres",
+  password: process.env.DB_PASSWORD, // password yahin rakho
+  database: "postgres",
+
+  // 🔥 THIS IS THE REAL FIX
+  family: 4, // FORCE IPv4 (pg ka option)
+
+  ssl: {
+    rejectUnauthorized: false,
   },
+
   max: 5,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
