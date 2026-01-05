@@ -18,6 +18,35 @@ import {
   ResponsiveContainer,
   Cell
 } from "recharts";
+// ====== HELPERS (ADD THIS) ======
+
+const normalizeTransactionsResponse = (resData) => {
+  if (!resData) return [];
+  if (Array.isArray(resData)) return resData;
+  if (Array.isArray(resData.transactions)) return resData.transactions;
+  if (Array.isArray(resData.data)) return resData.data;
+  return [];
+};
+
+const safeAmount = (val) => {
+  if (val == null) return 0;
+  const n = parseFloat(String(val).replace(/,/g, ""));
+  return Number.isFinite(n) ? n : 0;
+};
+
+const fetchTransactions = async () => {
+  if (!token) return;
+  try {
+    const res = await axios.get(`${VITE_BASE_URL}/api/transactions`, axiosConfig);
+    const list = normalizeTransactionsResponse(res.data);
+    setTransactions(list);
+  } catch (err) {
+    console.error("Fetch transactions error:", err);
+    setTransactions([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
 const ReportsPage = () => {
   const [transactions, setTransactions] = useState([]);
@@ -92,10 +121,12 @@ const ReportsPage = () => {
  const fetchTransactions = async () => {
     if (!token) return;
     try {
-      const res = await axios.get(`${VITE_BASE_URL}/api/transactions`, axiosConfig);
-      const data = res.data.transactions || res.data;
+     const res = await axios.get(`${VITE_BASE_URL}/api/transactions`, axiosConfig);
+const raw = res.data.transactions || res.data;
+setTransactions(normalizeTransactions(Array.isArray(raw) ? raw : []));
+
       // Ensure transactions is always an array
-      setTransactions(Array.isArray(data) ? data : []);
+      
     } catch (err) {
       console.error("Fetch transactions error:", err);
       // Fallback to sample data
@@ -163,16 +194,24 @@ const ReportsPage = () => {
     }
 
     const filteredTransactions = transactions.filter(t => {
-      const transactionDate = new Date(t.transaction_date);
-      return transactionDate >= startDate && transactionDate <= now;
-    });
+  const dateOk =
+    new Date(t.transaction_date) >= startDate &&
+    new Date(t.transaction_date) <= now;
+
+  const categoryOk =
+    categoryFilter === "all" ||
+    String(t.category_id) === String(categoryFilter);
+
+  return dateOk && categoryOk;
+});
+
 
     // Category-wise spending
     const categorySpending = categories.map(category => {
       const categoryTransactions = filteredTransactions.filter(
         t => parseInt(t.category_id) === category.id && t.type === "expense"
       );
-      const total = categoryTransactions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+      const total = categoryTransactions.reduce((sum, t) => sum + safeAmount(t.amount), 0);
       return {
         name: category.name,
         value: Math.round(total),
@@ -195,11 +234,13 @@ const ReportsPage = () => {
 
       const income = monthTransactions
         .filter(t => t.type === "income")
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+        .reduce((sum, t) => sum + safeAmount(t.amount)
+, 0);
 
       const expenses = monthTransactions
         .filter(t => t.type === "expense")
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+        .reduce((sum, t) => sum + safeAmount(t.amount)
+, 0);
 
       monthlyData.push({
         month: monthKey,
@@ -216,7 +257,7 @@ const ReportsPage = () => {
       .slice(0, 10)
       .map(t => ({
         name: t.merchant,
-        amount: parseFloat(t.amount),
+        amount: safeAmount(t.amount),
         category: categories.find(c => parseInt(c.id) === parseInt(t.category_id))?.name || 'Unknown',
         date: new Date(t.transaction_date).toLocaleDateString()
       }));
@@ -241,10 +282,10 @@ const ReportsPage = () => {
       subscriptionCost: Math.round(subscriptionCost),
       activeSubscriptions: activeSubscriptions.length,
       totalTransactions: filteredTransactions.length,
-      totalIncome: Math.round(filteredTransactions.filter(t => t.type === "income").reduce((sum, t) => sum + parseFloat(t.amount), 0)),
-      totalExpenses: Math.round(filteredTransactions.filter(t => t.type === "expense").reduce((sum, t) => sum + parseFloat(t.amount), 0)),
-      netSavings: Math.round(filteredTransactions.filter(t => t.type === "income").reduce((sum, t) => sum + parseFloat(t.amount), 0) - 
-                    filteredTransactions.filter(t => t.type === "expense").reduce((sum, t) => sum + parseFloat(t.amount), 0))
+      totalIncome: Math.round(filteredTransactions.filter(t => t.type === "income").reduce((sum, t) => sum + safeAmount(t.amount), 0)),
+      totalExpenses: Math.round(filteredTransactions.filter(t => t.type === "expense").reduce((sum, t) => sum + safeAmount(t.amount), 0)),
+      netSavings: Math.round(filteredTransactions.filter(t => t.type === "income").reduce((sum, t) => sum + safeAmount(t.amount), 0) - 
+                    filteredTransactions.filter(t => t.type === "expense").reduce((sum, t) => sum + safeAmount(t.amount), 0))
     };
   };
 
