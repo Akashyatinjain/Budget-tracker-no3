@@ -104,6 +104,7 @@
 // backend/config/db.js
 // backend/config/db.js
 // backend/config/db.js
+// backend/config/db.js
 import pg from "pg";
 import dotenv from "dotenv";
 
@@ -117,17 +118,20 @@ if (!process.env.DATABASE_URL) {
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+
   ssl: {
-    require: true,
     rejectUnauthorized: false,
   },
+
+  family: 4, // 🔥 THIS FIXES SUPABASE POOLER SSL ISSUE
+
   max: 5,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 20000,
 });
 
 pool.on("connect", () => {
-  console.log("✅ PostgreSQL connected");
+  console.log("✅ PostgreSQL connected (Supabase)");
 });
 
 pool.on("error", (err) => {
