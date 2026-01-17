@@ -136,14 +136,7 @@ pool.on("error", (err) => {
 });
 
 // Non-fatal probe (for startup check)
-(async () => {
-  try {
-    const client = await pool.connect();
-    client.release();
-    console.log("✅ DB probe successful");
-  } catch (err) {
-    console.warn("⚠️ DB probe failed (non-fatal):", err.message);
-  }
+
 })();
 
 export default pool;
