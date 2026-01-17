@@ -102,38 +102,40 @@
 
 // export default pool;
 // backend/config/db.js
+// backend/config/db.js
 import pg from "pg";
 import dotenv from "dotenv";
 
 dotenv.config();
 const { Pool } = pg;
 
-// Basic safety check
 if (!process.env.DATABASE_URL) {
-  console.error("❌ DATABASE_URL is missing");
+  console.error("❌ DATABASE_URL missing");
   process.exit(1);
 }
 
-// Create pool (Pooler compatible)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+
   ssl: {
-    rejectUnauthorized: false, // ✅ FIX for self-signed certificate
+    require: true,
+    rejectUnauthorized: false,
   },
-  max: 10,
+
+  max: 5,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
+  connectionTimeoutMillis: 20000,
 });
 
-// Log successful connection
 pool.on("connect", () => {
-  console.log("✅ PostgreSQL connected successfully");
+  console.log("✅ PostgreSQL connected");
 });
 
-// Log unexpected errors
 pool.on("error", (err) => {
-  console.error("❌ Unexpected DB error:", err);
+  console.error("❌ DB pool error:", err);
 });
+
+export default pool;
 
 // Non-fatal probe (for startup check)
 
