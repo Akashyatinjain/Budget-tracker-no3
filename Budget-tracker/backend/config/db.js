@@ -103,6 +103,7 @@
 // export default pool;
 // backend/config/db.js
 // backend/config/db.js
+// backend/config/db.js
 import pg from "pg";
 import dotenv from "dotenv";
 
@@ -116,12 +117,10 @@ if (!process.env.DATABASE_URL) {
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-
   ssl: {
     require: true,
     rejectUnauthorized: false,
   },
-
   max: 5,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 20000,
@@ -134,12 +133,6 @@ pool.on("connect", () => {
 pool.on("error", (err) => {
   console.error("❌ DB pool error:", err);
 });
-
-export default pool;
-
-// Non-fatal probe (for startup check)
-
-})();
 
 export default pool;
 
