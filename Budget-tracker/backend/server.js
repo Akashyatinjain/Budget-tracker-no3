@@ -59,9 +59,14 @@ app.use(cookieParser());
 app.use(
   session({
     store: new PgSession({
-      pool,
-      tableName: "session",
-    }),
+  pool,
+  tableName: "session",
+  createTableIfMissing: true,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+}),
+,
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
