@@ -34,19 +34,7 @@ const safeAmount = (val) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-const fetchTransactions = async () => {
-  if (!token) return;
-  try {
-    const res = await axios.get(`${VITE_BASE_URL}/api/transactions`, axiosConfig);
-    const list = normalizeTransactionsResponse(res.data);
-    setTransactions(list);
-  } catch (err) {
-    console.error("Fetch transactions error:", err);
-    setTransactions([]);
-  } finally {
-    setLoading(false);
-  }
-};
+
 
 const ReportsPage = () => {
   const [transactions, setTransactions] = useState([]);
@@ -123,8 +111,7 @@ const ReportsPage = () => {
     try {
      const res = await axios.get(`${VITE_BASE_URL}/api/transactions`, axiosConfig);
 const raw = res.data.transactions || res.data;
-setTransactions(normalizeTransactions(Array.isArray(raw) ? raw : []));
-
+setTransactions(normalizeTransactionsResponse(raw));
       // Ensure transactions is always an array
       
     } catch (err) {
@@ -253,8 +240,7 @@ setTransactions(normalizeTransactions(Array.isArray(raw) ? raw : []));
     // Top expenses
     const topExpenses = filteredTransactions
       .filter(t => t.type === "expense")
-      .sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount))
-      .slice(0, 10)
+.sort((a, b) => safeAmount(b.amount) - safeAmount(a.amount))      .slice(0, 10)
       .map(t => ({
         name: t.merchant,
         amount: safeAmount(t.amount),
@@ -302,7 +288,10 @@ setTransactions(normalizeTransactions(Array.isArray(raw) ? raw : []));
     for (let i = 0; i <= targetSteps; i++) ticks.push(i * niceStep);
     return ticks;
   };
-
+const savingsRate =
+  reportData.totalIncome > 0
+    ? ((reportData.netSavings / reportData.totalIncome) * 100).toFixed(1)
+    : 0;
   const monthlyMax = Math.max(
     0,
     ...reportData.monthlyData.flatMap(d => [Number(d.income) || 0, Number(d.expenses) || 0, Number(d.savings) || 0])
@@ -585,7 +574,7 @@ setTransactions(normalizeTransactions(Array.isArray(raw) ? raw : []));
               <div className="p-4 bg-purple-900/20 rounded-lg border border-purple-700/30">
                 <h4 className="font-semibold text-green-400 mb-2">Positive Trends</h4>
                 <ul className="text-sm text-gray-300 space-y-1">
-                  <li>• Your savings rate is {((reportData.netSavings / reportData.totalIncome) * 100).toFixed(1)}% of income</li>
+                  <li>• Your savings rate is {savingsRate}% of income</li>
                   <li>• You have {reportData.activeSubscriptions} active subscriptions</li>
                   <li>• Top spending category: {reportData.categorySpending[0]?.name || 'N/A'}</li>
                 </ul>

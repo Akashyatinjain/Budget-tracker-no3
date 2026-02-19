@@ -64,39 +64,7 @@ const SubscriptionsPage = () => {
 
   // ---------- Utilities ----------
   const getSampleSubscriptions = () => [
-    {
-      id: 1,
-      name: "Netflix",
-      amount: 649,
-      currency: "INR",
-      billing_cycle: "monthly",
-      category: "entertainment",
-      next_billing_date: "2024-02-15",
-      status: "active",
-      description: "Premium Plan"
-    },
-    {
-      id: 2,
-      name: "Spotify",
-      amount: 119,
-      currency: "INR",
-      billing_cycle: "monthly",
-      category: "music",
-      next_billing_date: "2024-02-20",
-      status: "active",
-      description: "Individual Plan"
-    },
-    {
-      id: 3,
-      name: "Adobe Creative Cloud",
-      amount: 1799,
-      currency: "INR",
-      billing_cycle: "monthly",
-      category: "software",
-      next_billing_date: "2024-02-28",
-      status: "active",
-      description: "All Apps"
-    }
+   
   ];
 
   const safeNumber = (v) => {

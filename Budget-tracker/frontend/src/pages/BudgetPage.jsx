@@ -2,7 +2,14 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
-
+const normalizeArrayResponse = (resData) => {
+  if (!resData) return [];
+  if (Array.isArray(resData)) return resData;
+  if (Array.isArray(resData.budgets)) return resData.budgets;
+  if (Array.isArray(resData.transactions)) return resData.transactions;
+  if (Array.isArray(resData.data)) return resData.data;
+  return [];
+};
 const BudgetPage = () => {
   const [budgets, setBudgets] = useState([]);
   const [transactions, setTransactions] = useState([]);
@@ -40,18 +47,15 @@ const BudgetPage = () => {
     categories.find((c) => +c.id === +id)?.name || "Unknown";
 
   // 🚀 Fetch all data (user, budgets, transactions)
-  const fetchAllData = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      await Promise.all([fetchUser(), fetchBudgets(), fetchTransactions()]);
-    } catch (err) {
-      console.error("Error fetching data:", err);
-      setError("Failed to load data. Please try again later.");
-    } finally {
-      setLoading(false);
-    }
-  };
+ const fetchAllData = async () => {
+  setLoading(true);
+  setError("");
+  await fetchUser();
+  await fetchBudgets();
+  await fetchTransactions();
+  setLoading(false);
+};
+
 
   const fetchUser = async () => {
     if (!token) return;
@@ -65,33 +69,30 @@ const BudgetPage = () => {
   };
 
   const fetchBudgets = async () => {
-    if (!token) return;
-    try {
-      const res = await axios.get(`${VITE_BASE_URL}/api/budgets`, axiosConfig);
-      const data = res.data.budgets || res.data || [];
-      setBudgets(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("❌ Fetch budgets error:", err.response?.data || err.message);
-      setBudgets([]);
-      throw err;
-    }
-  };
+  if (!token) return;
+  try {
+    const res = await axios.get(`${VITE_BASE_URL}/api/budgets`, axiosConfig);
+    const list = normalizeArrayResponse(res.data);
+    setBudgets(list);
+  } catch (err) {
+    console.error("Fetch budgets error:", err);
+    setBudgets([]);
+  }
+};
 
-  const fetchTransactions = async () => {
-    if (!token) return;
-    try {
-      const res = await axios.get(
-        `${VITE_BASE_URL}/api/transactions`,
-        axiosConfig
-      );
-      const data = res.data.transactions || res.data || [];
-      setTransactions(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("❌ Fetch transactions error:", err.response?.data || err.message);
-      setTransactions([]);
-      throw err;
-    }
-  };
+
+ const fetchTransactions = async () => {
+  if (!token) return;
+  try {
+    const res = await axios.get(`${VITE_BASE_URL}/api/transactions`, axiosConfig);
+    const list = normalizeArrayResponse(res.data);
+    setTransactions(list);
+  } catch (err) {
+    console.error("Fetch transactions error:", err);
+    setTransactions([]);
+  }
+};
+
 
   // 🟢 Add New Budget
   const handleAddBudget = async (e) => {
@@ -121,16 +122,22 @@ const BudgetPage = () => {
   };
 
   // 🔴 Delete Budget
-  const handleDeleteBudget = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this budget?")) return;
-    try {
-      await axios.delete(`${VITE_BASE_URL}/api/budgets/${id}`, axiosConfig);
-      await fetchBudgets();
-    } catch (err) {
-      console.error("❌ Delete budget error:", err.response?.data || err.message);
-      alert(err.response?.data?.error || "Failed to delete budget");
-    }
-  };
+const handleDeleteBudget = async (id) => {
+  const numericId = Number(id);
+  if (!Number.isFinite(numericId)) {
+    console.error("Invalid budget id:", id);
+    return;
+  }
+
+  if (!window.confirm("Are you sure you want to delete this budget?")) return;
+
+  try {
+    await axios.delete(`${VITE_BASE_URL}/api/budgets/${numericId}`, axiosConfig);
+    await fetchBudgets();
+  } catch (err) {
+    console.error("Delete budget error:", err);
+  }
+};
 
   // 📊 Utility Calculations
   const calculateSpentAmount = (categoryId, month) =>
@@ -141,18 +148,24 @@ const BudgetPage = () => {
           +t.category_id === +categoryId &&
           t.type === "expense"
       )
-      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+      .reduce((sum, t) => sum + safeAmount(t.amount), 0);
 
-  const calculateProgress = (budget, spent) =>
-    !budget ? 0 : Math.min((spent / budget) * 100, 100);
+ const calculateProgress = (budgetAmount, spentAmount) => {
+  const b = parseFloat(budgetAmount);
+  const s = parseFloat(spentAmount);
+  if (!Number.isFinite(b) || b <= 0) return 0;
+  return Math.min((s / b) * 100, 100);
+};
 
+const safeAmount = (val) => {
+  const n = parseFloat(String(val).replace(/,/g, ""));
+  return Number.isFinite(n) ? n : 0;
+};
   const getProgressColor = (p) =>
     p < 70 ? "bg-green-500" : p < 90 ? "bg-yellow-500" : "bg-red-500";
 
-  const formatCurrency = (a) =>
-    `₹${parseFloat(a || 0).toLocaleString("en-IN", {
-      minimumFractionDigits: 2,
-    })}`;
+ const formatCurrency = (a) =>
+  `₹${Number(a || 0).toLocaleString("en-IN")}`;
 
   const totalBudget = budgets.reduce((s, b) => s + +b.amount, 0);
   const totalSpent = budgets.reduce(
@@ -267,7 +280,20 @@ const BudgetPage = () => {
                 className="bg-[#1b0128]/70 border border-purple-800/30 rounded-xl p-4 md:p-5 shadow-md"
               >
                 <p className="text-sm text-gray-400">{stat.label}</p>
-                <h2 className={`text-xl md:text-2xl font-semibold text-${stat.color} mt-1`}>
+                <h2
+  className={`text-xl md:text-2xl font-semibold mt-1 ${
+    stat.color === "purple-300"
+      ? "text-purple-300"
+      : stat.color === "red-400"
+      ? "text-red-400"
+      : stat.color === "green-400"
+      ? "text-green-400"
+      : stat.color === "indigo-400"
+      ? "text-indigo-400"
+      : "text-gray-200"
+  }`}
+>
+
                   {typeof stat.value === "number"
                     ? formatCurrency(stat.value)
                     : stat.value}
