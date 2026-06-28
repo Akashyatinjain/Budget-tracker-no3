@@ -159,20 +159,7 @@ const AccountHolderPage = () => {
             </div>
           </motion.div>
 
-          {/* Message Alert */}
-          {message.text && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`p-4 rounded-xl border ${
-                message.type === "success" 
-                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
-                  : "bg-red-500/10 border-red-500/20 text-red-400"
-              }`}
-            >
-              {message.text}
-            </motion.div>
-          )}
+
 
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Left Sidebar - FinTrack Style */}
