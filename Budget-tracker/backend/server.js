@@ -181,12 +181,9 @@ app.post("/sign-up", async (req, res) => {
     if (!username || !email || !password)
       return res.status(400).json({ error: "All fields are required" });
 
-    const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{6,50}$/;
-    if (!passwordRegex.test(password))
+    if (!password || password.length < 6)
       return res.status(400).json({
-        error:
-          "Password must be 6-50 chars long and include uppercase, lowercase, number, and special char",
+        error: "Password must be at least 6 characters long",
       });
 
     // Check if username or email already exists

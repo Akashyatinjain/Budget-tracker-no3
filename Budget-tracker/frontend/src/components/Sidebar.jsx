@@ -8,7 +8,6 @@ import {
   FiX,
   FiFileText,
   FiUsers,
-  FiBookOpen,
   FiLogOut,
   FiTrendingUp,
   FiRepeat,
@@ -21,25 +20,24 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 const DEFAULT_COLLAPSED_KEY = "app.sidebar.collapsed";
 
-// Build menu based on role
 const buildMenu = (role, notificationsCount = 0) => [
   {
     id: "main",
     label: "Main",
     items: [
-      { id: "dashboard", label: "Dashboard", icon: <FiHome />, route: "/dashboard" },
-      { id: "analytics", label: "Analytics", icon: <FiBarChart2 />, route: "/analytics" },
-      { id: "trends", label: "Trends", icon: <FiTrendingUp />, route: "/trends" },
+      { id: "dashboard",     label: "Dashboard",     icon: <FiHome />,       route: "/dashboard" },
+      { id: "analytics",    label: "Analytics",     icon: <FiBarChart2 />,  route: "/analytics" },
+      { id: "trends",       label: "Trends",        icon: <FiTrendingUp />, route: "/trends" },
     ],
   },
   {
     id: "money",
     label: "Money",
     items: [
-      { id: "transactions", label: "Transactions", icon: <FiDollarSign />, route: "/transactions" },
-      { id: "budgets", label: "Budgets", icon: <FiRepeat />, route: "/budgets" },
-      { id: "subscriptions", label: "Subscriptions", icon: <FiClock />, route: "/subscriptions" },
-      { id: "currencies", label: "Currencies", icon: <FiGlobe />, route: "/currencies" },
+      { id: "transactions",  label: "Transactions",  icon: <FiDollarSign />, route: "/transactions" },
+      { id: "budgets",       label: "Budgets",       icon: <FiRepeat />,     route: "/budgets" },
+      { id: "subscriptions", label: "Subscriptions", icon: <FiClock />,      route: "/subscriptions" },
+      { id: "currencies",    label: "Currencies",    icon: <FiGlobe />,      route: "/currencies" },
     ],
   },
   {
@@ -96,8 +94,8 @@ export default function AdvancedSidebar({
     } catch {}
   }, [collapsed]);
 
-  const avatar = user?.avatarUrl || "/default-avatar.png";
-  const username = user?.username || "Guest";
+  const avatar   = user?.avatarUrl || "/default-avatar.png";
+  const username = user?.username  || "Guest";
 
   const menus = useMemo(() => buildMenu(role, notificationsCount), [role, notificationsCount]);
 
@@ -106,20 +104,21 @@ export default function AdvancedSidebar({
       menus.map((group) => ({
         ...group,
         items: group.items.filter((it) =>
-          query.trim() === "" ? true : it.label.toLowerCase().includes(query.toLowerCase())
+          query.trim() === ""
+            ? true
+            : it.label.toLowerCase().includes(query.toLowerCase())
         ),
       })),
     [menus, query]
   );
 
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate  = useNavigate();
+  const location  = useLocation();
 
   const handleNav = useCallback(
     (route) => {
       onNavigate(route);
       navigate(route);
-      // close mobile drawer when navigating
       setInternalMobileOpen(false);
       onMobileClose();
       document.body.style.overflow = "auto";
@@ -130,7 +129,6 @@ export default function AdvancedSidebar({
   const isActive = useCallback(
     (route) => {
       if (!route) return false;
-      // exact or prefix match for route groups
       return location.pathname === route || location.pathname.startsWith(route + "/");
     },
     [location.pathname]
@@ -138,61 +136,76 @@ export default function AdvancedSidebar({
 
   return (
     <>
-      {/* MOBILE DRAWER */}
+      {/* ── MOBILE DRAWER ── */}
       <div
         className={`fixed inset-0 z-[9999] flex md:hidden transition-transform duration-300 ease-in-out ${
           internalMobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-hidden={!internalMobileOpen}
       >
+        {/* Backdrop */}
         <div
           className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
-          onClick={() => {
-            setInternalMobileOpen(false);
-            onMobileClose();
-          }}
+          onClick={() => { setInternalMobileOpen(false); onMobileClose(); }}
         />
-        <aside className="relative w-72 h-full bg-gradient-to-b from-black via-[#1b0128] to-[#2e014d] text-white p-4 shadow-2xl flex flex-col">
+
+        {/* Drawer panel */}
+        <aside className="relative w-72 h-full bg-[#0d1117] border-r border-[#213b21]/60 text-white p-4 shadow-2xl flex flex-col">
+          {/* User row */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <img src={avatar} alt={username} className="w-10 h-10 rounded-full object-cover" />
+              <img src={avatar} alt={username} className="w-10 h-10 rounded-full object-cover ring-2 ring-emerald-500/30" />
               <div>
                 <div className="font-semibold text-white">{username}</div>
-                <div className="text-xs text-purple-300 capitalize">{role}</div>
+                <div className="text-xs text-emerald-400 capitalize">{role}</div>
               </div>
             </div>
-            <button onClick={() => { setInternalMobileOpen(false); onMobileClose(); }} className="p-2 rounded-md hover:bg-purple-600/40 transition" aria-label="Close menu">
+            <button
+              onClick={() => { setInternalMobileOpen(false); onMobileClose(); }}
+              className="p-2 rounded-md hover:bg-emerald-900/40 transition"
+              aria-label="Close menu"
+            >
               <FiX size={20} />
             </button>
           </div>
 
-          <div className="flex items-center gap-2 bg-purple-950/40 rounded-lg p-2 mb-4">
-            <FiSearch className="text-purple-400" />
+          {/* Search */}
+          <div className="flex items-center gap-2 bg-[#161b22]/80 border border-[#213b21]/60 rounded-lg p-2 mb-4">
+            <FiSearch className="text-emerald-500" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search..."
-              className="flex-1 bg-transparent outline-none text-sm text-purple-200 placeholder-purple-400"
+              className="flex-1 bg-transparent outline-none text-sm text-emerald-200 placeholder-emerald-700"
               aria-label="Search menu"
             />
           </div>
 
+          {/* Nav */}
           <div className="flex-1 overflow-y-auto sidebar-scrollbar">
             <nav aria-label="Main navigation">
               {filteredMenus.map((group) => (
                 <div key={group.id} className="mb-5">
-                  <div className="uppercase text-xs text-purple-400 mb-2 tracking-wide">{group.label}</div>
-                  <ul className="flex flex-col gap-2">
+                  <div className="uppercase text-xs text-emerald-600/70 mb-2 tracking-wide">
+                    {group.label}
+                  </div>
+                  <ul className="flex flex-col gap-1">
                     {group.items.map((item) => (
                       <li key={item.id}>
                         <button
                           onClick={() => handleNav(item.route)}
-                          className={`flex items-center gap-3 w-full p-2 rounded-md hover:bg-purple-600/30 transition-all duration-200 text-left ${isActive(item.route) ? "bg-purple-700/40" : ""}`}
+                          className={`flex items-center gap-3 w-full p-2 rounded-md transition-all duration-200 text-left ${
+                            isActive(item.route)
+                              ? "bg-emerald-900/40 text-emerald-300"
+                              : "hover:bg-emerald-900/30 text-gray-300"
+                          }`}
                           aria-current={isActive(item.route) ? "page" : undefined}
                           title={item.label}
                         >
-                          <span className="text-lg text-purple-300">{item.icon}</span>
-                          <span className="flex-1">{item.label}</span>
+                          <span className={`text-lg ${isActive(item.route) ? "text-emerald-400" : "text-emerald-500"}`}>
+                            {item.icon}
+                          </span>
+                          <span className="flex-1 text-sm">{item.label}</span>
                           {item.badge ? (
                             <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold rounded-full bg-red-600 text-white">
                               {item.badge}
@@ -206,54 +219,82 @@ export default function AdvancedSidebar({
               ))}
             </nav>
           </div>
-
-          {/* Footer - removed Settings & Logout for mobile */}
         </aside>
       </div>
 
-      {/* DESKTOP SIDEBAR */}
-      <aside className={`hidden md:flex md:flex-col h-screen transition-all duration-300 ${collapsed ? "w-20" : "w-64"} bg-gradient-to-b from-black via-[#1b0128] to-[#2e014d] text-white border-r border-purple-900/40`} aria-label="Sidebar">
+      {/* ── DESKTOP SIDEBAR ── */}
+      <aside
+        className={`hidden md:flex md:flex-col h-screen transition-all duration-300 ${
+          collapsed ? "w-20" : "w-64"
+        } bg-[#0d1117] border-r border-[#213b21]/60 text-white`}
+        aria-label="Sidebar"
+      >
+        {/* Top bar */}
         <div className="flex items-center justify-between p-4">
-          <button onClick={() => setCollapsed((c) => !c)} className="p-2 rounded-md hover:bg-purple-600/30" aria-pressed={collapsed} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
+          <button
+            onClick={() => setCollapsed((c) => !c)}
+            className="p-2 rounded-md hover:bg-emerald-900/30 text-gray-400 hover:text-emerald-400 transition"
+            aria-pressed={collapsed}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
             {collapsed ? <FiMenu /> : <FiX />}
           </button>
-          {!collapsed && <h1 className="font-semibold text-xl text-purple-400">Finance Pro</h1>}
+          {!collapsed && (
+            <h1 className="font-semibold text-xl text-emerald-400">Finance Pro</h1>
+          )}
         </div>
 
-        <div className="px-3">
-          <div className="flex items-center gap-2 bg-purple-950/50 rounded-lg p-2 mb-4">
-            <FiSearch />
+        {/* Search */}
+        <div className="px-3 mb-2">
+          <div className="flex items-center gap-2 bg-[#161b22]/80 border border-[#213b21]/60 rounded-lg p-2">
+            <FiSearch className="text-emerald-500 flex-shrink-0" />
             {!collapsed && (
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search..."
-                className="flex-1 bg-transparent outline-none text-sm text-purple-200"
+                className="flex-1 bg-transparent outline-none text-sm text-emerald-200 placeholder-emerald-700"
                 aria-label="Search menu"
               />
             )}
           </div>
         </div>
 
-        <nav className="px-2 space-y-5 overflow-y-auto sidebar-scrollbar" aria-label="Main navigation">
+        {/* Nav */}
+        <nav
+          className="px-2 space-y-4 overflow-y-auto sidebar-scrollbar flex-1 pt-2"
+          aria-label="Main navigation"
+        >
           {filteredMenus.map((group) => (
             <div key={group.id}>
-              {!collapsed && <div className="text-xs uppercase text-purple-400 mb-2 tracking-widest">{group.label}</div>}
-              <ul className="flex flex-col gap-2">
+              {!collapsed && (
+                <div className="text-xs uppercase text-emerald-600/70 mb-2 tracking-widest px-2">
+                  {group.label}
+                </div>
+              )}
+              <ul className="flex flex-col gap-1">
                 {group.items.map((item) => {
                   const active = isActive(item.route);
                   return (
                     <li key={item.id}>
                       <button
                         onClick={() => handleNav(item.route)}
-                        className={`group flex items-center gap-3 w-full p-2 rounded-md hover:bg-purple-600/30 transition-all duration-200 ${active ? "bg-purple-700/40" : ""}`}
+                        className={`group flex items-center gap-3 w-full p-2 rounded-md transition-all duration-200 ${
+                          active
+                            ? "bg-emerald-900/40 text-emerald-300"
+                            : "hover:bg-emerald-900/30 text-gray-300 hover:text-emerald-200"
+                        }`}
                         title={collapsed ? item.label : undefined}
                         aria-current={active ? "page" : undefined}
                       >
-                        <span className="text-lg text-purple-300 group-hover:text-purple-100">
+                        <span className={`text-lg flex-shrink-0 ${
+                          active ? "text-emerald-400" : "text-emerald-500 group-hover:text-emerald-300"
+                        }`}>
                           {item.icon}
                         </span>
-                        {!collapsed && <span className="text-sm group-hover:text-white">{item.label}</span>}
+                        {!collapsed && (
+                          <span className="text-sm">{item.label}</span>
+                        )}
                         {!collapsed && item.badge ? (
                           <span className="ml-auto inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold rounded-full bg-red-600 text-white">
                             {item.badge}
@@ -267,8 +308,6 @@ export default function AdvancedSidebar({
             </div>
           ))}
         </nav>
-
-        {/* Footer removed */}
       </aside>
     </>
   );

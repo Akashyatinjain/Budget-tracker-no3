@@ -1,23 +1,24 @@
 // FinanceDashboard.jsx
-import React, { useState, useEffect,useRef  } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import toast from "react-hot-toast";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
 import Papa from "papaparse";
-import axios from "axios";
-import { 
-  PieChart, Pie, Cell, ResponsiveContainer, 
-  BarChart, Bar, XAxis, YAxis, Tooltip, 
-  CartesianGrid, LineChart, Line, AreaChart, 
-  Area, Legend 
+import { useAuth, api } from "../context/AuthContext";
+import {
+  PieChart, Pie, Cell, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, Tooltip,
+  CartesianGrid, LineChart, Line, AreaChart,
+  Area, Legend
 } from "recharts";
 import { motion } from "framer-motion";
-import { 
-  TrendingUp, TrendingDown, Wallet, 
-  Target, Calendar, ArrowUpRight, 
+import {
+  TrendingUp, TrendingDown, Wallet,
+  Target, Calendar, ArrowUpRight,
   ArrowDownRight, PieChart as PieChartIcon,
   BarChart3, Download, PlusCircle, Import, Search
 } from "lucide-react";
-// put this ABOVE the FinanceDashboard component
+
 function ImportButton() {
   const fileRef = useRef();
 
@@ -35,15 +36,8 @@ function ImportButton() {
       complete: async (result) => {
         const rows = result.data;
         try {
-          const token = localStorage.getItem("token");
-         const base = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
-// correct endpoint
-const response = await axios.post(
-  `${base}/api/transactions/import`,
-  { rows },
-  { headers: { Authorization: `Bearer ${token}` } }
-);
-console.log("Received CSV rows:", rows);
+          const response = await api.post("/api/transactions/import", { rows });
+          console.log("Received CSV rows:", rows);
           alert("Imported successfully: " + (response.data.inserted ?? response.data.insertedRows ?? 0) + " rows");
         } catch (err) {
           console.error("Import failed:", err);
@@ -56,7 +50,6 @@ console.log("Received CSV rows:", rows);
       },
     });
 
-    // reset so same file can be selected again
     e.target.value = "";
   };
 
@@ -76,66 +69,54 @@ console.log("Received CSV rows:", rows);
         <Import size={16} /> Import
       </button>
       <button
-  onClick={() => alert(
-    "📌 Required CSV Columns:\n\n" +
-    "• category_id\n" +
-    "• type\n" +
-    "• amount\n" +
-    "• currency\n" +
-    "• description\n" +
-    "• merchant\n" +
-    "• transaction_date\n\n" +
-    "⚠️ Column names must match exactly!"
-  )}
-  className="bg-purple-700 text-white px-3 py-2 rounded-lg text-sm hover:bg-purple-800"
->
-  CSV Format
-</button>
-
+        onClick={() => alert(
+          "📌 Required CSV Columns:\n\n" +
+          "• category_id\n" +
+          "• type\n" +
+          "• amount\n" +
+          "• currency\n" +
+          "• description\n" +
+          "• merchant\n" +
+          "• transaction_date\n\n" +
+          "⚠️ Column names must match exactly!"
+        )}
+        className="bg-[#1f2937] border border-[#30363d] text-white px-3 py-2 rounded-lg text-sm hover:bg-[#374151] transition-all"
+      >
+        CSV Format
+      </button>
     </>
   );
 }
+
 const FinanceDashboard = () => {
-  const [user, setUser] = useState(null);
+  const { user, token } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [timeRange, setTimeRange] = useState("month");
   const [pieChartRadius, setPieChartRadius] = useState(80);
-  // inside FinanceDashboard component, with other useState calls
-const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
 
-const [newTransaction, setNewTransaction] = useState({
-  merchant: "",
-  amount: "",
-  category_id: "",
-  type: "",
-  currency: "INR",
-  description: "",
-  transaction_date: "",
-});
+  const [newTransaction, setNewTransaction] = useState({
+    merchant: "",
+    amount: "",
+    category_id: "",
+    type: "",
+    currency: "INR",
+    description: "",
+    transaction_date: "",
+  });
 
-
-  const VITE_BASE_URL = import.meta.env.VITE_BASE_URL;
-  const token = localStorage.getItem("token");
-
-  const axiosConfig = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-
-  // 🧩 Categories
   const categories = [
-    { id: 1, name: "Food & Dining", color: "#f43f5e" },
-    { id: 2, name: "Shopping", color: "#8b5cf6" },
-    { id: 3, name: "Transportation", color: "#06b6d4" },
-    { id: 4, name: "Entertainment", color: "#eab308" },
-    { id: 5, name: "Bills & Utilities", color: "#84cc16" },
-    { id: 6, name: "Healthcare", color: "#ef4444" },
-    { id: 7, name: "Salary", color: "#22c55e" },
-    { id: 8, name: "Investment", color: "#3b82f6" },
+    { id: 1, name: "Food & Dining",    color: "#f43f5e" },
+    { id: 2, name: "Shopping",         color: "#8b5cf6" },
+    { id: 3, name: "Transportation",   color: "#06b6d4" },
+    { id: 4, name: "Entertainment",    color: "#eab308" },
+    { id: 5, name: "Bills & Utilities",color: "#84cc16" },
+    { id: 6, name: "Healthcare",       color: "#ef4444" },
+    { id: 7, name: "Salary",           color: "#22c55e" },
+    { id: 8, name: "Investment",       color: "#3b82f6" },
   ];
 
   const getCategoryName = (id) => {
@@ -150,80 +131,19 @@ const [newTransaction, setNewTransaction] = useState({
     return cat ? cat.color : "#6b7280";
   };
 
-  // 🔹 Fetch User - with error handling
-  const fetchUser = async () => {
-    if (!token) {
-      console.warn("No token found");
-      return;
-    }
-    try {
-      // Try different possible endpoints
-      const endpoints = [
-        `${VITE_BASE_URL}/api/users/me`,
-        `${VITE_BASE_URL}/api/user`,
-        `${VITE_BASE_URL}/users/me`
-      ];
-      
-      let userData = null;
-      for (const endpoint of endpoints) {
-        try {
-          const res = await axios.get(endpoint, axiosConfig);
-          if (res.data) {
-            userData = res.data.user || res.data;
-            break;
-          }
-        } catch (err) {
-          console.log(`Endpoint ${endpoint} failed, trying next...`);
-        }
-      }
-      
-      if (userData) {
-        setUser(userData);
-      } else {
-        // Fallback to mock user data
-        setUser({ username: "Guest", email: "guest@example.com" });
-      }
-    } catch (err) {
-      console.error("Error fetching user:", err);
-      // Fallback to mock user data
-      setUser({ username: "Guest", email: "guest@example.com" });
-    }
-  };
-
-  // 🔹 Fetch Transactions - with better error handling
   const fetchTransactions = async () => {
     if (!token) {
-      console.warn("No token found, using mock data");
       setTransactions(getMockTransactions());
       setLoading(false);
       return;
     }
-    
+
     try {
-      const endpoints = [
-        `${VITE_BASE_URL}/api/transactions`,
-        `${VITE_BASE_URL}/api/transaction`,
-        `${VITE_BASE_URL}/transactions`
-      ];
-      
-      let transactionsData = [];
-      for (const endpoint of endpoints) {
-        try {
-          const res = await axios.get(endpoint, axiosConfig);
-          if (res.data) {
-            transactionsData = res.data.transactions || res.data || [];
-            if (Array.isArray(transactionsData)) break;
-          }
-        } catch (err) {
-          console.log(`Endpoint ${endpoint} failed, trying next...`);
-        }
-      }
-      
-      // Ensure transactions is always an array
-      if (Array.isArray(transactionsData)) {
-        setTransactions(transactionsData);
+      const res = await api.get("/api/transactions");
+      const data = res.data.transactions || res.data || [];
+      if (Array.isArray(data)) {
+        setTransactions(data);
       } else {
-        console.warn("Transactions data is not an array, using mock data");
         setTransactions(getMockTransactions());
       }
     } catch (err) {
@@ -233,70 +153,27 @@ const [newTransaction, setNewTransaction] = useState({
       setLoading(false);
     }
   };
- 
 
-  // 🔹 Mock data for fallback
-  const getMockTransactions = () => {
-    return [
-      {
-        transaction_id: 1,
-        merchant: "Supermarket",
-        category_id: 1,
-        type: "expense",
-        amount: 1500,
-        transaction_date: "2024-01-15"
-      },
-      {
-        transaction_id: 2,
-        merchant: "Salary",
-        category_id: 7,
-        type: "income",
-        amount: 50000,
-        transaction_date: "2024-01-01"
-      },
-      {
-        transaction_id: 3,
-        merchant: "Electricity Bill",
-        category_id: 5,
-        type: "expense",
-        amount: 2000,
-        transaction_date: "2024-01-10"
-      },
-      {
-        transaction_id: 4,
-        merchant: "Movie Theater",
-        category_id: 4,
-        type: "expense",
-        amount: 800,
-        transaction_date: "2024-01-12"
-      }
-    ];
-  };
+  const getMockTransactions = () => [
+    { transaction_id: 1, merchant: "Supermarket",     category_id: 1, type: "expense", amount: 1500,  transaction_date: "2024-01-15" },
+    { transaction_id: 2, merchant: "Salary",          category_id: 7, type: "income",  amount: 50000, transaction_date: "2024-01-01" },
+    { transaction_id: 3, merchant: "Electricity Bill",category_id: 5, type: "expense", amount: 2000,  transaction_date: "2024-01-10" },
+    { transaction_id: 4, merchant: "Movie Theater",   category_id: 4, type: "expense", amount: 800,   transaction_date: "2024-01-12" },
+  ];
 
   const CustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) => {
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
     if (percent < 0.05) return null;
-
     return (
-      <text
-        x={x}
-        y={y}
-        fill="#fff"
-        textAnchor="middle"
-        dominantBaseline="central"
-        fontSize="10"
-        style={{ pointerEvents: "none" }}
-      >
+      <text x={x} y={y} fill="#fff" textAnchor="middle" dominantBaseline="central" fontSize="10" style={{ pointerEvents: "none" }}>
         {`${name} ${(percent * 100).toFixed(0)}%`}
       </text>
     );
   };
 
-  // 🔹 Export CSV Function
   const exportCSV = () => {
     const headers = ["Date", "Merchant", "Category", "Type", "Amount"];
     const csvData = transactions.map(t => [
@@ -306,11 +183,11 @@ const [newTransaction, setNewTransaction] = useState({
       t.type || "unknown",
       getSafeAmount(t)
     ]);
-    
+
     const csvContent = [headers, ...csvData]
       .map(row => row.map(field => `"${field}"`).join(","))
       .join("\n");
-    
+
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -320,13 +197,7 @@ const [newTransaction, setNewTransaction] = useState({
     window.URL.revokeObjectURL(url);
   };
 
-  // 🔹 Import Function (placeholder)
-  const handleImport = () => {
-    alert("Import functionality would be implemented here!");
-  };
-
-  // 🔹 Filter transactions based on search - with array safety
-  const filteredTransactions = Array.isArray(transactions) 
+  const filteredTransactions = Array.isArray(transactions)
     ? transactions.filter(transaction =>
         (transaction.merchant?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
         getCategoryName(transaction.category_id).toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -334,76 +205,50 @@ const [newTransaction, setNewTransaction] = useState({
       )
     : [];
 
-  // 🔹 useEffect — on load
-  useEffect(() => {
-    fetchUser();
-    fetchTransactions();
-  }, []);
+  useEffect(() => { fetchTransactions(); }, [token]);
 
-  // 🔹 Safe amount calculation
   const getSafeAmount = (transaction) => {
-    if (!transaction || transaction.amount === undefined || transaction.amount === null) {
-      return 0;
-    }
+    if (!transaction || transaction.amount === undefined || transaction.amount === null) return 0;
     return parseFloat(transaction.amount) || 0;
   };
 
-  // 🔹 Summary Calculations with safe handling
   const totalIncome = Array.isArray(transactions)
-    ? transactions
-        .filter((t) => t?.type === "income")
-        .reduce((sum, t) => sum + getSafeAmount(t), 0)
+    ? transactions.filter((t) => t?.type === "income").reduce((sum, t) => sum + getSafeAmount(t), 0)
     : 0;
 
   const totalExpenses = Array.isArray(transactions)
-    ? transactions
-        .filter((t) => t?.type === "expense")
-        .reduce((sum, t) => sum + getSafeAmount(t), 0)
+    ? transactions.filter((t) => t?.type === "expense").reduce((sum, t) => sum + getSafeAmount(t), 0)
     : 0;
 
   const totalBalance = totalIncome - totalExpenses;
-
   const savingsGoal = 5000;
   const goalProgress = Math.min((totalBalance / savingsGoal) * 100, 100);
 
-  // 🔹 Monthly Trends Data with safe handling
   const getMonthlyData = () => {
     if (!Array.isArray(transactions)) return [];
-    
     const monthlyData = {};
-    
     transactions.forEach(transaction => {
       if (!transaction || !transaction.transaction_date) return;
-      
       try {
         const date = new Date(transaction.transaction_date);
         if (isNaN(date.getTime())) return;
-        
         const monthYear = `${date.getFullYear()}-${date.getMonth() + 1}`;
-        
         if (!monthlyData[monthYear]) {
-          monthlyData[monthYear] = { 
-            income: 0, 
-            expenses: 0, 
-            month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) 
+          monthlyData[monthYear] = {
+            income: 0, expenses: 0,
+            month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
           };
         }
-        
         const amount = getSafeAmount(transaction);
-        if (transaction.type === 'income') {
-          monthlyData[monthYear].income += amount;
-        } else if (transaction.type === 'expense') {
-          monthlyData[monthYear].expenses += amount;
-        }
+        if (transaction.type === 'income') monthlyData[monthYear].income += amount;
+        else if (transaction.type === 'expense') monthlyData[monthYear].expenses += amount;
       } catch (error) {
         console.warn('Error processing transaction date:', error);
       }
     });
-    
     return Object.values(monthlyData).slice(-6);
   };
 
-  // 🔹 Weekly Spending with safe handling
   const getWeeklySpending = () => {
     if (!Array.isArray(transactions)) {
       return Array.from({ length: 7 }, (_, i) => ({
@@ -411,94 +256,65 @@ const [newTransaction, setNewTransaction] = useState({
         amount: 0
       }));
     }
-
     const weeklyData = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      return {
-        day: date.toLocaleDateString('en-US', { weekday: 'short' }),
-        amount: 0
-      };
+      return { day: date.toLocaleDateString('en-US', { weekday: 'short' }), amount: 0 };
     }).reverse();
 
     transactions.forEach(transaction => {
       if (!transaction || transaction.type !== "expense") return;
-
       try {
         const amount = getSafeAmount(transaction);
         if (!amount) return;
-
         const transactionDate = new Date(transaction.transaction_date);
         if (isNaN(transactionDate.getTime())) return;
-
         const today = new Date();
-        const diffTime = today - transactionDate;
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-        if (diffDays >= 0 && diffDays < 7) {
-          weeklyData[6 - diffDays].amount += amount;
-        }
+        const diffDays = Math.floor((today - transactionDate) / (1000 * 60 * 60 * 24));
+        if (diffDays >= 0 && diffDays < 7) weeklyData[6 - diffDays].amount += amount;
       } catch (error) {
         console.warn('Error processing transaction for weekly spending:', error);
       }
     });
-
     return weeklyData;
   };
-const handleAddTransaction = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const base = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
 
-    const res = await axios.post(
-      `${base}/api/transactions`,
-      newTransaction,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+  const handleAddTransaction = async () => {
+    try {
+      await api.post("/api/transactions", newTransaction);
+      toast.success("Transaction Added!");
+      setShowAddModal(false);
+      fetchTransactions();
+    } catch (err) {
+      console.log(err);
+      toast.error(err?.response?.data?.message || err?.response?.data?.error || "Failed to add transaction.");
+    }
+  };
 
-    alert("Transaction Added!");
-    setShowAddModal(false);
-    fetchTransactions(); // reload UI
-  } catch (err) {
-    console.log(err);
-    alert("Add failed: " + (err?.response?.data?.message || "Error"));
-  }
-};
-
-  // 🔹 Data for Pie Chart (Expenses by Category) with safe handling
   const expenseByCategory = Array.isArray(transactions)
-    ? categories
-        .map((cat) => ({
-          name: cat.name,
-          value: transactions
-            .filter((t) => t?.type === "expense" && parseInt(t.category_id) === cat.id)
-            .reduce((sum, t) => sum + getSafeAmount(t), 0),
-          color: cat.color,
-        }))
-        .filter((c) => c.value > 0)
+    ? categories.map((cat) => ({
+        name: cat.name,
+        value: transactions
+          .filter((t) => t?.type === "expense" && parseInt(t.category_id) === cat.id)
+          .reduce((sum, t) => sum + getSafeAmount(t), 0),
+        color: cat.color,
+      })).filter((c) => c.value > 0)
     : [];
 
-  // 🔹 Data for Bar Chart (Income vs Expense)
   const barData = [
-    { name: "Income", amount: totalIncome, fill: "#22c55e" },
-    { name: "Expense", amount: totalExpenses, fill: "#ef4444" },
-    { name: "Balance", amount: totalBalance, fill: "#8b5cf6" },
+    { name: "Income",  amount: totalIncome,   fill: "#22c55e" },
+    { name: "Expense", amount: totalExpenses,  fill: "#ef4444" },
+    { name: "Balance", amount: totalBalance,   fill: "#8b5cf6" },
   ];
 
-  // 🔹 Recent Transactions with icons
   const recentTransactions = Array.isArray(filteredTransactions)
-    ? filteredTransactions
-        .slice()
-        .reverse()
-        .slice(0, 8)
+    ? filteredTransactions.slice().reverse().slice(0, 8)
     : [];
 
-  // 🔹 Lock body scroll when sidebar open
   useEffect(() => {
     document.body.style.overflow = mobileSidebarOpen ? "hidden" : "auto";
   }, [mobileSidebarOpen]);
 
-  // 🔹 Adjust pie chart radius on resize
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 480) setPieChartRadius(100);
@@ -511,7 +327,7 @@ const handleAddTransaction = async () => {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-black via-[#0a0014] to-[#1a002a] text-gray-100">
+    <div className="flex min-h-screen bg-[#0d1117] text-gray-100">
       {/* Sidebar */}
       <AdvancedSidebar
         user={user || { username: "Guest" }}
@@ -523,7 +339,7 @@ const handleAddTransaction = async () => {
         <Header onMobileToggle={() => setMobileSidebarOpen(true)} />
 
         <main className="p-4 md:p-6 mt-16 flex flex-col gap-8">
-          {/* Header */}
+          {/* Page Header */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -531,22 +347,24 @@ const handleAddTransaction = async () => {
             className="flex flex-col md:flex-row md:items-center md:justify-between"
           >
             <div>
-              <h1 className="text-3xl font-bold text-purple-400">Dashboard</h1>
+              <h1 className="text-3xl font-bold text-emerald-400">Dashboard</h1>
               <p className="text-gray-400 text-sm">
                 Welcome back, {user ? user.username : "User"} 👋
               </p>
             </div>
             <div className="flex gap-2 mt-4 md:mt-0">
-              <button onClick={exportCSV} className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:from-purple-700 hover:to-indigo-800 transition-all">
+              <button
+                onClick={exportCSV}
+                className="bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:from-emerald-700 hover:to-teal-600 transition-all"
+              >
                 <Download size={16} /> Export CSV
               </button>
               <button
-  onClick={() => setShowAddModal(true)}
-  className="bg-gradient-to-r from-green-600 to-emerald-500 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:from-green-700 hover:to-emerald-600 transition-all"
->
-  <PlusCircle size={16} /> Add
-</button>
-
+                onClick={() => setShowAddModal(true)}
+                className="bg-gradient-to-r from-green-600 to-emerald-500 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:from-green-700 hover:to-emerald-600 transition-all"
+              >
+                <PlusCircle size={16} /> Add
+              </button>
               <ImportButton />
             </div>
           </motion.div>
@@ -565,7 +383,7 @@ const handleAddTransaction = async () => {
                 placeholder="Search transactions by merchant, category, or type..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-[#1b0128]/70 border border-purple-800/30 rounded-xl text-gray-100 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                className="w-full pl-10 pr-4 py-3 bg-[#161b22]/80 border border-[#30363d]/60 rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
               />
             </div>
           </motion.div>
@@ -578,60 +396,41 @@ const handleAddTransaction = async () => {
             transition={{ delay: 0.2 }}
           >
             {[
-              {
-                title: "Total Balance",
-                value: totalBalance,
-                color: "text-purple-300",
-                icon: Wallet,
-                trend: totalBalance >= 0 ? "up" : "down",
-              },
-              {
-                title: "Total Income",
-                value: totalIncome,
-                color: "text-green-400",
-                icon: TrendingUp,
-                trend: "up",
-              },
-              {
-                title: "Total Expenses",
-                value: totalExpenses,
-                color: "text-red-400",
-                icon: TrendingDown,
-                trend: "down",
-              },
-              {
-                title: "Savings Goal",
-                value: goalProgress,
-                color: "text-purple-400",
-                icon: Target,
-                isProgress: true,
-              },
+              { title: "Total Balance",  value: totalBalance,   color: "text-teal-300",    icon: Wallet,    trend: totalBalance >= 0 ? "up" : "down" },
+              { title: "Total Income",   value: totalIncome,    color: "text-green-400",   icon: TrendingUp,   trend: "up" },
+              { title: "Total Expenses", value: totalExpenses,  color: "text-red-400",     icon: TrendingDown, trend: "down" },
+              { title: "Savings Goal",   value: goalProgress,   color: "text-emerald-400", icon: Target,    isProgress: true },
             ].map((card, i) => (
               <motion.div
                 key={i}
-                className="bg-[#1b0128]/70 border border-purple-800/30 rounded-xl p-6 shadow-lg hover:shadow-purple-500/10 transition-all duration-300"
+                className="bg-[#161b22]/80 border border-[#30363d]/60 rounded-xl p-6 shadow-lg hover:shadow-emerald-500/5 transition-all duration-300"
                 whileHover={{ y: -2 }}
               >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-400">{card.title}</p>
                     <h2 className={`text-2xl font-bold ${card.color} mt-2`}>
-                      {card.isProgress ? `${card.value.toFixed(1)}%` : `₹${card.value.toLocaleString("en-IN")}`}
+                      {card.isProgress
+                        ? `${card.value.toFixed(1)}%`
+                        : `₹${card.value.toLocaleString("en-IN")}`}
                     </h2>
                   </div>
-                  <div className={`p-3 rounded-lg ${card.trend === 'up' ? 'bg-green-500/20' : card.trend === 'down' ? 'bg-red-500/20' : 'bg-purple-500/20'}`}>
+                  <div className={`p-3 rounded-lg ${
+                    card.trend === "up"   ? "bg-green-500/20" :
+                    card.trend === "down" ? "bg-red-500/20"   : "bg-emerald-500/20"
+                  }`}>
                     <card.icon className={`w-6 h-6 ${
-                      card.trend === 'up' ? 'text-green-400' : 
-                      card.trend === 'down' ? 'text-red-400' : 'text-purple-400'
+                      card.trend === "up"   ? "text-green-400" :
+                      card.trend === "down" ? "text-red-400"   : "text-emerald-400"
                     }`} />
                   </div>
                 </div>
                 {card.isProgress && (
-                  <div className="w-full bg-gray-800 rounded-full h-2 mt-4">
+                  <div className="w-full bg-[#21262d] rounded-full h-2 mt-4">
                     <div
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500"
+                      className="bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full transition-all duration-500"
                       style={{ width: `${card.value}%` }}
-                    ></div>
+                    />
                   </div>
                 )}
               </motion.div>
@@ -640,42 +439,40 @@ const handleAddTransaction = async () => {
 
           {/* Charts Section */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {/* Monthly Trends Chart */}
-            <motion.div 
-              className="bg-[#1b0128]/70 border border-purple-800/30 rounded-xl p-6 shadow-lg"
+            {/* Monthly Trends */}
+            <motion.div
+              className="bg-[#161b22]/80 border border-[#30363d]/60 rounded-xl p-6 shadow-lg"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
             >
               <div className="flex items-center gap-2 mb-6">
-                <TrendingUp className="w-5 h-5 text-purple-400" />
-                <h3 className="text-xl font-semibold text-purple-300">
-                  Monthly Trends
-                </h3>
+                <TrendingUp className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-xl font-semibold text-emerald-300">Monthly Trends</h3>
               </div>
               <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={getMonthlyData()}>
                   <defs>
                     <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0.1}/>
+                      <stop offset="5%"  stopColor="#22c55e" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0.1} />
                     </linearGradient>
                     <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1}/>
+                      <stop offset="5%"  stopColor="#ef4444" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#3b0764" />
-                  <XAxis dataKey="month" stroke="#a855f7" />
-                  <YAxis stroke="#a855f7" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1b0128', 
-                      border: '1px solid #6b21a8',
-                      borderRadius: '8px'
-                    }} 
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e2a1e" />
+                  <XAxis dataKey="month" stroke="#10b981" />
+                  <YAxis stroke="#10b981" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#0d1117",
+                      border: "1px solid #065f46",
+                      borderRadius: "8px",
+                    }}
                   />
-                  <Area type="monotone" dataKey="income" stroke="#22c55e" fillOpacity={1} fill="url(#colorIncome)" />
+                  <Area type="monotone" dataKey="income"   stroke="#22c55e" fillOpacity={1} fill="url(#colorIncome)" />
                   <Area type="monotone" dataKey="expenses" stroke="#ef4444" fillOpacity={1} fill="url(#colorExpenses)" />
                   <Legend />
                 </AreaChart>
@@ -683,34 +480,29 @@ const handleAddTransaction = async () => {
             </motion.div>
 
             {/* Weekly Spending */}
-            <motion.div 
-              className="bg-[#1b0128]/70 border border-purple-800/30 rounded-xl p-6 shadow-lg"
+            <motion.div
+              className="bg-[#161b22]/80 border border-[#30363d]/60 rounded-xl p-6 shadow-lg"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
             >
               <div className="flex items-center gap-2 mb-6">
-                <Calendar className="w-5 h-5 text-purple-400" />
-                <h3 className="text-xl font-semibold text-purple-300">
-                  Weekly Spending
-                </h3>
+                <Calendar className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-xl font-semibold text-emerald-300">Weekly Spending</h3>
               </div>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={getWeeklySpending()}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#3b0764" />
-                  <XAxis dataKey="day" stroke="#a855f7" />
-                  <YAxis stroke="#a855f7" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1b0128', 
-                      border: '1px solid #6b21a8',
-                      borderRadius: '8px'
-                    }} 
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e2a1e" />
+                  <XAxis dataKey="day" stroke="#10b981" />
+                  <YAxis stroke="#10b981" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#0d1117",
+                      border: "1px solid #065f46",
+                      borderRadius: "8px",
+                    }}
                   />
-                  <Bar 
-                    dataKey="amount" 
-                    radius={[6, 6, 0, 0]}
-                  >
+                  <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
                     {getWeeklySpending().map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={categories[index % categories.length].color} />
                     ))}
@@ -723,17 +515,15 @@ const handleAddTransaction = async () => {
           {/* Bottom Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Expense Distribution */}
-            <motion.div 
-              className="lg:col-span-1 bg-[#1b0128]/70 border border-purple-800/30 rounded-xl p-6 shadow-lg"
+            <motion.div
+              className="lg:col-span-1 bg-[#161b22]/80 border border-[#30363d]/60 rounded-xl p-6 shadow-lg"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
               <div className="flex items-center gap-2 mb-6">
-                <PieChartIcon className="w-5 h-5 text-purple-400" />
-                <h3 className="text-xl font-semibold text-purple-300">
-                  Expense Distribution
-                </h3>
+                <PieChartIcon className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-xl font-semibold text-emerald-300">Expense Distribution</h3>
               </div>
 
               {expenseByCategory.length > 0 ? (
@@ -755,8 +545,8 @@ const handleAddTransaction = async () => {
                         </Pie>
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: "#1b0128",
-                            border: "1px solid #6b21a8",
+                            backgroundColor: "#0d1117",
+                            border: "1px solid #065f46",
                             borderRadius: "8px",
                             color: "#fff",
                           }}
@@ -767,18 +557,12 @@ const handleAddTransaction = async () => {
 
                   <div className="mt-4 space-y-2">
                     {expenseByCategory.map((category, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between text-sm"
-                      >
+                      <div key={index} className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: category.color }}
-                          />
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
                           <span className="text-gray-300">{category.name}</span>
                         </div>
-                        <span className="text-purple-300 font-medium">
+                        <span className="text-emerald-300 font-medium">
                           ₹{category.value.toLocaleString("en-IN")}
                         </span>
                       </div>
@@ -786,27 +570,23 @@ const handleAddTransaction = async () => {
                   </div>
                 </>
               ) : (
-                <p className="text-gray-400 text-sm text-center py-8">
-                  No expense data available.
-                </p>
+                <p className="text-gray-400 text-sm text-center py-8">No expense data available.</p>
               )}
             </motion.div>
 
             {/* Recent Transactions */}
-            <motion.div 
-              className="lg:col-span-2 bg-[#1b0128]/70 border border-purple-800/30 rounded-xl p-6 shadow-lg"
+            <motion.div
+              className="lg:col-span-2 bg-[#161b22]/80 border border-[#30363d]/60 rounded-xl p-6 shadow-lg"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
             >
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-purple-400" />
-                  <h3 className="text-xl font-semibold text-purple-300">
-                    Recent Transactions
-                  </h3>
+                  <BarChart3 className="w-5 h-5 text-emerald-400" />
+                  <h3 className="text-xl font-semibold text-emerald-300">Recent Transactions</h3>
                 </div>
-                <span className="text-sm text-purple-400">
+                <span className="text-sm text-emerald-500">
                   {filteredTransactions.length} transactions found
                 </span>
               </div>
@@ -819,11 +599,11 @@ const handleAddTransaction = async () => {
                     recentTransactions.map((t) => (
                       <motion.div
                         key={t.transaction_id || Math.random()}
-                        className="flex items-center justify-between p-4 bg-purple-900/20 rounded-lg border border-purple-800/30 hover:border-purple-600/50 transition-all"
+                        className="flex items-center justify-between p-4 bg-[#1a2f1a]/40 rounded-lg border border-[#30363d]/50 hover:border-emerald-600/40 transition-all"
                         whileHover={{ scale: 1.02 }}
                       >
                         <div className="flex items-center gap-4">
-                          <div 
+                          <div
                             className="p-2 rounded-lg"
                             style={{ backgroundColor: `${getCategoryColor(t.category_id)}20` }}
                           >
@@ -839,11 +619,8 @@ const handleAddTransaction = async () => {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className={`font-semibold ${
-                            t.type === "income" ? "text-green-400" : "text-red-400"
-                          }`}>
-                            {t.type === "income" ? "+" : "-"}₹
-                            {getSafeAmount(t).toLocaleString("en-IN")}
+                          <p className={`font-semibold ${t.type === "income" ? "text-green-400" : "text-red-400"}`}>
+                            {t.type === "income" ? "+" : "-"}₹{getSafeAmount(t).toLocaleString("en-IN")}
                           </p>
                           <p className="text-sm text-gray-400">
                             {t.transaction_date ? new Date(t.transaction_date).toLocaleDateString() : "Unknown date"}
@@ -862,85 +639,83 @@ const handleAddTransaction = async () => {
           </div>
         </main>
 
-{showAddModal && (
-  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-    <div className="bg-[#14001f] border border-purple-800/40 p-6 rounded-xl w-full max-w-md">
-      <h2 className="text-xl font-bold text-purple-300 mb-4">Add Transaction</h2>
-      <div className="space-y-4">
-        <input
-          type="text"
-          placeholder="Merchant"
-          value={newTransaction.merchant}
-          onChange={(e) => setNewTransaction({ ...newTransaction, merchant: e.target.value })}
-          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
-        />
-        <input
-          type="number"
-          placeholder="Amount"
-          value={newTransaction.amount}
-          onChange={(e) => setNewTransaction({ ...newTransaction, amount: e.target.value })}
-          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
-        />
-        <select
-          value={newTransaction.category_id}
-          onChange={(e) => setNewTransaction({ ...newTransaction, category_id: e.target.value })}
-          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
-        >
-          <option value="">Select Category</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-        <select
-          value={newTransaction.type}
-          onChange={(e) => setNewTransaction({ ...newTransaction, type: e.target.value })}
-          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
-        >
-          <option value="">Select Type</option>
-          <option value="income">Income</option>
-          <option value="expense">Expense</option>
-        </select>
-        <input
-          type="text"
-          placeholder="Currency (INR)"
-          value={newTransaction.currency}
-          onChange={(e) => setNewTransaction({ ...newTransaction, currency: e.target.value })}
-          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
-        />
-        <textarea
-          placeholder="Description"
-          value={newTransaction.description}
-          onChange={(e) => setNewTransaction({ ...newTransaction, description: e.target.value })}
-          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
-        />
-        <input
-          type="date"
-          value={newTransaction.transaction_date}
-          onChange={(e) => setNewTransaction({ ...newTransaction, transaction_date: e.target.value })}
-          className="w-full p-3 bg-[#1b0128] border border-purple-700 rounded-lg text-gray-200"
-        />
+        {/* Add Transaction Modal */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+            <div className="bg-[#0d1117] border border-[#30363d] p-6 rounded-xl w-full max-w-md">
+              <h2 className="text-xl font-bold text-emerald-300 mb-4">Add Transaction</h2>
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="Merchant"
+                  value={newTransaction.merchant}
+                  onChange={(e) => setNewTransaction({ ...newTransaction, merchant: e.target.value })}
+                  className="w-full p-3 bg-[#161b22] border border-[#30363d] rounded-lg text-gray-200 focus:outline-none focus:border-emerald-500 transition-all"
+                />
+                <input
+                  type="number"
+                  placeholder="Amount"
+                  value={newTransaction.amount}
+                  onChange={(e) => setNewTransaction({ ...newTransaction, amount: e.target.value })}
+                  className="w-full p-3 bg-[#161b22] border border-[#30363d] rounded-lg text-gray-200 focus:outline-none focus:border-emerald-500 transition-all"
+                />
+                <select
+                  value={newTransaction.category_id}
+                  onChange={(e) => setNewTransaction({ ...newTransaction, category_id: e.target.value })}
+                  className="w-full p-3 bg-[#161b22] border border-[#30363d] rounded-lg text-gray-200 focus:outline-none focus:border-emerald-500 transition-all"
+                >
+                  <option value="">Select Category</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <select
+                  value={newTransaction.type}
+                  onChange={(e) => setNewTransaction({ ...newTransaction, type: e.target.value })}
+                  className="w-full p-3 bg-[#161b22] border border-[#30363d] rounded-lg text-gray-200 focus:outline-none focus:border-emerald-500 transition-all"
+                >
+                  <option value="">Select Type</option>
+                  <option value="income">Income</option>
+                  <option value="expense">Expense</option>
+                </select>
+                <input
+                  type="text"
+                  placeholder="Currency (INR)"
+                  value={newTransaction.currency}
+                  onChange={(e) => setNewTransaction({ ...newTransaction, currency: e.target.value })}
+                  className="w-full p-3 bg-[#161b22] border border-[#30363d] rounded-lg text-gray-200 focus:outline-none focus:border-emerald-500 transition-all"
+                />
+                <textarea
+                  placeholder="Description"
+                  value={newTransaction.description}
+                  onChange={(e) => setNewTransaction({ ...newTransaction, description: e.target.value })}
+                  className="w-full p-3 bg-[#161b22] border border-[#30363d] rounded-lg text-gray-200 focus:outline-none focus:border-emerald-500 transition-all"
+                />
+                <input
+                  type="date"
+                  value={newTransaction.transaction_date}
+                  onChange={(e) => setNewTransaction({ ...newTransaction, transaction_date: e.target.value })}
+                  className="w-full p-3 bg-[#161b22] border border-[#30363d] rounded-lg text-gray-200 focus:outline-none focus:border-emerald-500 transition-all"
+                />
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddTransaction}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white transition-all"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-
-      <div className="flex justify-end gap-3 mt-6">
-        <button
-          onClick={() => setShowAddModal(false)}
-          className="px-4 py-2 bg-red-600 rounded-lg text-white"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleAddTransaction}
-          className="px-4 py-2 bg-green-600 rounded-lg text-white"
-        >
-          Add
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-      </div>
-      
     </div>
   );
 };
