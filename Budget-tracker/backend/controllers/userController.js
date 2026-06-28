@@ -5,6 +5,7 @@ import {
   findUserByEmail,
   findUserById,
   updateUser,
+  updateUserPassword,
   deleteUser,
 } from "../models/userModel.js";
 
@@ -12,6 +13,10 @@ import {
 export const registerUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ msg: "Email and password are required" });
+    }
 
     // 1️⃣ Check existing user
     const existing = await findUserByEmail(email);
@@ -24,14 +29,14 @@ export const registerUser = async (req, res) => {
 
     // 3️⃣ Create user
     const newUser = await createUser({
-      username,
+      username: username || email.split("@")[0],
       email,
       password: hashedPassword,
     });
 
     // 4️⃣ Generate token
     const token = jwt.sign(
-      { user_id: newUser.user_id, email: newUser.email },
+      { user_id: newUser.user_id, email: newUser.email, role: newUser.role || "user" },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -52,6 +57,10 @@ export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ msg: "Email and password are required" });
+    }
+
     // 1️⃣ Find user
     const user = await findUserByEmail(email);
     if (!user) {
@@ -66,14 +75,16 @@ export const loginUser = async (req, res) => {
 
     // 3️⃣ Create JWT
     const token = jwt.sign(
-      { user_id: user.user_id, email: user.email },
+      { user_id: user.user_id, email: user.email, role: user.role || "user" },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
+    const fullUser = await findUserById(user.user_id);
+
     res.json({
       msg: "Login successful",
-      user: {
+      user: fullUser || {
         user_id: user.user_id,
         username: user.username,
         email: user.email,
@@ -97,19 +108,49 @@ export const getProfile = async (req, res) => {
   }
 };
 
-// ✅ Update Profile
+// ✅ Update Profile (Protected)
 export const updateProfile = async (req, res) => {
   try {
     const user_id = req.user.user_id;
-    const { username, email } = req.body;
-    const updated = await updateUser(user_id, { username, email });
-    res.json({ msg: "Profile updated", user: updated });
+    const updated = await updateUser(user_id, req.body);
+    res.json({ msg: "Profile updated successfully", user: updated });
   } catch (err) {
+    console.error("Update profile controller error:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// ✅ Delete Account
+// ✅ Change Password (Protected)
+export const changePassword = async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+    const { current_password, new_password } = req.body;
+
+    if (!current_password || !new_password) {
+      return res.status(400).json({ msg: "Current password and new password are required" });
+    }
+
+    const user = await findUserByEmail(req.user.email);
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(current_password, user.password_hash);
+    if (!isMatch) {
+      return res.status(400).json({ msg: "Incorrect current password" });
+    }
+
+    const hashed = await bcrypt.hash(new_password, 10);
+    await updateUserPassword(user_id, hashed);
+
+    res.json({ msg: "Password changed successfully" });
+  } catch (err) {
+    console.error("Change password error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ✅ Delete Account (Protected)
 export const deleteAccount = async (req, res) => {
   try {
     const user_id = req.user.user_id;

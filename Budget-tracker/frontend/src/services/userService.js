@@ -6,7 +6,11 @@ export const userService = {
     return res.data.user || res.data;
   },
   updateProfile: async (data) => {
-    const res = await apiClient.put("/api/users/me", data);
+    const res = await apiClient.put("/api/users/profile", data);
+    return res.data;
+  },
+  changePassword: async (passwordData) => {
+    const res = await apiClient.post("/api/users/change-password", passwordData);
     return res.data;
   },
 };
