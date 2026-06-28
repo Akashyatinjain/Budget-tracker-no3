@@ -1,9 +1,9 @@
-// ReportsPage.jsx - FinTrack Theme
 import React, { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
 import { motion } from "framer-motion";
+import { useAuth, api } from "../context/AuthContext";
 import {
   BarChart,
   Bar,
@@ -49,17 +49,15 @@ const safeAmount = (val) => {
 };
 
 const ReportsPage = () => {
+  const { user, token } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
   const [reportType, setReportType] = useState("spending");
   const [timeRange, setTimeRange] = useState("month");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
-
-  const VITE_BASE_URL = import.meta.env.VITE_BASE_URL;
 
   const categories = [
     { id: 1, name: "Food & Dining", color: "#10b981" },
@@ -88,38 +86,22 @@ const ReportsPage = () => {
     { value: "custom", label: "Custom Range" },
   ];
 
-  const token = localStorage.getItem("token");
-  
-  const axiosConfig = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-
   useEffect(() => {
-    fetchUser();
     fetchTransactions();
     fetchSubscriptions();
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     document.body.style.overflow = mobileSidebarOpen ? "hidden" : "auto";
   }, [mobileSidebarOpen]);
 
-  const fetchUser = async () => {
-    if (!token) return;
-    try {
-      const res = await axios.get(`${VITE_BASE_URL}/api/users/me`, axiosConfig);
-      setUser(res.data.user);
-    } catch (err) {
-      console.error("Fetch user error:", err);
-    }
-  };
-
   const fetchTransactions = async () => {
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     try {
-      const res = await axios.get(`${VITE_BASE_URL}/api/transactions`, axiosConfig);
+      const res = await api.get("/api/transactions");
       const raw = res.data.transactions || res.data;
       setTransactions(normalizeTransactionsResponse(raw));
     } catch (err) {
@@ -133,7 +115,7 @@ const ReportsPage = () => {
   const fetchSubscriptions = async () => {
     if (!token) return;
     try {
-      const res = await axios.get(`${VITE_BASE_URL}/api/subscriptions`, axiosConfig);
+      const res = await api.get("/api/subscriptions");
       const data = res.data.subscriptions || res.data;
       setSubscriptions(Array.isArray(data) ? data : []);
     } catch (err) {

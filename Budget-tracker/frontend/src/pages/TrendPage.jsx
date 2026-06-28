@@ -32,13 +32,11 @@ import {
 } from "react-icons/fi";
 
 const TrendsPage = () => {
+  const { user, token } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [timeRange, setTimeRange] = useState("month");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const VITE_BASE_URL = import.meta.env.VITE_BASE_URL;
 
   const categories = [
     { id: 1, name: "Food & Dining", color: "#10b981" },
@@ -56,38 +54,22 @@ const TrendsPage = () => {
     return cat ? cat.name : "Unknown";
   };
 
-  const token = localStorage.getItem("token");
-  
-  const axiosConfig = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-
   useEffect(() => {
-    fetchUser();
     fetchTransactions();
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     document.body.style.overflow = mobileSidebarOpen ? "hidden" : "auto";
   }, [mobileSidebarOpen]);
 
-  const fetchUser = async () => {
-    if (!token) return;
-    try {
-      const res = await axios.get(`${VITE_BASE_URL}/api/users/me`, axiosConfig);
-      setUser(res.data.user);
-    } catch (err) {
-      console.error("Fetch user error:", err);
-    }
-  };
-
   const fetchTransactions = async () => {
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
-      const res = await axios.get(`${VITE_BASE_URL}/api/transactions`, axiosConfig);
+      const res = await api.get("/api/transactions");
       const data = res.data.transactions || res.data;
       setTransactions(Array.isArray(data) ? data : []);
     } catch (err) {

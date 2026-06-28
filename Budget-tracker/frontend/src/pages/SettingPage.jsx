@@ -1,9 +1,9 @@
-// SettingsPage.jsx - FinTrack Theme
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
+import { useAuth, api } from "../context/AuthContext";
 import { motion } from "framer-motion";
 import { 
   FiUser, FiLock, FiSettings, FiShield, FiDatabase, FiInfo, 
@@ -13,7 +13,7 @@ import {
 
 const SettingsPage = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user, token } = useAuth();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -105,30 +105,24 @@ const SettingsPage = () => {
     { value: "analytics", label: "Analytics", description: "Start with analytics" }
   ];
 
-  const token = localStorage.getItem("token");
-  
-  const axiosConfig = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-
   useEffect(() => {
     fetchUser();
     fetchUserPreferences();
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     document.body.style.overflow = mobileSidebarOpen ? "hidden" : "auto";
   }, [mobileSidebarOpen]);
 
   const fetchUser = async () => {
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
-      const res = await axios.get(`${VITE_BASE_URL}/api/users/me`, axiosConfig);
-      const userData = res.data.user;
-      setUser(userData);
+      const res = await api.get("/api/users/me");
+      const userData = res.data.user || res.data;
       setProfileData({
         first_name: userData.first_name || "",
         last_name: userData.last_name || "",
@@ -149,11 +143,11 @@ const SettingsPage = () => {
   const fetchUserPreferences = async () => {
     if (!token) return;
     try {
-      const res = await axios.get(`${VITE_BASE_URL}/api/users/preferences`, axiosConfig);
+      const res = await api.get("/api/users/preferences");
       const prefs = res.data.preferences || {};
       setPreferences(prev => ({ ...prev, ...prefs }));
       
-      const privacyRes = await axios.get(`${VITE_BASE_URL}/api/users/privacy`, axiosConfig);
+      const privacyRes = await api.get("/api/users/privacy");
       const privacy = privacyRes.data.settings || {};
       setPrivacySettings(prev => ({ ...prev, ...privacy }));
     } catch (err) {

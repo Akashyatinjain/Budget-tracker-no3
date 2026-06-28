@@ -2,21 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { FaUser, FaBell, FaShieldAlt, FaPalette, FaDownload, FaArrowLeft } from 'react-icons/fa';
 import { MdCurrencyExchange } from 'react-icons/md';
 import { useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import toast from 'react-hot-toast';
 import Header from '../components/Header';
 import AdvancedSidebar from '../components/Sidebar';
 import { motion } from 'framer-motion';
 import { FiZap, FiShield, FiClock, FiTrendingUp } from 'react-icons/fi';
+import { useAuth, api } from '../context/AuthContext';
 
 const AccountHolderPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user: authUser, token } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [message, setMessage] = useState({ type: "", text: "" });
 
   const [formData, setFormData] = useState({
     first_name: "",
@@ -28,25 +29,19 @@ const AccountHolderPage = () => {
     timezone: "Asia/Kolkata"
   });
 
-  const VITE_BASE_URL = import.meta.env.VITE_BASE_URL;
-  const token = localStorage.getItem("token");
-  
-  const axiosConfig = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-
   useEffect(() => {
     fetchUser();
-  }, []);
+  }, [token]);
 
   const fetchUser = async () => {
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
-      const res = await axios.get(`${VITE_BASE_URL}/api/users/me`, axiosConfig);
-      const userData = res.data.user;
+      const res = await api.get("/api/users/me");
+      const userData = res.data.user || res.data;
       setUser(userData);
       setFormData({
         first_name: userData.first_name || "",
@@ -59,7 +54,7 @@ const AccountHolderPage = () => {
       });
     } catch (err) {
       console.error("Fetch user error:", err.response?.data || err.message);
-      showMessage("error", "Failed to load user data");
+      toast.error("Failed to load user data");
     } finally {
       setLoading(false);
     }
@@ -69,21 +64,16 @@ const AccountHolderPage = () => {
     navigate(-1);
   };
 
-  const showMessage = (type, text) => {
-    setMessage({ type, text });
-    setTimeout(() => setMessage({ type: "", text: "" }), 5000);
-  };
-
   const handleSave = async () => {
     try {
       setLoading(true);
-      await axios.put(`${VITE_BASE_URL}/api/users/profile`, formData, axiosConfig);
-      showMessage("success", "Profile updated successfully");
+      await api.put("/api/users/profile", formData);
+      toast.success("Profile updated successfully");
       setIsEditing(false);
       fetchUser();
     } catch (error) {
       console.error("Update profile error:", error);
-      showMessage("error", "Failed to update profile");
+      toast.error("Failed to update profile");
     } finally {
       setLoading(false);
     }
