@@ -218,7 +218,7 @@ export default function HomePage() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate("/sign-up")}
-              className="px-4 sm:px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-xs sm:text-sm font-semibold rounded-2xl transition-all duration-200 text-white shadow-lg shadow-emerald-600/25"
+              className="hidden sm:inline-flex px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold rounded-2xl transition-all duration-200 text-white shadow-lg shadow-emerald-600/25"
             >
               Get Started
             </motion.button>
@@ -226,7 +226,7 @@ export default function HomePage() {
             {/* Mobile Hamburger Toggle Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2.5 rounded-2xl bg-white/5 border border-white/10 text-gray-300 hover:text-white transition-colors"
+              className="lg:hidden p-2.5 rounded-2xl bg-white/10 dark:bg-white/5 border border-slate-700/50 dark:border-white/10 text-slate-200 dark:text-gray-300 hover:text-white transition-colors"
               aria-label="Toggle Mobile Menu"
             >
               {mobileMenuOpen ? <FiX className="text-xl" /> : <FiMenu className="text-xl" />}
@@ -299,16 +299,16 @@ export default function HomePage() {
 
               <button
                 onClick={() => document.getElementById('demo').scrollIntoView({ behavior: 'smooth' })}
-                className="w-full sm:w-auto px-7 py-3.5 sm:py-4 border border-white/20 hover:border-emerald-500/50 hover:bg-white/5 rounded-2xl font-medium text-sm sm:text-lg transition-all text-center"
+                className="w-full sm:w-auto px-7 py-3.5 sm:py-4 bg-slate-800/80 hover:bg-slate-700/90 border border-slate-700/60 rounded-2xl font-semibold text-sm sm:text-lg transition-all text-center text-white shadow-md"
               >
                 Explore Live Features
               </button>
             </div>
 
-            <div className="pt-5 border-t border-white/10 flex flex-wrap items-center gap-3 sm:gap-8 text-xs sm:text-sm text-gray-400">
-              <div className="flex items-center gap-1.5 sm:gap-2"><FaCheckCircle className="text-emerald-400 flex-shrink-0" /> No credit card required</div>
-              <div className="flex items-center gap-1.5 sm:gap-2"><FaCheckCircle className="text-emerald-400 flex-shrink-0" /> 14-day full access</div>
-              <div className="flex items-center gap-1.5 sm:gap-2"><FaCheckCircle className="text-emerald-400 flex-shrink-0" /> Instant Setup</div>
+            <div className="pt-5 border-t border-white/10 flex flex-wrap items-center gap-x-4 gap-y-2.5 text-xs sm:text-sm text-gray-400">
+              <div className="flex items-center gap-1.5"><FaCheckCircle className="text-emerald-400 flex-shrink-0" /> No credit card required</div>
+              <div className="flex items-center gap-1.5"><FaCheckCircle className="text-emerald-400 flex-shrink-0" /> 14-day full access</div>
+              <div className="flex items-center gap-1.5"><FaCheckCircle className="text-emerald-400 flex-shrink-0" /> Instant Setup</div>
             </div>
           </div>
 
