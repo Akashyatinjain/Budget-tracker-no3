@@ -676,15 +676,21 @@ const ReportsPage = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
                     data={reportData.monthlyData}
-                    margin={{ top: 10, right: 30, left: 8, bottom: 0 }}
+                    margin={{ top: 20, right: 15, left: -10, bottom: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" stroke="#1a252f" vertical={false} />
                     <XAxis dataKey="month" stroke="#64748b" fontSize={12} tickLine={false} />
                     <YAxis
-                      width={84}
+                      width={52}
                       stroke="#64748b"
                       tick={{ fontSize: 11, fill: "#64748b" }}
-                      tickFormatter={(v) => `₹${(v/1000).toFixed(0)}k`}
+                      tickFormatter={(v) => {
+                        if (!v || v === 0) return "₹0";
+                        if (v >= 10000000) return `₹${(v / 10000000).toFixed(1)}Cr`;
+                        if (v >= 100000) return `₹${(v / 100000).toFixed(0)}L`;
+                        if (v >= 1000) return `₹${(v / 1000).toFixed(0)}k`;
+                        return `₹${v}`;
+                      }}
                       domain={[0, yAxisTop]}
                       ticks={yAxisTicks}
                       axisLine={false}
@@ -732,15 +738,21 @@ const ReportsPage = () => {
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={reportData.categorySpending}
-                      margin={{ top: 10, right: 30, left: 48, bottom: 0 }}
+                      margin={{ top: 20, right: 15, left: -10, bottom: 0 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="#1a252f" vertical={false} />
                       <XAxis dataKey="name" stroke="#64748b" angle={-30} textAnchor="end" height={60} fontSize={11} axisLine={false} />
                       <YAxis
-                        width={80}
+                        width={52}
                         stroke="#64748b"
                         tick={{ fontSize: 11, fill: "#64748b" }}
-                        tickFormatter={(v) => `₹${(v/1000).toFixed(0)}k`}
+                        tickFormatter={(v) => {
+                          if (!v || v === 0) return "₹0";
+                          if (v >= 10000000) return `₹${(v / 10000000).toFixed(1)}Cr`;
+                          if (v >= 100000) return `₹${(v / 100000).toFixed(0)}L`;
+                          if (v >= 1000) return `₹${(v / 1000).toFixed(0)}k`;
+                          return `₹${v}`;
+                        }}
                         axisLine={false}
                       />
                       <Tooltip

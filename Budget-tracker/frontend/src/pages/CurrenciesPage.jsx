@@ -397,26 +397,26 @@ const CurrenciesPage = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-3 gap-5"
+            className="grid grid-cols-1 sm:grid-cols-3 gap-4"
           >
             {statCards.map((stat, i) => (
               <motion.div
                 key={i}
                 variants={itemVariants}
-                className={`relative overflow-hidden bg-gradient-to-br ${stat.bg} border border-white/10 rounded-2xl p-6 shadow-lg hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 group`}
-                whileHover={{ y: -4, scale: 1.01 }}
+                className={`relative overflow-hidden bg-gradient-to-br ${stat.bg} border border-white/10 rounded-2xl p-5 md:p-6 shadow-lg hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 group`}
+                whileHover={{ y: -2 }}
               >
                 {/* Glow Effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
-                <div className="relative flex items-center gap-4">
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-10 shadow-lg`}>
+                <div className="relative flex items-center gap-3.5">
+                  <div className={`p-3 rounded-2xl bg-gradient-to-br ${stat.color} bg-opacity-15 shadow-md flex-shrink-0`}>
                     <stat.icon className="w-5 h-5 text-emerald-400" />
                   </div>
-                  <div>
-                    <p className="text-sm text-slate-300 font-medium">{stat.label}</p>
-                    <h3 className="text-lg font-bold text-white mt-0.5">{stat.value}</h3>
-                    <p className="text-xs text-slate-500 mt-0.5">{stat.subtext}</p>
+                  <div className="min-w-0">
+                    <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">{stat.label}</p>
+                    <h3 className="text-base sm:text-lg font-black text-white mt-1 truncate">{stat.value}</h3>
+                    <p className="text-[11px] text-slate-400 font-medium mt-0.5">{stat.subtext}</p>
                   </div>
                 </div>
               </motion.div>
@@ -427,22 +427,22 @@ const CurrenciesPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Currencies List */}
             <motion.div
-              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
+              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-4 sm:p-6 shadow-lg hover:border-emerald-500/20 transition-all"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="p-2.5 rounded-2xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20 flex-shrink-0">
                   <Globe className="w-5 h-5 text-emerald-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-white">Your Currencies</h3>
-                <span className="ml-auto text-xs text-slate-500 bg-[#1a2228] px-3 py-1 rounded-full">
+                <h3 className="text-base md:text-lg font-semibold text-white">Your Currencies</h3>
+                <span className="ml-auto text-xs text-slate-400 bg-[#1a2228] px-2.5 py-1 rounded-full font-medium">
                   {currencies.length} total
                 </span>
               </div>
               
-              <div className="space-y-2 max-h-[35rem] overflow-y-auto scrollbar-thin scrollbar-thumb-emerald-500/20 pr-1">
+              <div className="space-y-3 max-h-[35rem] overflow-y-auto custom-scrollbar pr-1">
                 {currencies.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12 text-slate-500">
                     <Globe className="w-12 h-12 mb-3 opacity-20" />
@@ -456,54 +456,51 @@ const CurrenciesPage = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.03 }}
-                    className={`p-4 rounded-xl border transition-all ${
+                    className={`p-3.5 sm:p-4 rounded-xl border transition-all ${
                       currency.is_default 
                         ? "bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border-emerald-500/30" 
                         : "bg-white/[0.03] backdrop-blur-xl border-white/10 hover:border-emerald-500/30 hover:bg-white/[0.05]"
                     }`}
-                    whileHover={{ x: 4 }}
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="p-2.5 rounded-xl bg-white/[0.03] flex-shrink-0">
-                          <span className="text-2xl">{getCurrencyFlag(currency.code)}</span>
+                        <div className="p-2 rounded-xl bg-white/[0.03] flex-shrink-0">
+                          <span className="text-xl sm:text-2xl">{getCurrencyFlag(currency.code)}</span>
                         </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-semibold text-white text-sm truncate">{currency.name}</h4>
-                            <span className="text-xs text-slate-500 font-mono bg-[#1a2228] px-2 py-0.5 rounded-full">{currency.code}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-semibold text-white text-xs sm:text-sm truncate">{currency.name}</h4>
+                            <span className="text-[10px] text-slate-400 font-mono bg-[#1a2228] px-2 py-0.5 rounded-full">{currency.code}</span>
                           </div>
-                          <p className="text-xs text-slate-500 mt-1">
-                            <span className="text-slate-400">{getCurrencySymbol(currency.code)}</span> • Rate: {formatRateToINR(currency.rate_to_inr)} INR
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            <span>{getCurrencySymbol(currency.code)}</span> • Rate: {formatRateToINR(currency.rate_to_inr)} INR
                           </p>
-                          <p className="text-xs text-emerald-400/80 mt-0.5 font-mono">
+                          <p className="text-[11px] text-emerald-400/90 mt-0.5 font-mono">
                             1 INR = {(1 / (safeNumber(currency.rate_to_inr, 1))).toFixed(4)} {currency.code}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 sm:flex-shrink-0">
+                      <div className="flex items-center gap-2 flex-wrap sm:flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
                         {currency.is_default ? (
-                          <span className="px-3 py-1.5 bg-emerald-500/20 text-emerald-400 text-xs rounded-full flex items-center gap-1.5 font-medium border border-emerald-500/20">
-                            <CheckCircle className="w-3 h-3" />
-                            Default
+                          <span className="px-3 py-1.5 bg-emerald-500/20 text-emerald-400 text-xs rounded-full flex items-center gap-1.5 font-semibold border border-emerald-500/20">
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            Default Currency
                           </span>
                         ) : (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 w-full sm:w-auto">
                             <motion.button
-                              whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                               onClick={() => handleSetDefault(currency.code)}
-                              className="px-3 py-1.5 bg-gradient-to-br from-teal-500/20 to-cyan-500/20 text-teal-400 text-xs rounded-lg hover:from-teal-500/30 hover:to-cyan-500/30 transition-all flex items-center gap-1 border border-teal-500/20"
+                              className="flex-1 sm:flex-initial px-3 py-1.5 bg-gradient-to-br from-teal-500/20 to-cyan-500/20 text-teal-300 text-xs rounded-lg hover:from-teal-500/30 hover:to-cyan-500/30 transition-all flex items-center justify-center gap-1 border border-teal-500/20 font-medium"
                             >
                               <Star className="w-3 h-3" />
                               Set Default
                             </motion.button>
                             <motion.button
-                              whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                               onClick={() => handleRemoveCurrency(currency.code)}
-                              className="px-3 py-1.5 bg-rose-500/10 text-rose-400 text-xs rounded-lg hover:bg-rose-500/20 transition-all flex items-center gap-1 border border-rose-500/10"
+                              className="px-3 py-1.5 bg-rose-500/10 text-rose-400 text-xs rounded-lg hover:bg-rose-500/20 transition-all flex items-center justify-center gap-1 border border-rose-500/20 font-medium"
                             >
                               <Trash2 className="w-3 h-3" />
                               Remove
@@ -519,27 +516,27 @@ const CurrenciesPage = () => {
 
             {/* Currency Converter */}
             <motion.div
-              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
+              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-4 sm:p-6 shadow-lg hover:border-emerald-500/20 transition-all"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-400/20 to-blue-400/20">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="p-2.5 rounded-2xl bg-gradient-to-br from-cyan-400/20 to-blue-400/20 flex-shrink-0">
                   <ArrowRightLeft className="w-5 h-5 text-cyan-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-white">Currency Converter</h3>
-                <span className="ml-auto text-xs text-slate-500 bg-[#1a2228] px-3 py-1 rounded-full">Live rates</span>
+                <h3 className="text-base md:text-lg font-semibold text-white">Currency Converter</h3>
+                <span className="ml-auto text-xs text-slate-400 bg-[#1a2228] px-2.5 py-1 rounded-full font-medium">Live rates</span>
               </div>
               
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-slate-400 mb-2 font-medium">From</label>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">From</label>
                     <select
                       value={converter.fromCurrency}
                       onChange={(e) => setConverter({ ...converter, fromCurrency: e.target.value })}
-                      className="w-full p-3 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none"
+                      className="w-full p-3 bg-[#0a1017] border border-white/15 rounded-xl text-white text-sm font-medium focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none cursor-pointer"
                     >
                       {currencies.map((c) => (
                         <option key={`from-${c.code}`} value={c.code} className="bg-[#0d141a]">
@@ -550,11 +547,11 @@ const CurrenciesPage = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-slate-400 mb-2 font-medium">To</label>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">To</label>
                     <select
                       value={converter.toCurrency}
                       onChange={(e) => setConverter({ ...converter, toCurrency: e.target.value })}
-                      className="w-full p-3 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none"
+                      className="w-full p-3 bg-[#0a1017] border border-white/15 rounded-xl text-white text-sm font-medium focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none cursor-pointer"
                     >
                       {currencies.map((c) => (
                         <option key={`to-${c.code}`} value={c.code} className="bg-[#0d141a]">
@@ -566,27 +563,27 @@ const CurrenciesPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2 font-medium">Amount</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Amount</label>
                   <input
                     type="number"
                     step="any"
                     placeholder="Enter amount"
                     value={converter.amount}
                     onChange={(e) => setConverter({ ...converter, amount: e.target.value })}
-                    className="w-full p-3 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                    className="w-full p-3 bg-[#0a1017] border border-white/15 rounded-xl text-white text-sm font-medium placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
                   />
                 </div>
 
-                <div className="p-5 bg-gradient-to-br from-emerald-500/10 to-teal-500/5 rounded-xl border border-emerald-500/20">
+                <div className="p-4 sm:p-5 bg-gradient-to-br from-emerald-500/10 to-teal-500/5 rounded-xl border border-emerald-500/20">
                   <div className="flex items-center gap-2 mb-2">
                     <DollarSign className="w-4 h-4 text-emerald-400" />
-                    <p className="text-sm text-slate-400 font-medium">Converted Amount</p>
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Converted Amount</p>
                   </div>
-                  <h4 className="text-xl md:text-2xl font-bold text-white mt-1">
+                  <div className="text-lg sm:text-xl md:text-2xl font-black text-white mt-1 flex flex-wrap items-center gap-1.5">
                     {convertedAmount ? (
                       <>
                         <span className="text-slate-400">{converter.amount} {converter.fromCurrency}</span>
-                        <span className="mx-2 text-emerald-400">=</span>
+                        <span className="text-emerald-400 font-bold">=</span>
                         <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
                           {convertedAmount} {converter.toCurrency}
                         </span>
@@ -594,8 +591,8 @@ const CurrenciesPage = () => {
                     ) : (
                       <span className="text-slate-600">—</span>
                     )}
-                  </h4>
-                  <p className="text-xs text-slate-500 mt-3 pt-3 border-t border-emerald-500/10">
+                  </div>
+                  <p className="text-xs text-slate-400 mt-3 pt-3 border-t border-emerald-500/10 font-medium">
                     Rate: 1 {converter.fromCurrency} = {getExchangeRate(converter.fromCurrency, converter.toCurrency)} {converter.toCurrency}
                   </p>
                 </div>

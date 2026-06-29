@@ -473,10 +473,10 @@ const NotificationsPage = () => {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
-                className={`p-2.5 rounded-xl border transition-all flex items-center gap-2 text-xs font-semibold ${
+                className={`flex-1 sm:flex-initial p-2.5 rounded-xl border transition-all flex items-center justify-center gap-2 text-xs font-semibold ${
                   soundEnabled 
                     ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
                     : "bg-white/5 border-white/10 text-slate-400 hover:text-white"
@@ -484,12 +484,12 @@ const NotificationsPage = () => {
                 title="Toggle Alert Sounds"
               >
                 {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-                <span className="hidden md:inline">{soundEnabled ? "Sound On" : "Muted"}</span>
+                <span>{soundEnabled ? "Sound On" : "Muted"}</span>
               </button>
 
               <button
                 onClick={() => setShowSettings(true)}
-                className="rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 font-semibold text-xs text-slate-300 hover:text-white hover:border-emerald-500/30 transition-all flex items-center gap-2 hover:bg-white/10 shadow-sm"
+                className="flex-1 sm:flex-initial rounded-xl bg-white/5 border border-white/10 px-3.5 py-2.5 font-semibold text-xs text-slate-300 hover:text-white hover:border-emerald-500/30 transition-all flex items-center justify-center gap-2 hover:bg-white/10 shadow-sm"
               >
                 <Settings size={15} />
                 Preferences
@@ -498,7 +498,7 @@ const NotificationsPage = () => {
               <button
                 onClick={markAllAsReadHandler}
                 disabled={notificationStats.unread === 0}
-                className="rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 px-4 py-2.5 font-semibold text-xs text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.02] transition-all disabled:opacity-50 flex items-center gap-2"
+                className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 px-4 py-2.5 font-semibold text-xs text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 <CheckCircle size={15} />
                 Mark All Read
@@ -511,7 +511,7 @@ const NotificationsPage = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="relative overflow-hidden bg-gradient-to-r from-purple-950/40 via-indigo-950/30 to-slate-900/60 backdrop-blur-2xl border border-purple-500/30 rounded-2xl p-5 shadow-xl"
+            className="relative overflow-hidden bg-gradient-to-r from-purple-950/40 via-indigo-950/30 to-slate-900/60 backdrop-blur-2xl border border-purple-500/30 rounded-2xl p-4 sm:p-5 shadow-xl"
           >
             <div className="absolute top-0 right-0 h-28 w-28 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
             
@@ -521,7 +521,7 @@ const NotificationsPage = () => {
                   <Brain className="w-6 h-6 animate-pulse" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="text-sm font-bold text-white">🧠 AI Daily Assistant Digest</h3>
                     <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30 font-semibold uppercase">Smart Summary</span>
                   </div>
@@ -545,24 +545,24 @@ const NotificationsPage = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-2 lg:grid-cols-4 gap-5"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4"
           >
             {statCards.map((stat, i) => (
               <motion.div
                 key={i}
                 variants={itemVariants}
-                className={`relative overflow-hidden bg-gradient-to-br ${stat.bg} border border-white/10 rounded-2xl p-6 shadow-lg hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 group`}
-                whileHover={{ y: -4, scale: 1.01 }}
+                className={`relative overflow-hidden bg-gradient-to-br ${stat.bg} border border-white/10 rounded-2xl p-5 md:p-6 shadow-lg hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 group`}
+                whileHover={{ y: -2 }}
               >
-                <div className="relative flex items-start justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">{stat.title}</p>
-                    <h2 className={`text-2xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mt-1`}>
+                <div className="relative flex items-center justify-between">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{stat.title}</p>
+                    <h2 className={`text-xl sm:text-2xl font-black bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mt-1 truncate`}>
                       {stat.value}
                     </h2>
-                    <p className="text-xs text-slate-400 mt-1.5">{stat.subtitle}</p>
+                    <p className="text-xs text-slate-400 mt-1 truncate">{stat.subtitle}</p>
                   </div>
-                  <div className={`p-3 rounded-xl bg-white/5 border border-white/10 shadow-md`}>
+                  <div className={`p-3 rounded-2xl bg-white/5 border border-white/10 shadow-md flex-shrink-0 ml-2`}>
                     <stat.icon className={`w-5 h-5 ${
                       String(stat.value).includes("✓") || stat.color.includes("emerald") ? "text-emerald-400" :
                       stat.color.includes("rose") ? "text-rose-400" :
@@ -579,14 +579,14 @@ const NotificationsPage = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-5 shadow-lg space-y-4"
+            className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-4 sm:p-5 shadow-lg space-y-4"
           >
             {/* Top Bar: Search Input */}
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search notifications by keyword, merchant, or category..."
+                placeholder="Search notifications..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-11 pr-10 py-3 bg-[#0a1017] border border-white/15 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-slate-500 shadow-inner"
@@ -602,31 +602,31 @@ const NotificationsPage = () => {
             </div>
 
             {/* Bottom Bar: Type Filter Pills */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs text-slate-400 mr-2 flex items-center gap-1.5 font-semibold uppercase tracking-wider">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar">
+              <span className="text-xs text-slate-400 mr-1 flex items-center gap-1.5 font-semibold uppercase tracking-wider flex-shrink-0">
                 <Filter className="w-3.5 h-3.5 text-emerald-400" />
-                Category Filter:
+                Filter:
               </span>
               <button
                 onClick={() => setFilter("all")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex-shrink-0 ${
                   filter === "all" 
                     ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/25" 
                     : "bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10"
                 }`}
               >
-                All Notifications
+                All
               </button>
               <button
                 onClick={() => setFilter("unread")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 flex-shrink-0 ${
                   filter === "unread" 
                     ? "bg-gradient-to-r from-rose-500 to-red-400 text-white shadow-md shadow-rose-500/25" 
                     : "bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <EyeOff className="w-3.5 h-3.5" />
-                Unread Only
+                Unread
               </button>
 
               {Object.entries(notificationTypes).map(([key, type]) => (
@@ -649,7 +649,7 @@ const NotificationsPage = () => {
 
           {/* ====== 6. Bulk Actions Controls Bar ====== */}
           {filteredNotifications.length > 0 && (
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-white/[0.03] border border-white/10 rounded-xl p-3 px-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/[0.03] border border-white/10 rounded-xl p-3.5 px-4 sm:px-5">
               <div className="flex items-center gap-3">
                 <button
                   onClick={toggleSelectAll}
@@ -665,24 +665,24 @@ const NotificationsPage = () => {
               </div>
 
               {selectedIds.length > 0 ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
                   <button
                     onClick={handleBulkMarkRead}
-                    className="px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/25 transition-all flex items-center gap-1.5"
+                    className="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/25 transition-all flex items-center justify-center gap-1.5"
                   >
                     <Check size={14} />
                     Mark Read
                   </button>
                   <button
                     onClick={handleBulkDelete}
-                    className="px-3 py-1.5 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs font-semibold hover:bg-rose-500/25 transition-all flex items-center gap-1.5"
+                    className="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs font-semibold hover:bg-rose-500/25 transition-all flex items-center justify-center gap-1.5"
                   >
                     <Trash2 size={14} />
                     Delete Selected
                   </button>
                   <button
                     onClick={exportNotificationsCSV}
-                    className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 text-xs font-semibold hover:bg-white/10 transition-all flex items-center gap-1.5"
+                    className="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 text-xs font-semibold hover:bg-white/10 transition-all flex items-center justify-center gap-1.5"
                   >
                     <Download size={14} />
                     Export CSV
@@ -745,7 +745,7 @@ const NotificationsPage = () => {
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.02 }}
-                            className={`p-5 transition-all group ${
+                            className={`p-4 sm:p-5 transition-all group ${
                               typeConfig.border
                             } border-l-4 ${
                               !notification.is_read 
@@ -753,8 +753,8 @@ const NotificationsPage = () => {
                                 : 'bg-transparent'
                             } ${isSelected ? 'bg-emerald-500/10' : 'hover:bg-white/[0.03]'}`}
                           >
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex items-start gap-4 flex-1 min-w-0">
+                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+                              <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
                                 {/* Selection Checkbox */}
                                 <button
                                   onClick={() => toggleSelect(notification.id)}
@@ -769,7 +769,7 @@ const NotificationsPage = () => {
 
                                 {/* 1. Contextual Type Icon & Emoji Pill */}
                                 <div 
-                                  className="p-3 rounded-2xl flex-shrink-0 shadow-inner border border-white/10 flex items-center justify-center text-xl relative"
+                                  className="p-2.5 rounded-xl flex-shrink-0 shadow-inner border border-white/10 flex items-center justify-center text-lg sm:text-xl relative"
                                   style={{ backgroundColor: typeConfig.color + '20' }}
                                 >
                                   <span>{typeConfig.emoji}</span>
@@ -777,7 +777,7 @@ const NotificationsPage = () => {
                                 
                                 <div className="flex-1 min-w-0 cursor-pointer" onClick={() => toggleExpand(notification.id)}>
                                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                                    <h4 className={`font-semibold text-sm ${!notification.is_read ? 'text-white font-bold' : 'text-slate-300'}`}>
+                                    <h4 className={`font-semibold text-xs sm:text-sm ${!notification.is_read ? 'text-white font-bold' : 'text-slate-300'}`}>
                                       {notification.title}
                                     </h4>
 
@@ -797,7 +797,7 @@ const NotificationsPage = () => {
                                   </div>
                                   
                                   {/* Message Preview */}
-                                  <p className={`text-slate-300 text-sm leading-relaxed ${!isExpanded ? 'line-clamp-2' : ''}`}>
+                                  <p className={`text-slate-300 text-xs sm:text-sm leading-relaxed ${!isExpanded ? 'line-clamp-2' : ''}`}>
                                     {notification.message}
                                   </p>
                                   
@@ -823,7 +823,7 @@ const NotificationsPage = () => {
                                     </motion.div>
                                   )}
 
-                                  <div className="flex items-center gap-4 text-xs text-slate-500 mt-2.5">
+                                  <div className="flex items-center gap-3 flex-wrap text-xs text-slate-500 mt-2.5">
                                     <span className="flex items-center gap-1.5 font-medium">
                                       <Clock className="w-3 h-3 text-slate-400" />
                                       {getTimeAgo(notification.created_at)}
@@ -833,7 +833,7 @@ const NotificationsPage = () => {
                                       onClick={(e) => { e.stopPropagation(); toggleExpand(notification.id); }}
                                       className="text-slate-400 hover:text-white transition flex items-center gap-1 font-medium"
                                     >
-                                      {isExpanded ? "Collapse Details" : "Expand Details"}
+                                      {isExpanded ? "Collapse" : "Expand"}
                                       {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                                     </button>
 
@@ -841,9 +841,9 @@ const NotificationsPage = () => {
                                       <a 
                                         href={notification.action_url}
                                         onClick={(e) => e.stopPropagation()}
-                                        className="text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1 font-semibold ml-auto"
+                                        className="text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1 font-semibold sm:ml-auto"
                                       >
-                                        Inspect Source Record
+                                        Inspect
                                         <ArrowRight className="w-3 h-3" />
                                       </a>
                                     )}
@@ -852,22 +852,24 @@ const NotificationsPage = () => {
                               </div>
                               
                               {/* Actions */}
-                              <div className="flex items-center gap-1 flex-shrink-0">
+                              <div className="flex items-center gap-1.5 flex-shrink-0 self-end sm:self-start pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5 w-full sm:w-auto justify-end">
                                 {!notification.is_read && (
                                   <button
                                     onClick={() => markAsReadHandler(notification.id)}
-                                    className="p-2 text-emerald-400 hover:bg-emerald-500/20 rounded-xl transition-all"
+                                    className="p-2 text-emerald-400 hover:bg-emerald-500/20 rounded-xl transition-all flex items-center gap-1 text-xs font-medium"
                                     title="Mark as read"
                                   >
                                     <Eye className="w-4 h-4" />
+                                    <span className="sm:hidden">Read</span>
                                   </button>
                                 )}
                                 <button
                                   onClick={() => deleteNotificationHandler(notification.id)}
-                                  className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all"
+                                  className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all flex items-center gap-1 text-xs font-medium"
                                   title="Delete notification"
                                 >
                                   <Trash2 className="w-4 h-4" />
+                                  <span className="sm:hidden">Delete</span>
                                 </button>
                               </div>
                             </div>

@@ -410,11 +410,11 @@ const TrendsPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-[#0b121e]/80 backdrop-blur-2xl border border-white/[0.06] rounded-2xl p-4.5 md:p-5 shadow-lg hover:border-purple-500/30 transition-all"
+            className="bg-[#0b121e]/80 backdrop-blur-2xl border border-white/[0.06] rounded-2xl p-5 md:p-6 shadow-lg hover:border-purple-500/30 transition-all"
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400">
+                <div className="p-2.5 rounded-2xl bg-purple-500/10 text-purple-400 flex-shrink-0">
                   <TrendingUp className="w-5 h-5" />
                 </div>
                 <div>
@@ -431,7 +431,7 @@ const TrendsPage = () => {
 
             <div className="h-[22rem]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 10, right: 15, left: 0, bottom: 5 }}>
+                <AreaChart data={chartData} margin={{ top: 20, right: 15, left: 5, bottom: 5 }}>
                   <defs>
                     <linearGradient id="colorInc3" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
@@ -440,11 +440,11 @@ const TrendsPage = () => {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1a252f" vertical={false} />
                   <XAxis dataKey="month" stroke="#4a5a6a" tick={{ fontSize: 11 }} tickLine={false} />
-                  <YAxis stroke="#4a5a6a" tick={{ fontSize: 11 }} tickLine={false} tickFormatter={(v) => `₹${(v/1000).toFixed(0)}k`} />
+                  <YAxis stroke="#4a5a6a" tick={{ fontSize: 11 }} tickLine={false} domain={[0, (dataMax) => Math.ceil(dataMax * 1.25 || 1000)]} tickFormatter={(v) => `₹${(v/1000).toFixed(0)}k`} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Area type="monotone" dataKey="income" stroke="#10b981" fill="url(#colorInc3)" strokeWidth={2.5} name="Income" />
-                  <Line type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={2.5} dot={{ r: 4 }} name="Expenses" />
-                  <Line type="monotone" dataKey="savings" stroke="#06b6d4" strokeWidth={2.5} strokeDasharray="4 4" dot={{ r: 4 }} name="Savings" />
+                  <Area type="monotone" dataKey="income" stroke="#10b981" fill="url(#colorInc3)" strokeWidth={2.5} name="Income" dot={{ r: 4, fill: "#10b981", strokeWidth: 2, stroke: "#ffffff" }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={2.5} dot={{ r: 4, fill: "#ef4444", strokeWidth: 2, stroke: "#ffffff" }} name="Expenses" />
+                  <Line type="monotone" dataKey="savings" stroke="#06b6d4" strokeWidth={2.5} strokeDasharray="4 4" dot={{ r: 4, fill: "#06b6d4", strokeWidth: 2, stroke: "#ffffff" }} name="Savings" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -458,11 +458,11 @@ const TrendsPage = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-[#0b121e]/80 backdrop-blur-2xl border border-white/[0.06] rounded-2xl p-4.5 md:p-5 shadow-lg hover:border-purple-500/30 transition-all flex flex-col justify-between"
+              className="bg-[#0b121e]/80 backdrop-blur-2xl border border-white/[0.06] rounded-2xl p-5 md:p-6 shadow-lg hover:border-purple-500/30 transition-all flex flex-col justify-between"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400">
+                  <div className="p-2.5 rounded-2xl bg-purple-500/10 text-purple-400 flex-shrink-0">
                     <Layers className="w-5 h-5" />
                   </div>
                   <h3 className="text-base md:text-lg font-semibold text-white">Category Dominance</h3>
@@ -474,10 +474,10 @@ const TrendsPage = () => {
 
               <div className="h-[18rem]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} margin={{ top: 10, right: 15, left: 0, bottom: 5 }}>
+                  <BarChart data={chartData} margin={{ top: 20, right: 15, left: 5, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#1a252f" vertical={false} />
                     <XAxis dataKey="month" stroke="#4a5a6a" tick={{ fontSize: 11 }} tickLine={false} />
-                    <YAxis stroke="#4a5a6a" tick={{ fontSize: 11 }} tickLine={false} tickFormatter={(v) => `₹${(v/1000).toFixed(0)}k`} />
+                    <YAxis stroke="#4a5a6a" tick={{ fontSize: 11 }} tickLine={false} domain={[0, (dataMax) => Math.ceil(dataMax * 1.25 || 1000)]} tickFormatter={(v) => `₹${(v/1000).toFixed(0)}k`} />
                     <Tooltip content={<CustomTooltip />} />
                     {categories.map((cat) => (
                       <Bar key={cat.id} dataKey={cat.name} stackId="a" fill={cat.color} radius={[4, 4, 0, 0]} />
@@ -492,10 +492,10 @@ const TrendsPage = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 }}
-              className="bg-[#0b121e]/80 backdrop-blur-2xl border border-white/[0.06] rounded-2xl p-4.5 md:p-5 shadow-lg hover:border-purple-500/30 transition-all flex flex-col justify-between"
+              className="bg-[#0b121e]/80 backdrop-blur-2xl border border-white/[0.06] rounded-2xl p-5 md:p-6 shadow-lg hover:border-purple-500/30 transition-all flex flex-col justify-between"
             >
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-xl bg-pink-500/10 text-pink-400">
+                <div className="p-2.5 rounded-2xl bg-pink-500/10 text-pink-400 flex-shrink-0">
                   <PieChartIcon className="w-5 h-5" />
                 </div>
                 <h3 className="text-base md:text-lg font-semibold text-white">Outflow Distribution &amp; Labels</h3>
@@ -503,14 +503,14 @@ const TrendsPage = () => {
 
               <div className="space-y-2.5">
                 {getCategoryDistribution().map((cat, idx) => (
-                  <div key={idx} className="p-3 rounded-xl bg-[#131b2a] border border-white/5 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color || "#8b5cf6" }} />
+                  <div key={idx} className="p-3.5 rounded-xl bg-[#131b2a] border border-white/10 flex items-center justify-between shadow-sm">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="w-3 h-3 rounded-full flex-shrink-0 shadow-sm" style={{ backgroundColor: cat.color || "#8b5cf6" }} />
                       <span className="text-xs font-bold text-white truncate">{cat.name}</span>
                     </div>
                     <div className="text-right flex-shrink-0 ml-2">
-                      <span className="text-xs font-black text-slate-200">₹{cat.amount.toLocaleString('en-IN')}</span>
-                      <span className="text-[10px] text-purple-300 font-bold ml-2">({cat.percentage}%)</span>
+                      <span className="text-xs font-black text-white">₹{cat.amount.toLocaleString('en-IN')}</span>
+                      <span className="text-[11px] text-purple-300 font-bold ml-2">({cat.percentage}%)</span>
                     </div>
                   </div>
                 ))}

@@ -596,7 +596,7 @@ const FinanceDashboard = () => {
                 <span className="ml-auto text-xs text-slate-500 bg-[#1a2228] px-2.5 py-1 rounded-full">Last 6 months</span>
               </div>
               <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={getMonthlyData()} margin={{ top: 20, right: 15, left: 10, bottom: 5 }}>
+                <AreaChart data={getMonthlyData()} margin={{ top: 20, right: 15, left: -10, bottom: 5 }}>
                   <defs>
                     <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%"  stopColor="#22c55e" stopOpacity={0.6} />
@@ -609,7 +609,19 @@ const FinanceDashboard = () => {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1a252f" vertical={false} />
                   <XAxis dataKey="month" stroke="#4a5a6a" fontSize={11} />
-                  <YAxis stroke="#4a5a6a" fontSize={11} domain={[0, (dataMax) => Math.ceil(dataMax * 1.25 || 1000)]} tickFormatter={(v) => `₹${(v/1000).toFixed(0)}k`} />
+                  <YAxis
+                    width={48}
+                    stroke="#4a5a6a"
+                    fontSize={11}
+                    domain={[0, (dataMax) => Math.ceil(dataMax * 1.25 || 1000)]}
+                    tickFormatter={(v) => {
+                      if (!v || v === 0) return "₹0";
+                      if (v >= 10000000) return `₹${(v / 10000000).toFixed(1)}Cr`;
+                      if (v >= 100000) return `₹${(v / 100000).toFixed(0)}L`;
+                      if (v >= 1000) return `₹${(v / 1000).toFixed(0)}k`;
+                      return `₹${v}`;
+                    }}
+                  />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "#0d141a",
@@ -641,10 +653,22 @@ const FinanceDashboard = () => {
                 <span className="ml-auto text-xs text-slate-500 bg-[#1a2228] px-2.5 py-1 rounded-full">This week</span>
               </div>
               <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={getWeeklySpending()} margin={{ top: 20, right: 15, left: 10, bottom: 5 }}>
+                <BarChart data={getWeeklySpending()} margin={{ top: 20, right: 15, left: -10, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1a252f" vertical={false} />
                   <XAxis dataKey="day" stroke="#4a5a6a" fontSize={11} />
-                  <YAxis stroke="#4a5a6a" fontSize={11} domain={[0, (dataMax) => Math.ceil(dataMax * 1.25 || 1000)]} tickFormatter={(v) => `₹${v}`} />
+                  <YAxis
+                    width={48}
+                    stroke="#4a5a6a"
+                    fontSize={11}
+                    domain={[0, (dataMax) => Math.ceil(dataMax * 1.25 || 1000)]}
+                    tickFormatter={(v) => {
+                      if (!v || v === 0) return "₹0";
+                      if (v >= 10000000) return `₹${(v / 10000000).toFixed(1)}Cr`;
+                      if (v >= 100000) return `₹${(v / 100000).toFixed(0)}L`;
+                      if (v >= 1000) return `₹${(v / 1000).toFixed(0)}k`;
+                      return `₹${v}`;
+                    }}
+                  />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "#0d141a",
@@ -715,14 +739,14 @@ const FinanceDashboard = () => {
                     </ResponsiveContainer>
                   </div>
 
-                  <div className="mt-3 space-y-1.5 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-emerald-500/20">
+                  <div className="mt-3 space-y-1.5 max-h-40 overflow-y-auto custom-scrollbar">
                     {expenseByCategory.map((category, index) => (
-                      <div key={index} className="flex items-center justify-between p-1.5 px-2 rounded-lg hover:bg-[#1a2228] transition-colors">
-                        <div className="flex items-center gap-2">
+                      <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-white/[0.03] border border-white/5 hover:bg-white/10 transition-colors">
+                        <div className="flex items-center gap-2 min-w-0">
                           <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: category.color }} />
-                          <span className="text-xs text-gray-300">{category.name}</span>
+                          <span className="text-xs text-slate-300 font-semibold truncate">{category.name}</span>
                         </div>
-                        <span className="text-xs text-emerald-300 font-medium">
+                        <span className="text-xs text-emerald-400 font-mono font-bold ml-2 flex-shrink-0">
                           ₹{category.value.toLocaleString("en-IN")}
                         </span>
                       </div>
