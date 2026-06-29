@@ -1,4 +1,4 @@
-// TrendsPage.jsx - FinTrack Theme
+// TrendsPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
@@ -20,16 +20,28 @@ import {
   ResponsiveContainer
 } from "recharts";
 import {
-  FiTrendingUp,
-  FiTrendingDown,
-  FiZap,
-  FiShield,
-  FiClock,
-  FiDownload,
-  FiPieChart,
-  FiBarChart2,
-  FiDollarSign
-} from "react-icons/fi";
+  AlertCircle,
+  TrendingUp,
+  TrendingDown,
+  Zap,
+  Shield,
+  Clock,
+  Download,
+  PieChart as PieChartIcon,
+  BarChart3,
+  DollarSign,
+  Sparkles,
+  Brain,
+  Lightbulb,
+  FileSpreadsheet,
+  FileOutput,
+  Target,
+  ArrowUp,
+  ArrowDown,
+  Activity,
+  Layers,
+  Eye
+} from "lucide-react";
 
 const TrendsPage = () => {
   const { user, token } = useAuth();
@@ -39,14 +51,14 @@ const TrendsPage = () => {
   const [loading, setLoading] = useState(true);
 
   const categories = [
-    { id: 1, name: "Food & Dining", color: "#10b981" },
-    { id: 2, name: "Shopping", color: "#8b5cf6" },
-    { id: 3, name: "Transportation", color: "#06b6d4" },
-    { id: 4, name: "Entertainment", color: "#eab308" },
-    { id: 5, name: "Bills & Utilities", color: "#14b8a6" },
-    { id: 6, name: "Healthcare", color: "#ef4444" },
-    { id: 7, name: "Salary", color: "#22c55e" },
-    { id: 8, name: "Investment", color: "#3b82f6" },
+    { id: 1, name: "Food & Dining",    color: "#f43f5e", icon: "🍕" },
+    { id: 2, name: "Shopping",         color: "#8b5cf6", icon: "🛍️" },
+    { id: 3, name: "Transportation",   color: "#06b6d4", icon: "🚗" },
+    { id: 4, name: "Entertainment",    color: "#f59e0b", icon: "🎬" },
+    { id: 5, name: "Bills & Utilities",color: "#84cc16", icon: "💡" },
+    { id: 6, name: "Healthcare",       color: "#ef4444", icon: "🏥" },
+    { id: 7, name: "Salary",           color: "#22c55e", icon: "💰" },
+    { id: 8, name: "Investment",       color: "#3b82f6", icon: "📈" },
   ];
 
   const getCategoryName = (id) => {
@@ -60,6 +72,7 @@ const TrendsPage = () => {
 
   useEffect(() => {
     document.body.style.overflow = mobileSidebarOpen ? "hidden" : "auto";
+    return () => { document.body.style.overflow = "auto"; };
   }, [mobileSidebarOpen]);
 
   const fetchTransactions = async () => {
@@ -228,32 +241,53 @@ const TrendsPage = () => {
     const suggestions = [];
     
     if (insights.mostSpentCategory && insights.mostSpentCategory.percentage > 40) {
-      suggestions.push(`Your spending on ${insights.mostSpentCategory.name} is ${insights.mostSpentCategory.percentage}% of total expenses. Consider diversifying your spending.`);
+      suggestions.push({
+        text: `Your spending on ${insights.mostSpentCategory.name} is ${insights.mostSpentCategory.percentage}% of total expenses. Consider diversifying your spending.`,
+        type: "warning"
+      });
     }
     
     if (insights.savingsGrowth < 0) {
-      suggestions.push("Your savings decreased this month. Review your recent expenses to identify areas for improvement.");
+      suggestions.push({
+        text: "Your savings decreased this month. Review your recent expenses to identify areas for improvement.",
+        type: "warning"
+      });
     }
     
     if (insights.topGrowingCategory && insights.topGrowingCategory.growth > 50) {
-      suggestions.push(`Your ${insights.topGrowingCategory.name} spending grew by ${insights.topGrowingCategory.growth}%. Make sure this aligns with your budget goals.`);
+      suggestions.push({
+        text: `Your ${insights.topGrowingCategory.name} spending grew by ${insights.topGrowingCategory.growth}%. Make sure this aligns with your budget goals.`,
+        type: "info"
+      });
     }
 
     if (chartData.length > 0) {
       const currentData = chartData[chartData.length - 1];
       const subscriptionExpense = currentData["Bills & Utilities"] || 0;
       if (subscriptionExpense > 1000) {
-        suggestions.push(`You're spending ₹${subscriptionExpense} on subscriptions. Review recurring payments to optimize costs.`);
+        suggestions.push({
+          text: `You're spending ₹${subscriptionExpense} on subscriptions. Review recurring payments to optimize costs.`,
+          type: "tip"
+        });
       }
     }
 
     if (suggestions.length === 0) {
       if (chartData.length === 0) {
-        suggestions.push("Start adding transactions to see personalized insights and trends.");
+        suggestions.push({
+          text: "Start adding transactions to see personalized insights and trends.",
+          type: "info"
+        });
       } else if (insights.currentSavings > 0) {
-        suggestions.push("Your financial trends look healthy! Keep monitoring your spending patterns.");
+        suggestions.push({
+          text: "Your financial trends look healthy! Keep monitoring your spending patterns.",
+          type: "success"
+        });
       } else {
-        suggestions.push("Track your income and expenses regularly to build better financial habits.");
+        suggestions.push({
+          text: "Track your income and expenses regularly to build better financial habits.",
+          type: "info"
+        });
       }
     }
 
@@ -265,7 +299,7 @@ const TrendsPage = () => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#111118] border border-white/10 p-3 rounded-xl shadow-lg">
+        <div className="bg-[#0d141a] border border-[#2a333d] p-3 rounded-xl shadow-lg">
           <p className="text-white font-semibold text-sm">{label}</p>
           {payload.map((entry, index) => (
             <p key={index} style={{ color: entry.color }} className="text-sm">
@@ -296,9 +330,9 @@ const TrendsPage = () => {
       const res = await api.get("/api/reports/export/excel", {
         responseType: "arraybuffer",
       });
-      const filename = `budget-report-${new Date().toISOString().replace(/[:.]/g, "-")}.xlsx`;
+      const filename = `trends-report-${new Date().toISOString().replace(/[:.]/g, "-")}.xlsx`;
       downloadBlob(res.data, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
-      toast.success("Excel report downloaded!");
+      toast.success("📊 Excel report downloaded!");
     } catch (err) {
       console.error("Export Excel error:", err);
       toast.error("Failed to export Excel report.");
@@ -313,9 +347,9 @@ const TrendsPage = () => {
       const res = await api.get("/api/reports/export/pdf", {
         responseType: "arraybuffer",
       });
-      const filename = `budget-report-${new Date().toISOString().replace(/[:.]/g, "-")}.pdf`;
+      const filename = `trends-report-${new Date().toISOString().replace(/[:.]/g, "-")}.pdf`;
       downloadBlob(res.data, "application/pdf", filename);
-      toast.success("PDF report downloaded!");
+      toast.success("📄 PDF report downloaded!");
     } catch (err) {
       console.error("Export PDF error:", err);
       toast.error("Failed to export PDF report.");
@@ -324,30 +358,89 @@ const TrendsPage = () => {
     }
   };
 
+  // ====== Animation Variants ======
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 300, damping: 24 },
+    },
+  };
+
+  // ====== Insight Cards Data ======
+  const insightCards = [
+    {
+      title: "Top Growing Category",
+      value: insights.topGrowingCategory.name,
+      subtitle: `${insights.topGrowingCategory.growth > 0 ? '+' : ''}${insights.topGrowingCategory.growth}% from last month`,
+      icon: TrendingUp,
+      color: "from-emerald-400 to-teal-300",
+      trend: insights.topGrowingCategory.growth >= 0 ? "up" : "down",
+      bg: "from-emerald-500/10 to-teal-500/5"
+    },
+    {
+      title: "Most Spent Category",
+      value: insights.mostSpentCategory.name,
+      subtitle: `₹${insights.mostSpentCategory.amount.toLocaleString('en-IN')} (${insights.mostSpentCategory.percentage}% of expenses)`,
+      icon: DollarSign,
+      color: "from-rose-400 to-red-300",
+      trend: "down",
+      bg: "from-rose-500/10 to-red-500/5"
+    },
+    {
+      title: "Savings Trend",
+      value: `${insights.savingsGrowth > 0 ? '+' : ''}${insights.savingsGrowth}%`,
+      subtitle: `Current savings: ₹${insights.currentSavings.toLocaleString('en-IN')}`,
+      icon: Target,
+      color: insights.savingsGrowth >= 0 ? "from-emerald-400 to-teal-300" : "from-rose-400 to-red-300",
+      trend: insights.savingsGrowth >= 0 ? "up" : "down",
+      bg: insights.savingsGrowth >= 0 ? "from-emerald-500/10 to-teal-500/5" : "from-rose-500/10 to-red-500/5"
+    }
+  ];
+
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-[#0a0a0f] text-gray-100">
-        <AdvancedSidebar
-          user={user}
-          mobileOpen={mobileSidebarOpen}
-          onMobileClose={() => setMobileSidebarOpen(false)}
-        />
-        <div className="flex-1 flex items-center justify-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="flex items-center gap-3 text-emerald-400"
-          >
-            <FiTrendingUp className="w-6 h-6" />
-            <span>Loading trends...</span>
-          </motion.div>
-        </div>
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-[#030712] via-[#07101f] to-[#050816] text-emerald-300">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="flex items-center gap-3"
+        >
+          <TrendingUp className="w-6 h-6" />
+          <span className="text-slate-400">Loading trends...</span>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-[#0a0a0f] text-gray-100">
+    <div className="relative flex min-h-screen overflow-hidden bg-gradient-to-br from-[#030712] via-[#07101f] to-[#050816] text-white">
+
+      {/* Animated Background */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-[-180px] left-[-120px] h-[420px] w-[420px] rounded-full bg-emerald-500/15 blur-[140px] animate-pulse" />
+        <div className="absolute bottom-[-150px] right-[-120px] h-[420px] w-[420px] rounded-full bg-cyan-500/15 blur-[150px] animate-pulse" />
+        <div className="absolute top-1/2 left-1/2 h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-teal-400/10 blur-[120px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,.05),transparent_40%)]" />
+      </div>
+
+      {/* Floating particles */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute top-20 left-1/4 h-2 w-2 rounded-full bg-emerald-400 animate-pulse"/>
+        <div className="absolute bottom-40 right-20 h-2 w-2 rounded-full bg-cyan-400 animate-ping"/>
+        <div className="absolute top-72 right-1/3 h-3 w-3 rounded-full bg-teal-400 animate-pulse"/>
+      </div>
+
+      {/* Sidebar */}
       <AdvancedSidebar
         user={user}
         mobileOpen={mobileSidebarOpen}
@@ -357,351 +450,404 @@ const TrendsPage = () => {
       <div className="flex-1 flex flex-col min-h-screen">
         <Header onMobileToggle={() => setMobileSidebarOpen(true)} />
 
-        <main className="p-4 md:p-6 mt-16 flex flex-col gap-6">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-0"
-          >
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl md:text-3xl font-bold text-white">Financial Trends</h1>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-medium text-emerald-400 uppercase tracking-wider">
-                  <FiZap className="w-3 h-3" />
-                  AI Insights Active
-                </span>
-              </div>
-              <p className="text-gray-400 text-sm">Visualize your spending, income, and savings patterns</p>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <select
-                value={timeRange}
-                onChange={(e) => setTimeRange(e.target.value)}
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
-              >
-                <option value="week">Last 7 Days</option>
-                <option value="month">Last Month</option>
-                <option value="quarter">Last 6 Months</option>
-                <option value="year">This Year</option>
-              </select>
-            </div>
-          </motion.div>
+        <main className="p-4 md:p-8 mt-16 flex flex-col gap-6 max-w-[1600px] mx-auto w-full">
 
-          {/* AI Insight Banner */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-center justify-between"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/20">
-                <FiTrendingUp className="w-5 h-5 text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-white">Trend Analysis</p>
-                <p className="text-xs text-gray-400">
-                  {chartData.length > 0 
-                    ? `Monthly average income: ₹${insights.averageIncome.toLocaleString('en-IN')} · Expenses: ₹${insights.averageExpenses.toLocaleString('en-IN')}`
-                    : 'Add transactions to see trend analysis'}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 text-xs text-gray-400">
-              <span className="flex items-center gap-1">
-                <FiShield className="w-3 h-3 text-emerald-400" />
-                Secure
-              </span>
-              <span className="hidden sm:inline">
-                <FiClock className="w-3 h-3 inline mr-1" />
-                Real-time
-              </span>
-            </div>
-          </motion.div>
+          {/* Glow orbs */}
+          <div className="absolute left-1/2 top-0 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[180px]" />
+          <div className="absolute bottom-0 right-0 h-[450px] w-[450px] rounded-full bg-cyan-500/10 blur-[180px]" />
 
-          {/* Overview Cards - FinTrack Style */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              {
-                title: "Top Growing Category",
-                value: insights.topGrowingCategory.name,
-                subtitle: `${insights.topGrowingCategory.growth > 0 ? '+' : ''}${insights.topGrowingCategory.growth}% from last month`,
-                icon: FiTrendingUp,
-                color: "text-emerald-400",
-                bgColor: "bg-emerald-500/20"
-              },
-              {
-                title: "Most Spent Category",
-                value: insights.mostSpentCategory.name,
-                subtitle: `₹${insights.mostSpentCategory.amount.toLocaleString('en-IN')} (${insights.mostSpentCategory.percentage}% of expenses)`,
-                icon: FiDollarSign,
-                color: "text-rose-400",
-                bgColor: "bg-rose-500/20"
-              },
-              {
-                title: "Savings Trend",
-                value: `${insights.savingsGrowth > 0 ? '+' : ''}${insights.savingsGrowth}%`,
-                subtitle: `Current savings: ₹${insights.currentSavings.toLocaleString('en-IN')}`,
-                icon: FiBarChart2,
-                color: insights.savingsGrowth >= 0 ? "text-emerald-400" : "text-rose-400",
-                bgColor: insights.savingsGrowth >= 0 ? "bg-emerald-500/20" : "bg-rose-500/20"
-              }
-            ].map((card, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + index * 0.05 }}
-                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-5 shadow-lg"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 ${card.bgColor} rounded-lg`}>
-                    <card.icon className={`w-5 h-5 ${card.color}`} />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">{card.title}</p>
-                    <h3 className={`text-lg font-semibold ${card.color}`}>
-                      {card.value}
-                    </h3>
-                    <p className="text-xs text-gray-500">{card.subtitle}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Income vs Expense Chart */}
+          {/* ====== Page Header with Gradient ====== */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 shadow-lg"
+            transition={{ duration: 0.5 }}
+            className="relative overflow-hidden rounded-[32px] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-emerald-500/[0.03] backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,.45)] p-8"
           >
-            <div className="flex items-center gap-2 mb-6">
-              <FiTrendingUp className="text-emerald-400 w-5 h-5" />
-              <h3 className="text-lg font-semibold text-white">Income vs Expenses</h3>
+            <div className="absolute -top-28 -right-20 h-80 w-80 rounded-full bg-emerald-500/15 blur-[120px]" />
+            <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-cyan-500/15 blur-[120px]" />
+
+            <div className="relative flex flex-col lg:flex-row justify-between gap-6">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-emerald-300 text-sm font-semibold">
+                  <Brain className="w-4 h-4" />
+                  AI Trend Analysis
+                </div>
+                <h1 className="mt-6 text-5xl font-black leading-tight">
+                  <span className="bg-gradient-to-r from-white via-emerald-200 to-cyan-300 bg-clip-text text-transparent">
+                    Financial
+                  </span>
+                  <br/>
+                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                    Trends
+                  </span>
+                </h1>
+                <p className="mt-5 max-w-xl text-slate-400 leading-8">
+                  Visualize your spending, income, and savings patterns.
+                  Spot trends before they become problems.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-end gap-3">
+                <select
+                  value={timeRange}
+                  onChange={(e) => setTimeRange(e.target.value)}
+                  className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl px-5 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none"
+                >
+                  <option value="week" className="bg-[#0d141a]">Last 7 Days</option>
+                  <option value="month" className="bg-[#0d141a]">Last Month</option>
+                  <option value="quarter" className="bg-[#0d141a]">Last 6 Months</option>
+                  <option value="year" className="bg-[#0d141a]">This Year</option>
+                </select>
+              </div>
             </div>
-            <div className="h-[22rem] sm:h-[20rem] md:h-[24rem]">
+          </motion.div>
+
+          {/* ====== Trend Summary Banner ====== */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="relative overflow-hidden bg-gradient-to-br from-emerald-500/10 to-teal-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-5 shadow-lg hover:border-emerald-500/40 transition-all"
+            whileHover={{ y: -1 }}
+          >
+            <div className="absolute -top-10 -right-10 h-20 w-20 rounded-full bg-emerald-500/20 blur-[40px]" />
+            
+            <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20">
+                  <Activity className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">Trend Analysis</p>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {chartData.length > 0 
+                      ? <>Monthly avg: <span className="text-emerald-400 font-medium">₹{insights.averageIncome.toLocaleString('en-IN')}</span> income · <span className="text-rose-400 font-medium">₹{insights.averageExpenses.toLocaleString('en-IN')}</span> expenses</>
+                      : 'Add transactions to see trend analysis'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 text-xs text-slate-500">
+                <span className="flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                  Secure
+                </span>
+                <span className="hidden sm:flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" />
+                  Real-time
+                </span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* ====== Insight Cards ====== */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 md:grid-cols-3 gap-5"
+          >
+            {insightCards.map((card, i) => (
+              <motion.div
+                key={i}
+                variants={itemVariants}
+                className={`relative overflow-hidden bg-gradient-to-br ${card.bg} border border-white/10 rounded-2xl p-6 shadow-lg hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 group`}
+                whileHover={{ y: -4, scale: 1.01 }}
+              >
+                {/* Glow Effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                
+                <div className="relative">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className={`p-2.5 rounded-xl bg-gradient-to-br ${card.color} bg-opacity-10 shadow-lg`}>
+                      <card.icon className={`w-5 h-5 ${
+                        card.trend === "up" ? "text-emerald-400" : "text-rose-400"
+                      }`} />
+                    </div>
+                    <p className="text-sm text-slate-300 font-medium">{card.title}</p>
+                  </div>
+                  <h3 className={`text-xl font-bold bg-gradient-to-r ${card.color} bg-clip-text text-transparent mb-1`}>
+                    {card.value}
+                  </h3>
+                  <p className="text-xs text-slate-500">{card.subtitle}</p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* ====== Income vs Expense Area Chart ====== */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20">
+                <TrendingUp className="w-5 h-5 text-emerald-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white">Income vs Expenses</h3>
+              <span className="ml-auto text-xs text-slate-500 bg-[#1a2228] px-3 py-1 rounded-full">6 Month Trend</span>
+            </div>
+            <div className="h-[25rem] sm:h-[22rem] md:h-[26rem]">
               {chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart
                     data={chartData}
                     margin={{ top: 10, right: 15, left: 0, bottom: 5 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1a252f" vertical={false} />
                     <XAxis
                       dataKey="month"
-                      stroke="#6b7280"
-                      tick={{ fontSize: 12 }}
+                      stroke="#4a5a6a"
+                      tick={{ fontSize: 11 }}
                       tickLine={false}
                     />
                     <YAxis
-                      stroke="#6b7280"
-                      tick={{ fontSize: 12 }}
+                      stroke="#4a5a6a"
+                      tick={{ fontSize: 11 }}
                       tickLine={false}
-                      tickFormatter={(value) =>
-                        value >= 100000 ? `${(value / 100000).toFixed(1)}L` : value
-                      }
+                      tickFormatter={(value) => `₹${(value/1000).toFixed(0)}k`}
                       domain={[0, "auto"]}
                     />
                     <Tooltip content={<CustomTooltip />} />
-                    <Legend wrapperStyle={{ fontSize: "12px", color: "#9ca3af", paddingTop: "5px" }} />
+                    <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
                     <defs>
-                      <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.6} />
-                        <stop offset="95%" stopColor="#10B981" stopOpacity={0.1} />
+                      <linearGradient id="colorIncomeTrends" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.6} />
+                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
                       </linearGradient>
-                      <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#EF4444" stopOpacity={0.6} />
-                        <stop offset="95%" stopColor="#EF4444" stopOpacity={0.1} />
+                      <linearGradient id="colorExpensesTrends" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.6} />
+                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <Area
                       type="monotone"
                       dataKey="income"
-                      stroke="#10B981"
-                      fill="url(#colorIncome)"
-                      strokeWidth={2}
+                      stroke="#22c55e"
+                      fill="url(#colorIncomeTrends)"
+                      strokeWidth={3}
                       name="Income"
                     />
                     <Area
                       type="monotone"
                       dataKey="expenses"
-                      stroke="#EF4444"
-                      fill="url(#colorExpenses)"
-                      strokeWidth={2}
+                      stroke="#ef4444"
+                      fill="url(#colorExpensesTrends)"
+                      strokeWidth={3}
                       name="Expenses"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex items-center justify-center h-full text-gray-400">
-                  No data available for the selected period
+                <div className="flex flex-col items-center justify-center h-full text-slate-500">
+                  <TrendingUp className="w-12 h-12 mb-3 opacity-20" />
+                  <p className="text-sm">No data available for the selected period</p>
                 </div>
               )}
             </div>
           </motion.div>
 
+          {/* ====== Bottom Charts Row ====== */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Savings Growth Chart */}
+            {/* Savings Growth Line Chart */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 shadow-lg"
+              transition={{ delay: 0.4 }}
+              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
             >
-              <div className="flex items-center gap-2 mb-6">
-                <FiBarChart2 className="text-emerald-400 w-5 h-5" />
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-400/20 to-indigo-400/20">
+                  <Target className="w-5 h-5 text-blue-400" />
+                </div>
                 <h3 className="text-lg font-semibold text-white">Savings Growth</h3>
               </div>
-              <div className="h-[22rem] sm:h-[20rem] md:h-[24rem]">
+              <div className="h-[25rem] sm:h-[22rem] md:h-[24rem]">
                 {chartData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                       data={chartData}
                       margin={{ top: 10, right: 15, left: 0, bottom: 5 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1a252f" vertical={false} />
                       <XAxis
                         dataKey="month"
-                        stroke="#6b7280"
-                        tick={{ fontSize: 12 }}
+                        stroke="#4a5a6a"
+                        tick={{ fontSize: 11 }}
                         tickLine={false}
                       />
                       <YAxis
-                        stroke="#6b7280"
-                        tick={{ fontSize: 12 }}
+                        stroke="#4a5a6a"
+                        tick={{ fontSize: 11 }}
                         tickLine={false}
-                        tickFormatter={(value) =>
-                          value >= 100000 ? `${(value / 100000).toFixed(1)}L` : value
-                        }
+                        tickFormatter={(value) => `₹${(value/1000).toFixed(0)}k`}
                         domain={[0, "auto"]}
                       />
                       <Tooltip content={<CustomTooltip />} />
-                      <Legend wrapperStyle={{ fontSize: "12px", color: "#9ca3af", paddingTop: "5px" }} />
-                      <defs>
-                        <linearGradient id="colorSavings" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.7} />
-                          <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1} />
-                        </linearGradient>
-                      </defs>
+                      <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
                       <Line
                         type="monotone"
                         dataKey="savings"
-                        stroke="#3B82F6"
+                        stroke="#3b82f6"
                         strokeWidth={3}
-                        dot={{ r: 4, fill: "#3B82F6", strokeWidth: 2, stroke: "#0a0a0f" }}
-                        activeDot={{ r: 6, fill: "#60A5FA" }}
+                        dot={{ r: 5, fill: "#3b82f6", strokeWidth: 2, stroke: "#0a0e12" }}
+                        activeDot={{ r: 7, fill: "#60a5fa", strokeWidth: 2, stroke: "#0a0e12" }}
                         name="Savings"
                       />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center h-full text-gray-400">
-                    No savings data available
+                  <div className="flex flex-col items-center justify-center h-full text-slate-500">
+                    <Target className="w-12 h-12 mb-3 opacity-20" />
+                    <p className="text-sm">No savings data available</p>
                   </div>
                 )}
               </div>
             </motion.div>
 
-            {/* Category Trend Comparison */}
+            {/* Category Breakdown Stacked Bar */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 shadow-lg"
+              transition={{ delay: 0.5 }}
+              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
             >
-              <div className="flex items-center gap-2 mb-6">
-                <FiPieChart className="text-emerald-400 w-5 h-5" />
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-purple-400/20 to-violet-400/20">
+                  <Layers className="w-5 h-5 text-purple-400" />
+                </div>
                 <h3 className="text-lg font-semibold text-white">Category Breakdown</h3>
               </div>
-              <div className="h-[25rem] sm:h-[22rem] md:h-[24rem]">
+              <div className="h-[27rem] sm:h-[24rem] md:h-[26rem]">
                 {chartData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={chartData}
                       margin={{ top: 10, right: 15, left: 0, bottom: 5 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1a252f" vertical={false} />
                       <XAxis
                         dataKey="month"
-                        stroke="#6b7280"
-                        tick={{ fontSize: 12 }}
+                        stroke="#4a5a6a"
+                        tick={{ fontSize: 11 }}
                         tickLine={false}
                       />
                       <YAxis
-                        stroke="#6b7280"
-                        tick={{ fontSize: 12 }}
+                        stroke="#4a5a6a"
+                        tick={{ fontSize: 11 }}
                         tickLine={false}
-                        tickFormatter={(value) =>
-                          value >= 100000 ? `${(value / 100000).toFixed(1)}L` : value
-                        }
+                        tickFormatter={(value) => `₹${(value/1000).toFixed(0)}k`}
                       />
                       <Tooltip content={<CustomTooltip />} />
-                      <Legend wrapperStyle={{ fontSize: "12px", color: "#9ca3af", paddingTop: "5px" }} />
-                      <Bar dataKey="Food & Dining" stackId="a" fill="#10b981" name="Food & Dining" radius={[6, 6, 0, 0]} />
-                      <Bar dataKey="Shopping" stackId="a" fill="#8b5cf6" name="Shopping" radius={[6, 6, 0, 0]} />
-                      <Bar dataKey="Transportation" stackId="a" fill="#06b6d4" name="Transportation" radius={[6, 6, 0, 0]} />
-                      <Bar dataKey="Bills & Utilities" stackId="a" fill="#14b8a6" name="Bills & Utilities" radius={[6, 6, 0, 0]} />
-                      <Bar dataKey="Investment" stackId="a" fill="#3b82f6" name="Investment" radius={[6, 6, 0, 0]} />
+                      <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "10px" }} />
+                      <Bar dataKey="Food & Dining"    stackId="a" fill="#f43f5e" name="Food & Dining"    radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="Shopping"         stackId="a" fill="#8b5cf6" name="Shopping"         radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="Transportation"   stackId="a" fill="#06b6d4" name="Transportation"   radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="Bills & Utilities" stackId="a" fill="#84cc16" name="Bills & Utilities" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="Investment"       stackId="a" fill="#3b82f6" name="Investment"       radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center h-full text-gray-400">
-                    No category data available
+                  <div className="flex flex-col items-center justify-center h-full text-slate-500">
+                    <Layers className="w-12 h-12 mb-3 opacity-20" />
+                    <p className="text-sm">No category data available</p>
                   </div>
                 )}
               </div>
             </motion.div>
           </div>
 
-          {/* AI Insights & Suggestions */}
+          {/* ====== AI Insights & Suggestions ====== */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-5 shadow-lg"
+            transition={{ delay: 0.6 }}
+            className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
           >
-            <div className="flex items-center gap-2 mb-4">
-              <FiZap className="text-emerald-400 w-5 h-5" />
-              <h3 className="text-lg font-semibold text-white">💡 AI Insights & Suggestions</h3>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-yellow-400/20 to-orange-400/20">
+                <Lightbulb className="w-5 h-5 text-yellow-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white">AI Insights & Suggestions</h3>
+              <span className="ml-auto text-xs text-slate-500 bg-[#1a2228] px-3 py-1 rounded-full flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 text-emerald-400" />
+                Powered by AI
+              </span>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {aiSuggestions.map((suggestion, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.6 + index * 0.1 }}
-                  className="flex items-start gap-3 p-3 bg-emerald-500/5 rounded-xl border border-emerald-500/10"
+                  transition={{ delay: 0.7 + index * 0.1 }}
+                  className={`p-4 rounded-xl border transition-all flex items-start gap-3 ${
+                    suggestion.type === "warning" 
+                      ? "bg-gradient-to-br from-yellow-500/10 to-orange-500/5 border-yellow-500/20" 
+                      : suggestion.type === "success"
+                      ? "bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border-emerald-500/20"
+                      : suggestion.type === "tip"
+                      ? "bg-gradient-to-br from-blue-500/10 to-indigo-500/5 border-blue-500/20"
+                      : "bg-gradient-to-br from-purple-500/10 to-violet-500/5 border-purple-500/20"
+                  }`}
+                  whileHover={{ x: 4 }}
                 >
-                  <span className="text-emerald-400 mt-0.5">💭</span>
-                  <p className="text-gray-300 text-sm">{suggestion}</p>
+                  <div className={`p-1.5 rounded-lg flex-shrink-0 ${
+                    suggestion.type === "warning" ? "bg-yellow-500/20" :
+                    suggestion.type === "success" ? "bg-emerald-500/20" :
+                    suggestion.type === "tip" ? "bg-blue-500/20" : "bg-purple-500/20"
+                  }`}>
+                    {suggestion.type === "warning" ? (
+                      <AlertCircle className="w-3.5 h-3.5 text-yellow-400" />
+                    ) : suggestion.type === "success" ? (
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : suggestion.type === "tip" ? (
+                      <Lightbulb className="w-3.5 h-3.5 text-blue-400" />
+                    ) : (
+                      <Brain className="w-3.5 h-3.5 text-purple-400" />
+                    )}
+                  </div>
+                  <p className="text-slate-300 text-sm leading-relaxed">{suggestion.text}</p>
                 </motion.div>
               ))}
             </div>
           </motion.div>
 
-          {/* Export Buttons */}
+          {/* ====== Export Buttons ====== */}
           <div className="flex justify-end gap-3">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               onClick={exportExcel}
-              className="px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-xl font-medium hover:bg-white/10 transition-all duration-200 flex items-center gap-2 text-sm"
+              className="rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 px-5 py-3 font-semibold text-slate-300 hover:text-white hover:border-emerald-500/30 transition-all shadow-lg flex items-center gap-2"
             >
-              <FiDownload className="w-4 h-4" />
+              <FileSpreadsheet size={16} />
               Export Excel
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               onClick={exportPDF}
-              className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-400 text-white rounded-xl font-medium hover:from-emerald-600 hover:to-teal-500 transition-all duration-200 shadow-lg shadow-emerald-500/20 flex items-center gap-2 text-sm"
+              className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-5 py-3 font-semibold shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/60 transition-all flex items-center gap-2"
             >
-              <FiDownload className="w-4 h-4" />
+              <FileOutput size={16} />
               Export PDF
-            </button>
+            </motion.button>
           </div>
+
+          {/* ====== Footer Branding ====== */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="text-center py-6 border-t border-white/10"
+          >
+            <p className="text-xs text-slate-500">
+              <span className="text-emerald-400 font-medium">FinTrack</span> — Trusted by finance professionals across India
+            </p>
+          </motion.div>
+
         </main>
       </div>
     </div>
