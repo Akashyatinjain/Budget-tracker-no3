@@ -165,9 +165,9 @@ export default function HomePage() {
       <div className="fixed inset-0 z-0 pointer-events-none">
         <Particles
           particleColors={currentTheme === "light" ? ["#059669", "#475569", "#0284c7"] : ["#10b981", "#64748b", "#0ea5e9"]}
-          particleCount={80}
+          particleCount={40}
           speed={0.08}
-          particleBaseSize={60}
+          particleBaseSize={50}
           alphaParticles={true}
         />
       </div>
@@ -270,19 +270,19 @@ export default function HomePage() {
       </nav>
 
       {/* 🚀 Hero Section */}
-      <section className="pt-36 pb-20 relative z-10">
-        <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 grid lg:grid-cols-2 gap-16 items-center">
-          <div className="space-y-8 text-left">
-            <div className="inline-flex items-center gap-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs sm:text-sm font-medium px-4 py-2 rounded-full backdrop-blur-md">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              The Complete Financial Management Suite for India
+      <section className="pt-28 sm:pt-36 pb-12 sm:pb-20 relative z-10">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+          <div className="space-y-6 sm:space-y-8 text-left">
+            <div className="inline-flex items-center gap-2 sm:gap-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs sm:text-sm font-medium px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full backdrop-blur-md">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0"></span>
+              <span className="truncate">The Complete Financial Management Suite</span>
             </div>
 
             <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold leading-[1.15] sm:leading-[1.1] tracking-tight text-white">
               Take complete control of your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">Financial Future</span>
             </h1>
 
-            <p className="text-base sm:text-xl text-gray-400 max-w-xl leading-relaxed">
+            <p className="text-sm sm:text-xl text-gray-400 max-w-xl leading-relaxed">
               Track expenses, automate category budgets, monitor subscriptions, and analyze long-term financial trends with bank-grade precision.
             </p>
 
@@ -291,7 +291,7 @@ export default function HomePage() {
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.96 }}
                 onClick={() => navigate("/sign-up")}
-                className="w-full sm:w-auto px-8 py-3.5 sm:py-4 bg-emerald-600 hover:bg-emerald-500 font-semibold rounded-2xl flex items-center justify-center gap-3 text-base sm:text-lg transition-all text-white shadow-xl shadow-emerald-600/30"
+                className="w-full sm:w-auto px-8 py-3.5 sm:py-4 bg-emerald-600 hover:bg-emerald-500 font-semibold rounded-2xl flex items-center justify-center gap-3 text-sm sm:text-lg transition-all text-white shadow-xl shadow-emerald-600/30"
               >
                 Start Your Free Trial
                 <FaArrowRight className="text-sm" />
@@ -299,16 +299,16 @@ export default function HomePage() {
 
               <button
                 onClick={() => document.getElementById('demo').scrollIntoView({ behavior: 'smooth' })}
-                className="w-full sm:w-auto px-7 py-3.5 sm:py-4 border border-white/20 hover:border-emerald-500/50 hover:bg-white/5 rounded-2xl font-medium text-base sm:text-lg transition-all text-center"
+                className="w-full sm:w-auto px-7 py-3.5 sm:py-4 border border-white/20 hover:border-emerald-500/50 hover:bg-white/5 rounded-2xl font-medium text-sm sm:text-lg transition-all text-center"
               >
                 Explore Live Features
               </button>
             </div>
 
-            <div className="pt-6 border-t border-white/10 flex flex-wrap items-center gap-4 sm:gap-8 text-xs sm:text-sm text-gray-400">
-              <div className="flex items-center gap-2"><FaCheckCircle className="text-emerald-400 flex-shrink-0" /> No credit card required</div>
-              <div className="flex items-center gap-2"><FaCheckCircle className="text-emerald-400 flex-shrink-0" /> 14-day full access</div>
-              <div className="flex items-center gap-2"><FaCheckCircle className="text-emerald-400 flex-shrink-0" /> Instant Setup</div>
+            <div className="pt-5 border-t border-white/10 flex flex-wrap items-center gap-3 sm:gap-8 text-xs sm:text-sm text-gray-400">
+              <div className="flex items-center gap-1.5 sm:gap-2"><FaCheckCircle className="text-emerald-400 flex-shrink-0" /> No credit card required</div>
+              <div className="flex items-center gap-1.5 sm:gap-2"><FaCheckCircle className="text-emerald-400 flex-shrink-0" /> 14-day full access</div>
+              <div className="flex items-center gap-1.5 sm:gap-2"><FaCheckCircle className="text-emerald-400 flex-shrink-0" /> Instant Setup</div>
             </div>
           </div>
 
@@ -320,10 +320,10 @@ export default function HomePage() {
             transition={{ duration: 0.7 }}
             className="relative"
           >
-            <div className="bg-[#111827] border border-gray-700/80 rounded-3xl overflow-hidden shadow-2xl shadow-emerald-950/20 backdrop-blur-xl">
+            <div className="bg-[#111827] border border-gray-700/80 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl shadow-emerald-950/20 backdrop-blur-xl">
               {/* Tab Header Bar */}
-              <div className="bg-[#0F172A] px-4 py-3 flex items-center justify-between border-b border-gray-700/80 overflow-x-auto custom-scrollbar">
-                <div className="flex items-center gap-2">
+              <div className="bg-[#0F172A] px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between border-b border-gray-700/80 overflow-x-auto custom-scrollbar">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   {[
                     { id: "overview", label: "Overview" },
                     { id: "transactions", label: "Transactions" },
@@ -333,7 +333,7 @@ export default function HomePage() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveDemoTab(tab.id)}
-                      className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                         activeDemoTab === tab.id
                           ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
                           : "text-gray-400 hover:text-white hover:bg-white/5"
@@ -343,13 +343,13 @@ export default function HomePage() {
                     </button>
                   ))}
                 </div>
-                <span className="text-xs text-emerald-400 font-mono hidden sm:block px-3 py-1 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                <span className="text-[11px] text-emerald-400 font-mono hidden sm:block px-2.5 py-1 bg-emerald-500/10 rounded-lg border border-emerald-500/20 whitespace-nowrap ml-2">
                   Live Preview
                 </span>
               </div>
 
               {/* Dynamic Showcase Content */}
-              <div className="p-6 sm:p-8 space-y-6">
+              <div className="p-4 sm:p-8 space-y-4 sm:space-y-6">
                 {activeDemoTab === "overview" && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2">
@@ -383,20 +383,20 @@ export default function HomePage() {
                 {activeDemoTab === "transactions" && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
                     <div className="flex justify-between items-center mb-1">
-                      <h4 className="text-sm font-semibold text-gray-300">Recent Cashflow Activity</h4>
-                      <span className="text-xs text-emerald-400 font-medium">Auto-Categorized</span>
+                      <h4 className="text-xs sm:text-sm font-semibold text-gray-300">Recent Cashflow Activity</h4>
+                      <span className="text-[11px] sm:text-xs text-emerald-400 font-medium">Auto-Categorized</span>
                     </div>
                     {[
-                      { name: "Salary Credit - TechCorp India", category: "Income", amount: "+₹1,45,000", type: "in", date: "Today, 10:30 AM" },
+                      { name: "Salary Credit - TechCorp India", category: "Income", amount: "+₹1,45,000", type: "in", date: "Today" },
                       { name: "Reliance Fresh Supermarket", category: "Groceries", amount: "-₹4,850", type: "out", date: "Yesterday" },
-                      { name: "Zerodha Mutual Fund SIP", category: "Investment", amount: "-₹25,000", type: "out", date: "28 Mar 2026" },
+                      { name: "Zerodha Mutual Fund SIP", category: "Investment", amount: "-₹25,000", type: "out", date: "28 Mar" },
                     ].map((tx, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-3.5 bg-[#1F2937]/80 rounded-xl border border-white/5">
-                        <div>
-                          <p className="text-xs font-semibold text-white">{tx.name}</p>
-                          <p className="text-[11px] text-gray-400 mt-0.5">{tx.category} • {tx.date}</p>
+                      <div key={idx} className="flex items-center justify-between gap-3 p-3 sm:p-3.5 bg-[#1F2937]/80 rounded-xl border border-white/5">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold text-white truncate">{tx.name}</p>
+                          <p className="text-[10px] sm:text-[11px] text-gray-400 mt-0.5 truncate">{tx.category} • {tx.date}</p>
                         </div>
-                        <span className={`text-xs font-bold ${tx.type === "in" ? "text-emerald-400" : "text-gray-300"}`}>
+                        <span className={`text-xs font-bold flex-shrink-0 ${tx.type === "in" ? "text-emerald-400" : "text-gray-300"}`}>
                           {tx.amount}
                         </span>
                       </div>
@@ -407,18 +407,18 @@ export default function HomePage() {
                 {activeDemoTab === "budgets" && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                     <div className="flex justify-between items-center mb-1">
-                      <h4 className="text-sm font-semibold text-gray-300">Category Budget Controls</h4>
-                      <span className="text-xs text-orange-400 font-medium">2 Active Alerts</span>
+                      <h4 className="text-xs sm:text-sm font-semibold text-gray-300">Category Budget Controls</h4>
+                      <span className="text-[11px] sm:text-xs text-orange-400 font-medium">2 Active Alerts</span>
                     </div>
                     {[
                       { category: "Food & Dining", spent: "₹17,600", limit: "₹20,000", percent: 88, color: "bg-orange-500" },
                       { category: "Shopping & Lifestyle", spent: "₹12,400", limit: "₹15,000", percent: 82, color: "bg-amber-500" },
                       { category: "Utilities & Bills", spent: "₹8,200", limit: "₹12,000", percent: 68, color: "bg-emerald-500" },
                     ].map((b, idx) => (
-                      <div key={idx} className="p-3.5 bg-[#1F2937]/80 rounded-xl border border-white/5 space-y-2">
+                      <div key={idx} className="p-3 sm:p-3.5 bg-[#1F2937]/80 rounded-xl border border-white/5 space-y-2">
                         <div className="flex justify-between text-xs font-medium">
-                          <span className="text-white">{b.category}</span>
-                          <span className="text-gray-400">{b.spent} / {b.limit} ({b.percent}%)</span>
+                          <span className="text-white truncate pr-2">{b.category}</span>
+                          <span className="text-gray-400 flex-shrink-0">{b.spent} / {b.limit}</span>
                         </div>
                         <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
                           <div className={`h-full ${b.color} rounded-full`} style={{ width: `${b.percent}%` }}></div>
@@ -431,20 +431,20 @@ export default function HomePage() {
                 {activeDemoTab === "subscriptions" && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
                     <div className="flex justify-between items-center mb-1">
-                      <h4 className="text-sm font-semibold text-gray-300">Active Recurring Subscriptions</h4>
-                      <span className="text-xs text-purple-400 font-medium">₹4,290 / mo</span>
+                      <h4 className="text-xs sm:text-sm font-semibold text-gray-300">Active Recurring Subscriptions</h4>
+                      <span className="text-[11px] sm:text-xs text-purple-400 font-medium">₹4,290 / mo</span>
                     </div>
                     {[
-                      { title: "Netflix Premium 4K", cost: "₹649 / mo", due: "Renews in 3 days", status: "Active" },
-                      { title: "Amazon Web Services (AWS)", cost: "₹2,840 / mo", due: "Renews on Apr 5", status: "Active" },
-                      { title: "Spotify Family Duo", cost: "₹179 / mo", due: "Renews on Apr 12", status: "Active" },
+                      { title: "Netflix Premium 4K", cost: "₹649 / mo", due: "Renews in 3 days" },
+                      { title: "Amazon Web Services (AWS)", cost: "₹2,840 / mo", due: "Renews on Apr 5" },
+                      { title: "Spotify Family Duo", cost: "₹179 / mo", due: "Renews on Apr 12" },
                     ].map((sub, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-3.5 bg-[#1F2937]/80 rounded-xl border border-white/5">
-                        <div>
-                          <p className="text-xs font-semibold text-white">{sub.title}</p>
-                          <p className="text-[11px] text-emerald-400 mt-0.5">{sub.due}</p>
+                      <div key={idx} className="flex items-center justify-between gap-3 p-3 sm:p-3.5 bg-[#1F2937]/80 rounded-xl border border-white/5">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold text-white truncate">{sub.title}</p>
+                          <p className="text-[10px] sm:text-[11px] text-emerald-400 mt-0.5 truncate">{sub.due}</p>
                         </div>
-                        <span className="text-xs font-bold text-white">{sub.cost}</span>
+                        <span className="text-xs font-bold text-white flex-shrink-0">{sub.cost}</span>
                       </div>
                     ))}
                   </motion.div>
@@ -461,13 +461,13 @@ export default function HomePage() {
       </section>
 
       {/* 📊 High Impact Stats Bar */}
-      <section className="py-16 bg-black/40 border-y border-white/5 relative z-10">
-        <div className="max-w-screen-2xl mx-auto px-6 lg:px-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+      <section className="py-10 sm:py-16 bg-black/40 border-y border-white/5 relative z-10">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
             {stats.map((stat, i) => (
-              <div key={i} className="space-y-2">
-                <div className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight">{stat.value}</div>
-                <div className="text-gray-400 text-sm font-medium">{stat.label}</div>
+              <div key={i} className="space-y-1 sm:space-y-2">
+                <div className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">{stat.value}</div>
+                <div className="text-gray-400 text-xs sm:text-sm font-medium">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -475,18 +475,18 @@ export default function HomePage() {
       </section>
 
       {/* 🛠️ Comprehensive Website Features Section */}
-      <section id="features" className="py-28 relative z-10">
-        <div className="max-w-screen-2xl mx-auto px-6 lg:px-12">
-          <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
-            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-white">
+      <section id="features" className="py-16 sm:py-28 relative z-10">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12">
+          <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-20 space-y-3 sm:space-y-4">
+            <h2 className="text-2xl sm:text-5xl font-bold tracking-tight text-white">
               Everything you need to <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">Master Money</span>
             </h2>
-            <p className="text-gray-400 text-lg">
+            <p className="text-gray-400 text-sm sm:text-lg">
               Explore the full suite of modules built specifically for individuals, professionals, and wealth builders.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {websiteFeatures.map((feature, i) => (
               <motion.div
                 key={feature.id}
@@ -494,7 +494,7 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
                 viewport={{ once: true }}
-                className="bg-[#111827] border border-gray-700/80 hover:border-emerald-500/50 rounded-3xl p-8 transition-all duration-300 group flex flex-col justify-between hover:shadow-xl hover:shadow-emerald-950/20"
+                className="bg-[#111827] border border-gray-700/80 hover:border-emerald-500/50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 transition-all duration-300 group flex flex-col justify-between hover:shadow-xl hover:shadow-emerald-950/20"
               >
                 <div>
                   <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-6 group-hover:scale-110 transition-transform duration-300">
@@ -519,33 +519,33 @@ export default function HomePage() {
       </section>
 
       {/* 🧮 Interactive Wealth Growth Calculator Widget */}
-      <section id="calculator" className="py-24 bg-gradient-to-b from-black/60 to-[#0A0F1C] border-y border-white/5 relative z-10">
-        <div className="max-w-screen-xl mx-auto px-6 lg:px-12">
-          <div className="grid lg:grid-cols-12 gap-12 items-center">
-            <div className="lg:col-span-5 space-y-6 text-left">
-              <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold px-4 py-2 rounded-full">
+      <section id="calculator" className="py-16 sm:py-24 bg-gradient-to-b from-black/60 to-[#0A0F1C] border-y border-white/5 relative z-10">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-12">
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            <div className="lg:col-span-5 space-y-5 sm:space-y-6 text-left">
+              <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full">
                 <FaCalculator /> Interactive Forecast Engine
               </div>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white leading-tight">
+              <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-white leading-tight">
                 See how smart budgeting accelerates your <span className="text-emerald-400">Wealth Growth</span>
               </h2>
-              <p className="text-gray-400 text-base leading-relaxed">
+              <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
                 By tracking daily leakages and staying under budget, consistent monthly savings compounded over time generate life-changing wealth.
               </p>
-              <div className="p-5 bg-[#111827] border border-gray-700/80 rounded-2xl space-y-3 text-xs text-gray-300">
+              <div className="p-4 sm:p-5 bg-[#111827] border border-gray-700/80 rounded-2xl space-y-2.5 text-xs text-gray-300">
                 <div className="flex items-center gap-2 font-semibold text-emerald-400">
-                  <FaRegStar /> Based on standard compound annual returns (12% p.a.)
+                  <FaRegStar className="flex-shrink-0" /> Based on standard compound annual returns (12% p.a.)
                 </div>
                 <p>Use FinTrack to identify unnecessary spending and redirect savings straight into growth.</p>
               </div>
             </div>
 
-            <div className="lg:col-span-7 bg-[#111827] border border-gray-700/80 rounded-3xl p-8 sm:p-10 shadow-2xl space-y-8">
-              <div className="space-y-6">
+            <div className="lg:col-span-7 bg-[#111827] border border-gray-700/80 rounded-2xl sm:rounded-3xl p-5 sm:p-10 shadow-2xl space-y-6 sm:space-y-8">
+              <div className="space-y-5 sm:space-y-6">
                 <div>
-                  <div className="flex justify-between text-sm font-semibold mb-2">
+                  <div className="flex justify-between text-xs sm:text-sm font-semibold mb-2">
                     <span className="text-gray-300">Monthly Savings Target</span>
-                    <span className="text-emerald-400 font-mono text-base">₹{monthlySavings.toLocaleString()}</span>
+                    <span className="text-emerald-400 font-mono text-sm sm:text-base">₹{monthlySavings.toLocaleString()}</span>
                   </div>
                   <input
                     type="range"
@@ -559,9 +559,9 @@ export default function HomePage() {
                 </div>
 
                 <div>
-                  <div className="flex justify-between text-sm font-semibold mb-2">
+                  <div className="flex justify-between text-xs sm:text-sm font-semibold mb-2">
                     <span className="text-gray-300">Time Horizon (Years)</span>
-                    <span className="text-emerald-400 font-mono text-base">{savingsYears} Years</span>
+                    <span className="text-emerald-400 font-mono text-sm sm:text-base">{savingsYears} Years</span>
                   </div>
                   <input
                     type="range"
@@ -575,18 +575,18 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-3 gap-4 pt-6 border-t border-white/10 text-center">
-                <div className="p-4 bg-[#1F2937]/80 rounded-2xl border border-white/5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-5 sm:pt-6 border-t border-white/10 text-center">
+                <div className="p-3.5 sm:p-4 bg-[#1F2937]/80 rounded-xl sm:rounded-2xl border border-white/5">
                   <p className="text-xs text-gray-400">Total Invested</p>
-                  <p className="text-xl font-bold text-white mt-1">₹{totalInvested.toLocaleString()}</p>
+                  <p className="text-lg sm:text-xl font-bold text-white mt-1">₹{totalInvested.toLocaleString()}</p>
                 </div>
-                <div className="p-4 bg-[#1F2937]/80 rounded-2xl border border-white/5">
+                <div className="p-3.5 sm:p-4 bg-[#1F2937]/80 rounded-xl sm:rounded-2xl border border-white/5">
                   <p className="text-xs text-gray-400">Estimated Returns</p>
-                  <p className="text-xl font-bold text-emerald-400 mt-1">₹{wealthGained.toLocaleString()}</p>
+                  <p className="text-lg sm:text-xl font-bold text-emerald-400 mt-1">₹{wealthGained.toLocaleString()}</p>
                 </div>
-                <div className="p-4 bg-emerald-600/20 border border-emerald-500/30 rounded-2xl">
+                <div className="p-3.5 sm:p-4 bg-emerald-600/20 border border-emerald-500/30 rounded-xl sm:rounded-2xl">
                   <p className="text-xs text-emerald-300 font-semibold">Total Wealth</p>
-                  <p className="text-2xl font-extrabold text-emerald-400 mt-1">₹{futureWealth.toLocaleString()}</p>
+                  <p className="text-xl sm:text-2xl font-extrabold text-emerald-400 mt-1">₹{futureWealth.toLocaleString()}</p>
                 </div>
               </div>
             </div>
@@ -595,26 +595,26 @@ export default function HomePage() {
       </section>
 
       {/* 🗺️ How It Works Roadmap */}
-      <section className="py-28 relative z-10">
-        <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 text-center space-y-16">
-          <div className="max-w-2xl mx-auto space-y-4">
-            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-white">How FinTrack Works</h2>
-            <p className="text-gray-400 text-lg">Three simple steps to financial clarity and control.</p>
+      <section className="py-16 sm:py-28 relative z-10">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 text-center space-y-12 sm:space-y-16">
+          <div className="max-w-2xl mx-auto space-y-3 sm:space-y-4">
+            <h2 className="text-2xl sm:text-5xl font-bold tracking-tight text-white">How FinTrack Works</h2>
+            <p className="text-gray-400 text-sm sm:text-lg">Three simple steps to financial clarity and control.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 text-left">
+          <div className="grid md:grid-cols-3 gap-6 md:gap-8 text-left">
             {[
               { step: "01", title: "Setup & Log Transactions", desc: "Easily log income, expenses, and recurring bills with intuitive multi-category tags." },
               { step: "02", title: "Set Smart Budget Limits", desc: "Define monthly allowances for food, shopping, and bills. Get instant threshold alerts." },
               { step: "03", title: "Watch Your Wealth Compound", desc: "Analyze visual trends, export tax reports, and optimize your cashflow effortlessly." },
             ].map((s, idx) => (
-              <div key={idx} className="bg-[#111827] border border-gray-700/80 rounded-3xl p-8 relative overflow-hidden group">
-                <span className="text-6xl font-black text-white/5 absolute top-4 right-6 group-hover:text-emerald-500/10 transition-colors">{s.step}</span>
-                <div className="w-12 h-12 rounded-2xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-lg mb-6">
+              <div key={idx} className="bg-[#111827] border border-gray-700/80 rounded-2xl sm:rounded-3xl p-6 sm:p-8 relative overflow-hidden group">
+                <span className="text-5xl sm:text-6xl font-black text-white/5 absolute top-4 right-6 group-hover:text-emerald-500/10 transition-colors">{s.step}</span>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-base sm:text-lg mb-4 sm:mb-6">
                   {s.step}
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3">{s.title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{s.desc}</p>
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">{s.title}</h3>
+                <p className="text-gray-400 text-xs sm:text-sm leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -622,30 +622,30 @@ export default function HomePage() {
       </section>
 
       {/* 🔒 Security Spotlight */}
-      <section id="security" className="py-24 bg-black/40 border-y border-white/5 relative z-10">
-        <div className="max-w-screen-xl mx-auto px-6 lg:px-12 text-center space-y-12">
-          <div className="max-w-2xl mx-auto space-y-4">
-            <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold px-4 py-2 rounded-full">
+      <section id="security" className="py-16 sm:py-24 bg-black/40 border-y border-white/5 relative z-10">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-12 text-center space-y-10 sm:space-y-12">
+          <div className="max-w-2xl mx-auto space-y-3 sm:space-y-4">
+            <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full">
               <FaLock /> Bank-Grade Security Architecture
             </div>
-            <h2 className="text-3xl sm:text-4xl font-bold text-white">Your Security & Privacy is Our Top Priority</h2>
-            <p className="text-gray-400 text-base">We safeguard your sensitive financial data with enterprise encryption protocols.</p>
+            <h2 className="text-2xl sm:text-4xl font-bold text-white">Your Security & Privacy is Our Top Priority</h2>
+            <p className="text-gray-400 text-sm sm:text-base">We safeguard your sensitive financial data with enterprise encryption protocols.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 text-left">
+          <div className="grid md:grid-cols-3 gap-6 md:gap-8 text-left">
             <div className="bg-[#111827] p-6 rounded-2xl border border-gray-700/80 space-y-3">
-              <FaShieldAlt className="text-3xl text-emerald-400" />
-              <h4 className="text-lg font-bold text-white">256-Bit AES Encryption</h4>
+              <FaShieldAlt className="text-2xl sm:text-3xl text-emerald-400" />
+              <h4 className="text-base sm:text-lg font-bold text-white">256-Bit AES Encryption</h4>
               <p className="text-xs text-gray-400 leading-relaxed">All data in transit and at rest is protected with high-grade cryptographic standards.</p>
             </div>
             <div className="bg-[#111827] p-6 rounded-2xl border border-gray-700/80 space-y-3">
-              <FaLock className="text-3xl text-teal-400" />
-              <h4 className="text-lg font-bold text-white">Strict Data Privacy</h4>
+              <FaLock className="text-2xl sm:text-3xl text-teal-400" />
+              <h4 className="text-base sm:text-lg font-bold text-white">Strict Data Privacy</h4>
               <p className="text-xs text-gray-400 leading-relaxed">We strictly adhere to privacy guidelines. Your financial data is never rented or sold.</p>
             </div>
             <div className="bg-[#111827] p-6 rounded-2xl border border-gray-700/80 space-y-3">
-              <FaCheckCircle className="text-3xl text-cyan-400" />
-              <h4 className="text-lg font-bold text-white">Automated Cloud Backups</h4>
+              <FaCheckCircle className="text-2xl sm:text-3xl text-cyan-400" />
+              <h4 className="text-base sm:text-lg font-bold text-white">Automated Cloud Backups</h4>
               <p className="text-xs text-gray-400 leading-relaxed">Continuous cloud snapshots ensure your records are backed up and instantly accessible.</p>
             </div>
           </div>
@@ -653,26 +653,26 @@ export default function HomePage() {
       </section>
 
       {/* 💬 Testimonials */}
-      <section id="insights" className="py-28 relative z-10">
-        <div className="max-w-3xl mx-auto px-6 text-center space-y-16">
-          <h2 className="text-4xl sm:text-5xl font-bold text-white tracking-tight">Loved by Finance Professionals</h2>
+      <section id="insights" className="py-16 sm:py-28 relative z-10">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center space-y-12 sm:space-y-16">
+          <h2 className="text-2xl sm:text-5xl font-bold text-white tracking-tight">Loved by Finance Professionals</h2>
 
-          <div className="relative min-h-[300px]">
+          <div className="relative min-h-[260px] sm:min-h-[300px]">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentTestimonial}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="bg-[#111827] border border-gray-700/80 rounded-3xl p-8 sm:p-12 shadow-2xl"
+                className="bg-[#111827] border border-gray-700/80 rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-2xl"
               >
-                <p className="text-xl sm:text-2xl leading-relaxed text-gray-200 italic font-light">
+                <p className="text-base sm:text-2xl leading-relaxed text-gray-200 italic font-light">
                   “{testimonials[currentTestimonial].quote}”
                 </p>
-                <div className="mt-8 flex items-center gap-4 justify-center">
-                  <span className="text-4xl">{testimonials[currentTestimonial].avatar}</span>
+                <div className="mt-6 sm:mt-8 flex items-center gap-3 sm:gap-4 justify-center">
+                  <span className="text-3xl sm:text-4xl">{testimonials[currentTestimonial].avatar}</span>
                   <div className="text-left">
-                    <div className="font-bold text-white text-base">{testimonials[currentTestimonial].name}</div>
+                    <div className="font-bold text-white text-sm sm:text-base">{testimonials[currentTestimonial].name}</div>
                     <div className="text-emerald-400 text-xs font-semibold">{testimonials[currentTestimonial].role}</div>
                   </div>
                 </div>
@@ -683,25 +683,25 @@ export default function HomePage() {
       </section>
 
       {/* ❓ Frequently Asked Questions Accordion */}
-      <section id="faq" className="py-28 bg-black/40 border-t border-white/5 relative z-10">
-        <div className="max-w-screen-md mx-auto px-6 space-y-12">
-          <div className="text-center space-y-4">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white">Frequently Asked Questions</h2>
-            <p className="text-gray-400 text-base">Have questions about FinTrack? We've got answers.</p>
+      <section id="faq" className="py-16 sm:py-28 bg-black/40 border-t border-white/5 relative z-10">
+        <div className="max-w-screen-md mx-auto px-4 sm:px-6 space-y-8 sm:space-y-12">
+          <div className="text-center space-y-3 sm:space-y-4">
+            <h2 className="text-2xl sm:text-4xl font-bold text-white">Frequently Asked Questions</h2>
+            <p className="text-gray-400 text-sm sm:text-base">Have questions about FinTrack? We've got answers.</p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {faqItems.map((item, idx) => (
-              <div key={idx} className="bg-[#111827] border border-gray-700/80 rounded-2xl overflow-hidden transition-colors">
+              <div key={idx} className="bg-[#111827] border border-gray-700/80 rounded-xl sm:rounded-2xl overflow-hidden transition-colors">
                 <button
                   onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className="w-full px-6 py-5 text-left flex justify-between items-center text-white font-semibold text-base sm:text-lg hover:text-emerald-400 transition-colors"
+                  className="w-full px-4 sm:px-6 py-4 sm:py-5 text-left flex justify-between items-center text-white font-semibold text-sm sm:text-lg hover:text-emerald-400 transition-colors"
                 >
-                  <span>{item.q}</span>
-                  <FaChevronDown className={`text-sm text-gray-400 transition-transform duration-300 flex-shrink-0 ml-4 ${openFaq === idx ? "rotate-180 text-emerald-400" : ""}`} />
+                  <span className="pr-2">{item.q}</span>
+                  <FaChevronDown className={`text-xs sm:text-sm text-gray-400 transition-transform duration-300 flex-shrink-0 ml-2 sm:ml-4 ${openFaq === idx ? "rotate-180 text-emerald-400" : ""}`} />
                 </button>
                 {openFaq === idx && (
-                  <div className="px-6 pb-5 text-gray-400 text-sm leading-relaxed border-t border-white/5 pt-3">
+                  <div className="px-4 sm:px-6 pb-4 sm:pb-5 text-gray-400 text-xs sm:text-sm leading-relaxed border-t border-white/5 pt-3">
                     {item.a}
                   </div>
                 )}
@@ -712,21 +712,21 @@ export default function HomePage() {
       </section>
 
       {/* 🎯 Final CTA Banner */}
-      <section className="py-28 border-t border-white/5 relative z-10 bg-gradient-to-b from-[#0A0F1C] to-black">
-        <div className="max-w-3xl mx-auto text-center px-6 space-y-8">
-          <h2 className="text-4xl sm:text-6xl font-bold tracking-tight text-white leading-tight">
+      <section className="py-16 sm:py-28 border-t border-white/5 relative z-10 bg-gradient-to-b from-[#0A0F1C] to-black">
+        <div className="max-w-3xl mx-auto text-center px-4 sm:px-6 space-y-6 sm:space-y-8">
+          <h2 className="text-3xl sm:text-6xl font-bold tracking-tight text-white leading-tight">
             Start building your financial freedom today
           </h2>
-          <p className="text-gray-400 text-lg sm:text-xl max-w-xl mx-auto">
+          <p className="text-gray-400 text-sm sm:text-xl max-w-xl mx-auto">
             Join thousands of smart professionals tracking their cashflow, budgets, and investments with FinTrack.
           </p>
 
-          <div className="pt-4">
+          <div className="pt-2 sm:pt-4">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate("/sign-up")}
-              className="px-12 py-5 bg-emerald-600 hover:bg-emerald-500 text-lg font-bold rounded-2xl inline-flex items-center gap-3 transition-all text-white shadow-2xl shadow-emerald-600/40"
+              className="w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 bg-emerald-600 hover:bg-emerald-500 text-base sm:text-lg font-bold rounded-2xl inline-flex items-center justify-center gap-3 transition-all text-white shadow-2xl shadow-emerald-600/40"
             >
               Create Professional Account
               <FaArrowRight />
@@ -736,8 +736,8 @@ export default function HomePage() {
       </section>
 
       {/* 🌐 Comprehensive Footer */}
-      <footer className="bg-black py-20 border-t border-white/10 text-gray-400 relative z-10 text-sm">
-        <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 grid grid-cols-1 md:grid-cols-5 gap-12 mb-16">
+      <footer className="bg-black py-12 sm:py-20 border-t border-white/10 text-gray-400 relative z-10 text-xs sm:text-sm">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 grid grid-cols-1 md:grid-cols-5 gap-8 md:gap-12 mb-12 sm:mb-16">
           <div className="md:col-span-2 space-y-4 text-left">
             <div className="flex items-center gap-3.5">
               <div className="w-9 h-9 bg-emerald-600 rounded-2xl flex items-center justify-center text-xl font-bold text-white">
@@ -745,7 +745,7 @@ export default function HomePage() {
               </div>
               <span className="text-2xl font-bold text-white">FinTrack</span>
             </div>
-            <p className="text-gray-400 text-sm max-w-sm leading-relaxed">
+            <p className="text-gray-400 text-xs sm:text-sm max-w-sm leading-relaxed">
               India's leading finance management platform designed for professionals seeking clarity, control, and actionable wealth growth.
             </p>
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-full font-medium">
@@ -754,7 +754,7 @@ export default function HomePage() {
           </div>
 
           <div className="space-y-3 text-left">
-            <h5 className="text-white font-bold text-base">Features</h5>
+            <h5 className="text-white font-bold text-sm sm:text-base">Features</h5>
             <ul className="space-y-2 text-xs">
               <li><a href="#features" className="hover:text-white transition-colors">Expense Tracking</a></li>
               <li><a href="#features" className="hover:text-white transition-colors">Budget Planner</a></li>
@@ -765,7 +765,7 @@ export default function HomePage() {
           </div>
 
           <div className="space-y-3 text-left">
-            <h5 className="text-white font-bold text-base">Platform</h5>
+            <h5 className="text-white font-bold text-sm sm:text-base">Platform</h5>
             <ul className="space-y-2 text-xs">
               <li><a href="#demo" className="hover:text-white transition-colors">Interactive Demo</a></li>
               <li><a href="#calculator" className="hover:text-white transition-colors">Wealth Calculator</a></li>
@@ -775,7 +775,7 @@ export default function HomePage() {
           </div>
 
           <div className="space-y-3 text-left">
-            <h5 className="text-white font-bold text-base">Account</h5>
+            <h5 className="text-white font-bold text-sm sm:text-base">Account</h5>
             <ul className="space-y-2 text-xs">
               <li><button onClick={() => navigate("/sign-in")} className="hover:text-white transition-colors">Sign In</button></li>
               <li><button onClick={() => navigate("/sign-up")} className="hover:text-white transition-colors">Create Free Account</button></li>
@@ -784,9 +784,9 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between text-xs gap-4">
-          <p>© 2026 FinTrack Inc. Professional Finance Management. All rights reserved.</p>
-          <div className="flex gap-6 text-gray-400">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 pt-6 sm:pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between text-xs gap-4">
+          <p className="text-center sm:text-left">© 2026 FinTrack Inc. Professional Finance Management. All rights reserved.</p>
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-gray-400">
             <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
             <a href="#" className="hover:text-white transition-colors">Security Compliance</a>
