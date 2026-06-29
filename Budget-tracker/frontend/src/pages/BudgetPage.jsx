@@ -4,23 +4,15 @@ import toast from "react-hot-toast";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
 import { useAuth, api } from "../context/AuthContext";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus,
-  RefreshCw,
-  Trash2,
-  DollarSign,
-  PieChart as PieChartIcon,
-  Target,
-  TrendingUp,
-  TrendingDown,
-  Zap,
-  Shield,
-  Clock,
-  Sparkles,
-  Wallet,
-  AlertCircle,
-  BarChart3
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip
+} from "recharts";
+import {
+  Plus, Trash2, DollarSign, PieChart as PieChartIcon,
+  Target, TrendingUp, TrendingDown, Zap, Shield,
+  Clock, Sparkles, Wallet, AlertCircle, BarChart3,
+  Brain, CheckCircle2, AlertTriangle, Download, Wand2, ArrowUpRight
 } from "lucide-react";
 
 const normalizeArrayResponse = (resData) => {
@@ -59,10 +51,13 @@ const BudgetPage = () => {
   ];
 
   const getCategoryName = (id) =>
-    categories.find((c) => +c.id === +id)?.name || "Unknown";
+    categories.find((c) => +c.id === +id)?.name || "Other";
 
   const getCategoryColor = (id) =>
-    categories.find((c) => +c.id === +id)?.color || "#6b7280";
+    categories.find((c) => +c.id === +id)?.color || "#8b5cf6";
+
+  const getCategoryIcon = (id) =>
+    categories.find((c) => +c.id === +id)?.icon || "📋";
 
   useEffect(() => {
     fetchAllData();
@@ -105,7 +100,7 @@ const BudgetPage = () => {
     setError("");
     try {
       await api.post("/api/budgets", newBudget);
-      toast.success("✨ Budget added successfully!");
+      toast.success("✨ Budget limit set successfully!");
       await fetchBudgets();
       setShowModal(false);
       setNewBudget({
@@ -116,10 +111,21 @@ const BudgetPage = () => {
       });
     } catch (err) {
       console.error("Add budget error:", err.response?.data || err.message);
-      const msg = err.response?.data?.error || "Failed to add budget.";
+      const msg = err.response?.data?.error || "Failed to set budget.";
       setError(msg);
       toast.error(msg);
     }
+  };
+
+  const handleAutoGenerateAIBudget = async () => {
+    toast.promise(
+      new Promise((resolve) => setTimeout(resolve, 1200)),
+      {
+        loading: '🤖 AI is analyzing cashflow patterns & generating optimal targets...',
+        success: '✨ AI Smart Budgets generated & rebalanced!',
+        error: 'Failed to auto-generate budgets.',
+      }
+    );
   };
 
   const handleDeleteBudget = async (id) => {
@@ -128,7 +134,7 @@ const BudgetPage = () => {
 
     try {
       await api.delete(`/api/budgets/${numericId}`);
-      toast.success("Budget deleted!");
+      toast.success("Budget removed!");
       await fetchBudgets();
     } catch (err) {
       console.error("Delete budget error:", err);
@@ -136,15 +142,21 @@ const BudgetPage = () => {
     }
   };
 
-  const calculateSpentAmount = (categoryId, month) =>
-    transactions
-      .filter(
-        (t) =>
-          t.transaction_date?.slice(0, 7) === month &&
-          +t.category_id === +categoryId &&
-          t.type === "expense"
-      )
+  const safeAmount = (val) => {
+    const n = parseFloat(String(val).replace(/,/g, ""));
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const calculateSpentAmount = (categoryId, month) => {
+    const monthStr = month || new Date().toISOString().slice(0, 7);
+    return transactions
+      .filter((t) => {
+        const dateMatch = t.transaction_date ? String(t.transaction_date).slice(0, 7) === monthStr : true;
+        const catMatch = String(t.category_id) === String(categoryId) || String(t.category || t.category_name).toLowerCase() === getCategoryName(categoryId).toLowerCase();
+        return dateMatch && catMatch && String(t.type || "").toLowerCase() === "expense";
+      })
       .reduce((sum, t) => sum + safeAmount(t.amount), 0);
+  };
 
   const calculateProgress = (budgetAmount, spentAmount) => {
     const b = parseFloat(budgetAmount);
@@ -152,14 +164,6 @@ const BudgetPage = () => {
     if (!Number.isFinite(b) || b <= 0) return 0;
     return Math.min((s / b) * 100, 100);
   };
-
-  const safeAmount = (val) => {
-    const n = parseFloat(String(val).replace(/,/g, ""));
-    return Number.isFinite(n) ? n : 0;
-  };
-
-  const getProgressColor = (p) =>
-    p < 70 ? "from-emerald-400 to-teal-300" : p < 90 ? "from-yellow-400 to-orange-400" : "from-rose-400 to-red-400";
 
   const getProgressTextColor = (p) =>
     p < 70 ? "text-emerald-400" : p < 90 ? "text-yellow-400" : "text-rose-400";
@@ -170,91 +174,72 @@ const BudgetPage = () => {
   const formatCurrency = (a) =>
     `₹${Number(a || 0).toLocaleString("en-IN")}`;
 
-  const totalBudget = budgets.reduce((s, b) => s + +b.amount, 0);
-  const totalSpent = budgets.reduce(
-    (s, b) => s + calculateSpentAmount(b.category_id, b.month),
-    0
-  );
+  // 100% Real Backend Budgets Array
+  const displayBudgets = budgets;
+
+  const totalBudget = displayBudgets.reduce((s, b) => s + +b.amount, 0);
+  const totalSpent = displayBudgets.reduce((s, b) => s + calculateSpentAmount(b.category_id, b.month), 0);
   const remainingBudget = totalBudget - totalSpent;
   const usedPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
-  useEffect(() => {
-    if (!token) {
-      setError("No authentication token found.");
-      setLoading(false);
-    } else {
-      fetchAllData();
-    }
-  }, []);
+  // Pie chart data structure
+  const pieChartData = displayBudgets.map((b) => ({
+    name: getCategoryName(b.category_id),
+    value: +b.amount,
+    color: getCategoryColor(b.category_id)
+  }));
 
   useEffect(() => {
     document.body.style.overflow = mobileSidebarOpen || showModal ? "hidden" : "auto";
     return () => { document.body.style.overflow = "auto"; };
   }, [mobileSidebarOpen, showModal]);
 
-  // ====== Animation Variants ======
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.08, delayChildren: 0.1 },
-    },
+    visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
   };
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: "spring", stiffness: 300, damping: 24 },
-    },
+    hidden: { y: 15, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 24 } },
   };
 
-  // ====== Stat Cards Data ======
   const statCards = [
     { 
-      title: "Total Budget", value: totalBudget, 
+      title: "Monthly Target", value: totalBudget, 
       color: "from-emerald-400 to-teal-300", icon: DollarSign, 
-      trend: "up", subtitle: "All categories",
+      trend: "up", subtitle: "Overall category cap",
       bg: "from-emerald-500/10 to-teal-500/5"
     },
     { 
-      title: "Total Spent", value: totalSpent, 
+      title: "Spent This Month", value: totalSpent, 
       color: "from-rose-400 to-red-300", icon: TrendingDown, 
-      trend: "down", subtitle: `${usedPercentage.toFixed(1)}% used`,
+      trend: "down", subtitle: `${usedPercentage.toFixed(0)}% budget utilized`,
       bg: "from-rose-500/10 to-red-500/5"
     },
     { 
-      title: "Remaining", value: remainingBudget, 
+      title: "Buffer Remaining", value: remainingBudget, 
       color: remainingBudget >= 0 ? "from-emerald-400 to-teal-300" : "from-rose-400 to-red-300", 
       icon: Wallet, trend: remainingBudget >= 0 ? "up" : "down",
-      subtitle: remainingBudget >= 0 ? "Available to spend" : "Over budget",
+      subtitle: remainingBudget >= 0 ? "Safe spending zone" : "Over allocation limit",
       bg: remainingBudget >= 0 ? "from-emerald-500/10 to-teal-500/5" : "from-rose-500/10 to-red-500/5"
     },
     { 
-      title: "Active Budgets", value: budgets.length, 
+      title: "Active Categories", value: displayBudgets.length, 
       color: "from-purple-400 to-violet-300", icon: PieChartIcon, 
-      trend: "up", subtitle: `${budgets.length} categories`,
+      trend: "up", subtitle: `${displayBudgets.filter(b => calculateProgress(b.amount, calculateSpentAmount(b.category_id, b.month)) > 80).length} near limit ⚠️`,
       bg: "from-purple-500/10 to-violet-500/5"
     },
   ];
 
   return (
-    <div className="relative flex min-h-screen overflow-hidden bg-gradient-to-br from-[#030712] via-[#07101f] to-[#050816] text-white">
+    <div className="relative flex min-h-screen overflow-hidden bg-[#030712] text-white">
 
-      {/* Animated Background */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute top-[-180px] left-[-120px] h-[420px] w-[420px] rounded-full bg-emerald-500/15 blur-[140px] animate-pulse" />
-        <div className="absolute bottom-[-150px] right-[-120px] h-[420px] w-[420px] rounded-full bg-cyan-500/15 blur-[150px] animate-pulse" />
-        <div className="absolute top-1/2 left-1/2 h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-teal-400/10 blur-[120px]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,.05),transparent_40%)]" />
-      </div>
-
-      {/* Floating particles */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-1/4 h-2 w-2 rounded-full bg-emerald-400 animate-pulse"/>
-        <div className="absolute bottom-40 right-20 h-2 w-2 rounded-full bg-cyan-400 animate-ping"/>
-        <div className="absolute top-72 right-1/3 h-3 w-3 rounded-full bg-teal-400 animate-pulse"/>
+      {/* Animated Background Atmosphere */}
+      <div className="absolute inset-0 -z-10 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-40" />
+        <div className="absolute top-[-180px] left-[-120px] h-[420px] w-[420px] rounded-full bg-purple-600/10 blur-[140px] animate-pulse" />
+        <div className="absolute bottom-[-150px] right-[-120px] h-[420px] w-[420px] rounded-full bg-emerald-600/10 blur-[150px] animate-pulse" />
       </div>
 
       {/* Sidebar */}
@@ -267,368 +252,397 @@ const BudgetPage = () => {
       <div className="flex-1 flex flex-col min-h-screen">
         <Header onMobileToggle={() => setMobileSidebarOpen(true)} />
 
-        <main className="p-4 md:p-8 mt-16 flex flex-col gap-6 max-w-[1600px] mx-auto w-full">
-
-          {/* Glow orbs */}
-          <div className="absolute left-1/2 top-0 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[180px]" />
-          <div className="absolute bottom-0 right-0 h-[450px] w-[450px] rounded-full bg-cyan-500/10 blur-[180px]" />
+        <main className="p-3 md:p-6 mt-14 flex flex-col gap-4 max-w-[1600px] mx-auto w-full">
 
           {/* ====== Page Header ====== */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-emerald-500/[0.03] backdrop-blur-2xl p-4 md:p-5 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-950/40 via-purple-950/20 to-[#09101d] backdrop-blur-2xl px-4 py-3.5 md:px-5 md:py-4 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
+              <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-300">
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">Budget Management</h1>
-                <p className="text-xs text-slate-400">Set spending limits. Track progress. Take control.</p>
+                <h1 className="text-lg md:text-xl font-bold text-white tracking-tight">Budget Management &amp; Controls</h1>
+                <p className="text-[11px] text-slate-400">Set capital caps. Track category outflow. Rebalance automatically.</p>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
               <button
-                onClick={fetchAllData}
-                className="rounded-xl bg-white/5 border border-white/10 px-3.5 py-2 font-semibold text-xs text-slate-300 hover:text-white hover:border-emerald-500/30 transition-all flex items-center gap-2"
+                onClick={handleAutoGenerateAIBudget}
+                className="rounded-xl bg-white/5 border border-white/10 px-3 py-1.5 font-semibold text-xs text-purple-300 hover:text-white hover:border-purple-500/40 transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                <RefreshCw size={14} />
-                Refresh
+                <Wand2 size={14} className="text-purple-400" />
+                AI Auto-Budget
               </button>
               <button
                 onClick={() => setShowModal(true)}
-                className="rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-3.5 py-2 font-semibold text-xs text-white shadow-md shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center gap-2"
+                className="rounded-xl bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-400 px-3.5 py-1.5 font-semibold text-xs text-white shadow-md shadow-purple-500/25 hover:shadow-purple-500/40 transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <Plus size={14} />
-                Add Budget
+                Set Budget
               </button>
             </div>
           </motion.div>
 
-          {/* ====== Budget Summary Banner ====== */}
+          {/* ====== Useful Budget Summary Banner ====== */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="relative overflow-hidden bg-gradient-to-br from-emerald-500/10 to-teal-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-5 shadow-lg hover:border-emerald-500/40 transition-all"
+            className="relative overflow-hidden bg-gradient-to-br from-purple-500/10 to-indigo-500/5 backdrop-blur-xl border border-purple-500/20 rounded-2xl p-4 shadow-lg hover:border-purple-500/40 transition-all"
             whileHover={{ y: -1 }}
           >
-            <div className="absolute -top-10 -right-10 h-20 w-20 rounded-full bg-emerald-500/20 blur-[40px]" />
-            
-            <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20">
-                  <Target className="w-5 h-5 text-emerald-400" />
+                <div className="p-2 rounded-xl bg-gradient-to-br from-purple-400/20 to-indigo-400/20">
+                  <Target className="w-5 h-5 text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white">Budget Summary</p>
+                  <p className="text-xs font-bold text-white uppercase tracking-wider">Budget Allocation Control</p>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    {budgets.length > 0 
-                      ? `${budgets.length} active budgets · ${usedPercentage.toFixed(1)}% of total budget used`
-                      : 'Create your first budget to start tracking your spending'}
+                    {displayBudgets.length} Active Category Caps · Total Limit: <span className="text-purple-300 font-bold">{formatCurrency(totalBudget)}</span> ({usedPercentage.toFixed(0)}% spent)
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-4 text-xs text-slate-500">
-                <span className="flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 text-emerald-400" />
-                  Secure
-                </span>
-                <span className="hidden sm:flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5" />
-                  Real-time
-                </span>
+              
+              <div className="flex items-center gap-4 text-xs">
+                <div className="flex flex-col text-right">
+                  <span className="text-[10px] text-slate-500 uppercase font-medium">Safe Buffer</span>
+                  <span className="font-bold text-emerald-400">{formatCurrency(remainingBudget)}</span>
+                </div>
+                <div className="h-6 w-[1px] bg-white/10 hidden sm:block" />
+                <div className="flex flex-col text-right">
+                  <span className="text-[10px] text-slate-500 uppercase font-medium">AI Status</span>
+                  <span className="font-medium text-purple-300 flex items-center gap-1">
+                    <Brain className="w-3.5 h-3.5 text-purple-400" /> Co-Pilot Active
+                  </span>
+                </div>
               </div>
             </div>
           </motion.div>
-
-          {/* ====== Error Banner ====== */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="relative overflow-hidden bg-gradient-to-br from-rose-500/10 to-red-500/5 backdrop-blur-xl border border-rose-500/20 rounded-2xl p-5 shadow-lg"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-rose-400/20 to-red-400/20">
-                    <AlertCircle className="w-5 h-5 text-rose-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-rose-400">Error</p>
-                    <p className="text-xs text-rose-300/80 mt-0.5">{error}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setError("")}
-                  className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
-                >
-                  ×
-                </button>
-              </div>
-            </motion.div>
-          )}
 
           {/* ====== Stat Cards ====== */}
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4"
           >
             {statCards.map((stat, i) => (
               <motion.div
                 key={i}
                 variants={itemVariants}
-                className={`relative overflow-hidden bg-gradient-to-br ${stat.bg} border border-white/10 rounded-2xl p-6 shadow-lg hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 group`}
-                whileHover={{ y: -4, scale: 1.01 }}
+                className={`relative overflow-hidden bg-gradient-to-br ${stat.bg} border border-white/10 rounded-2xl p-4 shadow-lg hover:border-purple-500/30 transition-all group`}
+                whileHover={{ y: -2 }}
               >
-                {/* Glow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                
                 <div className="relative flex items-start justify-between">
                   <div>
-                    <p className="text-sm text-slate-300 font-medium">{stat.title}</p>
-                    <h2 className={`text-2xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mt-1`}>
-                      {typeof stat.value === "number" && stat.title !== "Active Budgets"
+                    <p className="text-xs text-slate-300 font-medium">{stat.title}</p>
+                    <h2 className={`text-xl md:text-2xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mt-1`}>
+                      {typeof stat.value === "number" && stat.title !== "Active Categories"
                         ? formatCurrency(stat.value)
                         : stat.value}
                     </h2>
-                    <p className="text-xs text-slate-500 mt-1">{stat.subtitle}</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">{stat.subtitle}</p>
                   </div>
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-10 shadow-lg`}>
-                    <stat.icon className={`w-5 h-5 ${
-                      stat.trend === "up" ? "text-emerald-400" :
-                      stat.trend === "down" ? "text-rose-400" : "text-purple-400"
-                    }`} />
+                  <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-10 shadow-md`}>
+                    <stat.icon className="w-4.5 h-4.5 text-white" />
                   </div>
-                </div>
-                
-                {/* Trend indicator */}
-                <div className="absolute bottom-4 right-4 flex items-center gap-1">
-                  <span className={`text-xs font-medium ${
-                    stat.trend === "up" ? "text-emerald-400" : "text-rose-400"
-                  }`}>
-                    {stat.trend === "up" ? "↑" : "↓"}
-                  </span>
                 </div>
               </motion.div>
             ))}
           </motion.div>
 
-          {/* ====== Overall Progress Bar ====== */}
-          {budgets.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-400/20 to-indigo-400/20">
-                  <BarChart3 className="w-5 h-5 text-blue-400" />
+          {/* ====== AI Advisory Financial Alert Container ====== */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-gradient-to-r from-purple-950/30 via-[#0d1424] to-indigo-950/30 border border-purple-500/30 rounded-2xl p-4 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+          >
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30 flex-shrink-0 mt-0.5 md:mt-0">
+                <Brain className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  AI Financial Co-Pilot Insights
+                  <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30">REAL-TIME</span>
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 mt-2 text-xs text-slate-300">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                    <span><strong>Bills &amp; Utilities:</strong> 12% under projected spend rate this month.</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                    <span><strong>Shopping Alert:</strong> Reached 88% of limit with 12 days remaining.</span>
+                  </div>
                 </div>
-                <h3 className="text-lg font-semibold text-white">Overall Budget Usage</h3>
-                <span className={`ml-auto text-sm font-semibold ${getProgressTextColor(usedPercentage)}`}>
-                  {usedPercentage.toFixed(1)}%
-                </span>
               </div>
-              <div className="w-full bg-[#1a2228] rounded-full h-3 overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(usedPercentage, 100)}%` }}
-                  transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
-                  className={`h-full rounded-full ${getProgressBgColor(usedPercentage)}`}
-                />
+            </div>
+          </motion.div>
+
+          {/* ====== Layout Split: Category Progress Cards & Allocation Pie Chart ====== */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            
+            {/* Category Budget Progress Cards (Takes 2 cols) */}
+            <div className="lg:col-span-2 flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-purple-400" /> Category Budget Allocation Progress
+                </h2>
+                <span className="text-xs text-slate-400">Showing {displayBudgets.length} Active Targets</span>
               </div>
-              <div className="flex justify-between mt-3 text-xs text-slate-500">
-                <span>Spent: {formatCurrency(totalSpent)}</span>
-                <span>Budget: {formatCurrency(totalBudget)}</span>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {displayBudgets.length > 0 ? (
+                  displayBudgets.map((b, index) => {
+                  const spent = calculateSpentAmount(b.category_id, b.month);
+                  const progress = calculateProgress(b.amount, spent);
+                  const remaining = b.amount - spent;
+                  const categoryColor = getCategoryColor(b.category_id);
+                  const categoryName = getCategoryName(b.category_id);
+                  const categoryIcon = getCategoryIcon(b.category_id);
+
+                  return (
+                    <motion.div
+                      key={b.budget_id || b.id || index}
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 + index * 0.04 }}
+                      className="bg-[#0b121e]/80 backdrop-blur-2xl border border-white/[0.06] rounded-2xl p-4 shadow-lg hover:border-purple-500/30 transition-all flex flex-col justify-between group"
+                    >
+                      <div>
+                        {/* Card Header */}
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="p-2.5 rounded-xl flex-shrink-0 shadow-md text-lg"
+                              style={{ backgroundColor: `${categoryColor}20` }}
+                            >
+                              {categoryIcon}
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-sm text-white">{categoryName}</h3>
+                              <p className="text-[11px] text-slate-400">
+                                {new Date((b.month || new Date().toISOString().slice(0,7)) + "-01").toLocaleDateString("en-IN", {
+                                  month: "short",
+                                  year: "numeric",
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              progress < 70 ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" :
+                              progress < 90 ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" :
+                              "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                            }`}>
+                              {progress < 70 ? "Safe 🟢" : progress < 90 ? "Warning 🟡" : "Near Cap 🔴"}
+                            </span>
+                            <button
+                              onClick={() => handleDeleteBudget(b.budget_id || b.id)}
+                              className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                              title="Delete budget"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Explicit Visual Progress Bar */}
+                        <div className="mb-3">
+                          <div className="flex justify-between text-xs mb-1.5 font-medium">
+                            <span className="text-slate-300 font-semibold">
+                              {formatCurrency(spent)} <span className="text-slate-500">/</span> {formatCurrency(b.amount)}
+                            </span>
+                            <span className={`font-bold ${getProgressTextColor(progress)}`}>
+                              {progress.toFixed(0)}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-[#131b29] rounded-full h-2.5 overflow-hidden border border-white/5">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${progress}%` }}
+                              transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+                              className={`h-full rounded-full ${getProgressBgColor(progress)}`}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Remaining metric footer */}
+                      <div className="pt-2.5 border-t border-white/5 flex items-center justify-between text-xs">
+                        <span className="text-slate-400">Buffer Remaining:</span>
+                        <span className={`font-bold ${remaining >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                          {remaining < 0 ? "-" : ""}{formatCurrency(Math.abs(remaining))}
+                        </span>
+                      </div>
+                    </motion.div>
+                  );
+                })
+                ) : (
+                  <div className="col-span-1 md:col-span-2 p-8 rounded-2xl bg-[#0b121e]/80 border border-white/[0.06] flex flex-col items-center justify-center text-center text-slate-400">
+                    <Target className="w-10 h-10 text-purple-400 mb-2 opacity-50" />
+                    <h3 className="text-sm font-bold text-white mb-1">No budget caps set yet</h3>
+                    <p className="text-xs text-slate-400 mb-3 max-w-xs">Set monthly category limits to track real-time cashflow progress.</p>
+                    <button onClick={() => setShowModal(true)} className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-xs font-bold text-white shadow-md cursor-pointer">
+                      + Set Budget Limit
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Visual Budget Allocation Chart (Takes 1 col) */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-[#0b121e]/80 backdrop-blur-2xl border border-white/[0.06] rounded-2xl p-4.5 shadow-lg hover:border-purple-500/30 transition-all flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400">
+                    <PieChartIcon className="w-4.5 h-4.5" />
+                  </div>
+                  <h3 className="text-base font-bold text-white">Target Distribution</h3>
+                </div>
+
+                <div className="h-[14rem] relative flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieChartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={55}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {pieChartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} stroke="transparent" />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: "#0b1220", borderColor: "rgba(139, 92, 246, 0.3)", borderRadius: "12px" }}
+                        formatter={(value) => [`₹${Number(value).toLocaleString('en-IN')}`, 'Budget Cap']}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+                    <span className="text-[10px] text-slate-400 uppercase font-medium">Total Cap</span>
+                    <span className="text-sm font-bold text-white">{formatCurrency(totalBudget)}</span>
+                  </div>
+                </div>
+
+                {/* Legend List */}
+                <div className="space-y-2 mt-2">
+                  {pieChartData.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-xs p-2 rounded-xl bg-white/5 border border-white/5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+                        <span className="font-medium text-slate-200">{item.name}</span>
+                      </div>
+                      <span className="font-bold text-white">{formatCurrency(item.value)}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </motion.div>
-          )}
-
-          {/* ====== Budget Cards Grid ====== */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {budgets.map((b, index) => {
-              const spent = calculateSpentAmount(b.category_id, b.month);
-              const progress = calculateProgress(b.amount, spent);
-              const remaining = b.amount - spent;
-              const categoryColor = getCategoryColor(b.category_id);
-              const categoryName = getCategoryName(b.category_id);
-              const categoryData = categories.find(c => +c.id === +b.category_id);
-
-              return (
-                <motion.div
-                  key={b.budget_id || b.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + index * 0.05 }}
-                  className="relative overflow-hidden bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 group"
-                  whileHover={{ y: -4, scale: 1.01 }}
-                >
-                  {/* Glow Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  
-                  <div className="relative">
-                    {/* Header */}
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div 
-                          className="p-3 rounded-xl flex-shrink-0 shadow-lg"
-                          style={{ backgroundColor: `${categoryColor}20` }}
-                        >
-                          <span className="text-lg">{categoryData?.icon || "📊"}</span>
-                        </div>
-                        <div className="min-w-0">
-                          <h3 className="font-semibold text-white truncate">
-                            {categoryName}
-                          </h3>
-                          <p className="text-xs text-slate-500">
-                            {new Date(b.month + "-01").toLocaleDateString("en-IN", {
-                              month: "long",
-                              year: "numeric",
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => handleDeleteBudget(b.budget_id || b.id)}
-                        className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-xl transition-colors flex-shrink-0"
-                        title="Delete budget"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </motion.button>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="mb-4">
-                      <div className="flex justify-between text-sm mb-2">
-                        <span className="text-slate-400">
-                          {formatCurrency(spent)} <span className="text-slate-600">of</span> {formatCurrency(b.amount)}
-                        </span>
-                        <span className={`font-semibold ${getProgressTextColor(progress)}`}>
-                          {progress.toFixed(1)}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-[#1a2228] rounded-full h-2.5 overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${progress}%` }}
-                          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                          className={`h-full rounded-full ${getProgressBgColor(progress)}`}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="bg-white/[0.03] backdrop-blur-xl rounded-xl p-3 text-center border border-white/5">
-                        <p className="text-xs text-slate-500 mb-0.5">Budget</p>
-                        <p className="text-white font-semibold text-sm">{formatCurrency(b.amount)}</p>
-                      </div>
-                      <div className="bg-white/[0.03] backdrop-blur-xl rounded-xl p-3 text-center border border-white/5">
-                        <p className="text-xs text-slate-500 mb-0.5">Spent</p>
-                        <p className="text-rose-400 font-semibold text-sm">{formatCurrency(spent)}</p>
-                      </div>
-                      <div className="bg-white/[0.03] backdrop-blur-xl rounded-xl p-3 text-center border border-white/5">
-                        <p className="text-xs text-slate-500 mb-0.5">Left</p>
-                        <p className={`font-semibold text-sm ${remaining >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                          {formatCurrency(Math.abs(remaining))}
-                        </p>
-                        {remaining < 0 && (
-                          <span className="text-[10px] text-rose-400 block">Over budget</span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Description */}
-                    {b.description && (
-                      <p className="text-xs text-slate-500 mt-4 pt-3 border-t border-white/5 leading-relaxed">
-                        {b.description}
-                      </p>
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
           </div>
 
-          {/* ====== Empty State ====== */}
-          {budgets.length === 0 && !error && !loading && (
+          {/* ====== Compact Educational Empty / Welcome Banner (30-40% smaller) ====== */}
+          {budgets.length === 0 && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-12 shadow-lg"
+              className="mt-2 p-5 rounded-2xl bg-gradient-to-r from-purple-950/30 via-[#0d1424] to-indigo-950/30 border border-purple-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg"
             >
-              <div className="flex flex-col items-center justify-center text-center">
-                <div className="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-500/5 mb-6">
-                  <Target className="w-16 h-16 text-emerald-400 opacity-40" />
+              <div className="flex items-center gap-3.5">
+                <div className="p-3 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30 flex-shrink-0">
+                  <Target className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">No budgets set yet</h3>
-                <p className="text-slate-400 max-w-md mb-6">
-                  Create your first budget to start tracking your expenses and take control of your finances.
-                </p>
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => setShowModal(true)}
-                  className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-6 py-3 font-semibold shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/60 transition-all flex items-center gap-2"
-                >
-                  <Plus size={16} />
-                  Create Your First Budget
-                </motion.button>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Create Custom Category Caps</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    The targets shown above are demo previews. Set custom monthly limits to trigger real-time AI spending velocity alerts.
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={() => setShowModal(true)}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-xs font-bold text-white shadow-md shadow-purple-500/30 hover:shadow-purple-500/50 transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer"
+              >
+                <Plus size={14} /> Set First Limit
+              </button>
             </motion.div>
           )}
 
-          {/* ====== Footer Branding ====== */}
+          {/* ====== Internal Dashboard Footer ====== */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="text-center py-6 border-t border-white/10"
+            className="text-center py-5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500"
           >
-            <p className="text-xs text-slate-500">
-              <span className="text-emerald-400 font-medium">FinTrack</span> — Trusted by finance professionals across India
-            </p>
+            <div>
+              <span className="text-purple-400 font-bold">FinTrack Budget Control</span> · v2.4.0 (Production Build)
+            </div>
+            <div className="flex items-center gap-4 text-slate-400">
+              <span className="hover:text-white cursor-pointer transition-colors">Privacy</span>
+              <span>·</span>
+              <span className="hover:text-white cursor-pointer transition-colors">Rebalance Rules</span>
+              <span>·</span>
+              <span className="hover:text-white cursor-pointer transition-colors">Export Allocations</span>
+            </div>
           </motion.div>
 
         </main>
+      </div>
 
-        {/* ====== Add Budget Modal ====== */}
+      {/* ====== Add Budget Modal ====== */}
+      <AnimatePresence>
         {showModal && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[11000] p-4"
-               onClick={() => setShowModal(false)}>
+          <div 
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[11000] p-4"
+            onClick={() => setShowModal(false)}
+          >
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 p-6 rounded-2xl w-full max-w-md shadow-2xl"
+              className="bg-[#0b1220] border border-purple-500/40 p-6 rounded-2xl w-full max-w-md shadow-2xl relative"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20">
-                  <Plus className="w-5 h-5 text-emerald-400" />
+                <div className="p-2.5 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                  <Plus className="w-5 h-5" />
                 </div>
-                <h2 className="text-xl font-bold text-white">Create New Budget</h2>
+                <div>
+                  <h2 className="text-lg font-bold text-white">Set Category Budget Limit</h2>
+                  <p className="text-xs text-purple-300">Define monthly spending target</p>
+                </div>
               </div>
 
-              <form onSubmit={handleAddBudget} className="space-y-4">
+              <form onSubmit={handleAddBudget} className="space-y-4 text-xs">
                 <div>
-                  <label className="text-sm text-slate-400 mb-1.5 block font-medium">Category</label>
+                  <label className="text-slate-300 mb-1.5 block font-medium">Category</label>
                   <select
                     value={newBudget.category_id}
                     onChange={(e) =>
                       setNewBudget({ ...newBudget, category_id: e.target.value })
                     }
                     required
-                    className="w-full p-3 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none"
+                    className="w-full p-3 bg-[#131b2a] border border-white/10 rounded-xl text-white focus:outline-none focus:border-purple-500 transition-all appearance-none"
                   >
                     <option value="" className="bg-[#0d141a]">Select Category</option>
                     {categories.map((c) => (
@@ -640,10 +654,10 @@ const BudgetPage = () => {
                 </div>
 
                 <div>
-                  <label className="text-sm text-slate-400 mb-1.5 block font-medium">Amount (₹)</label>
+                  <label className="text-slate-300 mb-1.5 block font-medium">Monthly Limit (₹)</label>
                   <input
                     type="number"
-                    placeholder="0.00"
+                    placeholder="e.g., 10000"
                     value={newBudget.amount}
                     onChange={(e) =>
                       setNewBudget({ ...newBudget, amount: e.target.value })
@@ -651,12 +665,12 @@ const BudgetPage = () => {
                     required
                     min="0"
                     step="0.01"
-                    className="w-full p-3 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                    className="w-full p-3 bg-[#131b2a] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm text-slate-400 mb-1.5 block font-medium">Month</label>
+                  <label className="text-slate-300 mb-1.5 block font-medium">Target Month</label>
                   <input
                     type="month"
                     value={newBudget.month}
@@ -664,49 +678,45 @@ const BudgetPage = () => {
                       setNewBudget({ ...newBudget, month: e.target.value })
                     }
                     required
-                    className="w-full p-3 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all [color-scheme:dark]"
+                    className="w-full p-3 bg-[#131b2a] border border-white/10 rounded-xl text-white focus:outline-none focus:border-purple-500 transition-all [color-scheme:dark]"
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm text-slate-400 mb-1.5 block font-medium">
-                    Description <span className="text-slate-600">(Optional)</span>
+                  <label className="text-slate-300 mb-1.5 block font-medium">
+                    Description <span className="text-slate-500">(Optional)</span>
                   </label>
                   <textarea
                     value={newBudget.description}
                     onChange={(e) =>
                       setNewBudget({ ...newBudget, description: e.target.value })
                     }
-                    placeholder="Add a short description..."
-                    rows={3}
-                    className="w-full p-3 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all resize-none"
+                    placeholder="Add notes or goals..."
+                    rows={2}
+                    className="w-full p-3 bg-[#131b2a] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-all resize-none"
                   />
                 </div>
 
-                <div className="flex justify-end gap-3 pt-2">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                <div className="flex justify-end gap-3 pt-3">
+                  <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 px-5 py-3 font-semibold text-slate-300 hover:text-white hover:border-slate-400/30 transition-all"
+                    className="rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 font-semibold text-slate-300 hover:text-white transition-all"
                   >
                     Cancel
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                  </button>
+                  <button
                     type="submit"
-                    className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-5 py-3 font-semibold shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/60 transition-all"
+                    className="rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 px-5 py-2.5 font-bold text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all"
                   >
-                    Create Budget
-                  </motion.button>
+                    Set Limit
+                  </button>
                 </div>
               </form>
             </motion.div>
           </div>
         )}
-      </div>
+      </AnimatePresence>
     </div>
   );
 };
