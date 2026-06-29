@@ -98,4 +98,52 @@ body,
   scrollbar-color: rgba(16, 185, 129, 0.25) transparent;
 }
 
+/* 🎨 FinTrack Theme Engine Overrides */
+html.theme-light,
+html.theme-light body,
+html.theme-light #root {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html.theme-light .bg-\[\#030712\],
+html.theme-light .bg-\[\#07101f\],
+html.theme-light .bg-\[\#050816\],
+html.theme-light .bg-\[\#070d14\],
+html.theme-light .bg-\[\#0a1017\],
+html.theme-light .bg-\[\#0d1117\],
+html.theme-light .bg-\[\#090e17\],
+html.theme-light .bg-\[\#070c14\] {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+html.theme-light .bg-white\/\[0\.04\],
+html.theme-light .bg-white\/\[0\.03\],
+html.theme-light .bg-white\/\[0\.02\],
+html.theme-light .bg-[#0b121e]\/80,
+html.theme-light .bg-[#0d141e],
+html.theme-light .bg-[#0d1520] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+}
+
+html.theme-light .text-white {
+  color: #0f172a !important;
+}
+
+html.theme-light .text-slate-300,
+html.theme-light .text-slate-400 {
+  color: #475569 !important;
+}
+
+html.theme-light .border-white\/10,
+html.theme-light .border-white\/5,
+html.theme-light .border-white\/15 {
+  border-color: #e2e8f0 !important;
+}
+
+
 

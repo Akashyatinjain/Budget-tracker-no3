@@ -21,7 +21,33 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
+export const applyTheme = (theme) => {
+  const root = document.documentElement;
+  let activeTheme = theme;
+  if (theme === "auto") {
+    activeTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  root.classList.remove("theme-dark", "theme-light");
+  root.classList.add(`theme-${activeTheme}`);
+  localStorage.setItem("fintrack_theme", theme);
+};
+
 function App() {
+  React.useEffect(() => {
+    const savedTheme = localStorage.getItem("fintrack_theme") || "dark";
+    applyTheme(savedTheme);
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleSystemThemeChange = () => {
+      const currentTheme = localStorage.getItem("fintrack_theme");
+      if (currentTheme === "auto") {
+        applyTheme("auto");
+      }
+    };
+    mediaQuery.addEventListener("change", handleSystemThemeChange);
+    return () => mediaQuery.removeEventListener("change", handleSystemThemeChange);
+  }, []);
+
   return (
     <AuthProvider>
       <Toaster position="top-right" />

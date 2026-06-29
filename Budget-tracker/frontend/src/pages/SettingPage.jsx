@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
 import { useAuth, api } from "../context/AuthContext";
+import { applyTheme } from "../App";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
@@ -238,10 +239,7 @@ const SettingsPage = () => {
   const tabs = [
     { id: "profile", label: "Profile & Identity", desc: "Personal info, avatar & regional units", icon: User },
     { id: "security", label: "Security & Auth", desc: "Password, 2FA & active sessions", icon: Lock },
-    { id: "preferences", label: "Application Setup", desc: "Dashboard layout & AI engine settings", icon: Sliders },
     { id: "appearance", label: "Appearance & Theme", desc: "Visual theme & display density", icon: Sun },
-    { id: "notifications", label: "Alerts & Digests", desc: "Email, push & budget threshold rules", icon: Bell },
-    { id: "accounts", label: "Connected Accounts", desc: "OAuth providers & linked devices", icon: Link2 },
     { id: "data", label: "Data & Export", desc: "Backup archives, reports & danger zone", icon: Database },
     { id: "about", label: "System & About", desc: "FinTrack platform specs & support", icon: Info }
   ];
@@ -683,38 +681,6 @@ const SettingsPage = () => {
                   </div>
                 )}
 
-                {/* ⚙ Application Preferences */}
-                {activeTab === "preferences" && (
-                  <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg space-y-6">
-                    <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                      <Sliders size={18} className="text-amber-400" />
-                      App Customization
-                    </h3>
-                    <div className="space-y-4">
-                      {[
-                        { key: 'ai_suggestions', label: 'AI Financial Advisory Engine', desc: 'Enable smart automated recommendations' },
-                        { key: 'weekly_report', label: 'Weekly Summary Digest', desc: 'Receive aggregated weekly spending notes' },
-                        { key: 'budget_alerts', label: 'Real-time Budget Threshold Alerts', desc: 'Alert when spending exceeds 85% threshold' }
-                      ].map(item => (
-                        <div key={item.key} className="flex items-center justify-between p-4 rounded-xl bg-white/[0.03] border border-white/5">
-                          <div>
-                            <div className="text-sm font-semibold text-white">{item.label}</div>
-                            <div className="text-xs text-slate-400">{item.desc}</div>
-                          </div>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={preferences[item.key]}
-                              onChange={(e) => setPreferences({ ...preferences, [item.key]: e.target.checked })}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-emerald-500 peer-checked:to-teal-500"></div>
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 {/* 🌐 Appearance & Theme */}
                 {activeTab === "appearance" && (
@@ -743,73 +709,6 @@ const SettingsPage = () => {
                   </div>
                 )}
 
-                {/* 🔔 Notifications Tab */}
-                {activeTab === "notifications" && (
-                  <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg space-y-4">
-                    <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                      <Bell size={18} className="text-emerald-400" />
-                      Notification Channels
-                    </h3>
-                    {[
-                      { key: 'email_notifications', label: 'Email Alerts', desc: 'Receive financial summaries via email' },
-                      { key: 'push_notifications', label: 'Browser Push Notifications', desc: 'Receive instant alerts in browser' },
-                      { key: 'spending_notifications', label: 'Unusual Spending Alerts', desc: 'Alerts for high single outlays' }
-                    ].map(item => (
-                      <div key={item.key} className="flex items-center justify-between p-4 rounded-xl bg-white/[0.03] border border-white/5">
-                        <div>
-                          <div className="text-sm font-semibold text-white">{item.label}</div>
-                          <div className="text-xs text-slate-400">{item.desc}</div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={preferences[item.key]}
-                            onChange={(e) => setPreferences({ ...preferences, [item.key]: e.target.checked })}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-emerald-500 peer-checked:to-teal-500"></div>
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* 📱 Connected Accounts Matrix */}
-                {activeTab === "accounts" && (
-                  <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg space-y-4">
-                    <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                      <Link2 size={18} className="text-cyan-400" />
-                      Connected Accounts & Identity Integrations
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {[
-                        { key: 'google', name: 'Google Workspace', icon: '🌐' },
-                        { key: 'github', name: 'GitHub Developer', icon: '🐙' },
-                        { key: 'apple', name: 'Apple ID', icon: '🍏' },
-                        { key: 'phone', name: 'Phone Authentication', icon: '📱' }
-                      ].map(acc => {
-                        const info = connectedAccounts[acc.key];
-                        return (
-                          <div key={acc.key} className="p-4 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <span className="text-2xl">{acc.icon}</span>
-                              <div>
-                                <div className="text-sm font-bold text-white">{acc.name}</div>
-                                <div className="text-xs text-slate-400">{info.connected ? (info.email || info.number || 'Connected') : 'Not Connected'}</div>
-                              </div>
-                            </div>
-                            <button
-                              onClick={() => toggleAccountConnection(acc.key)}
-                              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${info.connected ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/5 text-slate-300 border border-white/10'}`}
-                            >
-                              {info.connected ? 'Connected' : 'Connect'}
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
 
                 {/* 💾 Data & Danger Zone */}
                 {activeTab === "data" && (
