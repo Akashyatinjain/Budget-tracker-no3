@@ -1,5 +1,5 @@
-// AnalyticsPage.jsx - FinTrack Teal/Navy Theme
-import React, { useState, useEffect } from "react";
+// AnalyticsPage.jsx - FinTrack Unified Design System
+import React, { useState, useEffect, useRef } from "react";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
 import { useAuth, api } from "../context/AuthContext";
@@ -10,10 +10,11 @@ import {
 } from "recharts";
 import { motion } from "framer-motion";
 import {
-  FiTrendingUp, FiPieChart, FiCalendar, FiBarChart2,
-  FiActivity, FiTarget, FiAward, FiArrowUp, FiArrowDown,
-  FiRefreshCw, FiZap, FiShield, FiClock
-} from "react-icons/fi";
+  TrendingUp, PieChart as PieChartIcon, Calendar,
+  BarChart3, Activity, Target, Award, ArrowUp, ArrowDown,
+  RefreshCw, Zap, Shield, Clock, Sparkles,
+  Eye, Layers, Brain
+} from "lucide-react";
 
 const AnalyticsPage = () => {
   const { user, token } = useAuth();
@@ -23,11 +24,11 @@ const AnalyticsPage = () => {
   const [timeRange, setTimeRange] = useState("all");
 
   const categories = [
-    { id: 1, name: "Food & Dining",    color: "#10b981", icon: "🍕" },
+    { id: 1, name: "Food & Dining",    color: "#f43f5e", icon: "🍕" },
     { id: 2, name: "Shopping",         color: "#8b5cf6", icon: "🛍️" },
     { id: 3, name: "Transportation",   color: "#06b6d4", icon: "🚗" },
-    { id: 4, name: "Entertainment",    color: "#eab308", icon: "🎬" },
-    { id: 5, name: "Bills & Utilities",color: "#14b8a6", icon: "💡" },
+    { id: 4, name: "Entertainment",    color: "#f59e0b", icon: "🎬" },
+    { id: 5, name: "Bills & Utilities",color: "#84cc16", icon: "💡" },
     { id: 6, name: "Healthcare",       color: "#ef4444", icon: "🏥" },
     { id: 7, name: "Salary",           color: "#22c55e", icon: "💰" },
     { id: 8, name: "Investment",       color: "#3b82f6", icon: "📈" },
@@ -57,6 +58,11 @@ const AnalyticsPage = () => {
     if (!token) { setLoading(false); return; }
     fetchTransactions();
   }, [token]);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileSidebarOpen ? "hidden" : "auto";
+    return () => { document.body.style.overflow = "auto"; };
+  }, [mobileSidebarOpen]);
 
   const getFilteredTransactions = () => {
     if (!Array.isArray(transactions)) return [];
@@ -128,33 +134,94 @@ const AnalyticsPage = () => {
 
   const financialHealthScore = Math.max(0, Math.min(100, Math.round(savingsRate * 2 + 50)));
 
-  // Shared chart style tokens
-  const tooltipStyle = {
-    background: "#0d1117",
-    border: "1px solid #065f46",
-    borderRadius: "8px",
-    color: "#fff",
+  const healthColor = 
+    financialHealthScore >= 70 ? "from-emerald-400 to-teal-300" :
+    financialHealthScore >= 50 ? "from-yellow-400 to-orange-400" :
+    "from-red-400 to-rose-400";
+
+  // ====== Animation Variants ======
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+    },
   };
-  const gridStroke  = "#1e2a1e";
-  const axisStroke  = "#10b981";
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 300, damping: 24 },
+    },
+  };
+
+  // ====== Stat Cards Data ======
+  const statCards = [
+    { 
+      title: "Total Income", value: totalIncome, 
+      color: "from-green-400 to-emerald-300", icon: TrendingUp, 
+      trend: "up", subtitle: "This period",
+      bg: "from-green-500/10 to-emerald-500/5"
+    },
+    { 
+      title: "Total Expenses", value: totalExpense, 
+      color: "from-rose-400 to-red-300", icon: PieChartIcon, 
+      trend: "down", subtitle: "This period",
+      bg: "from-rose-500/10 to-red-500/5"
+    },
+    { 
+      title: "Net Savings", value: netSavings, 
+      color: netSavings >= 0 ? "from-emerald-400 to-teal-300" : "from-rose-400 to-red-300", 
+      icon: Target, trend: netSavings >= 0 ? "up" : "down",
+      subtitle: netSavings >= 0 ? "Saving progress" : "Deficit",
+      bg: netSavings >= 0 ? "from-emerald-500/10 to-teal-500/5" : "from-rose-500/10 to-red-500/5"
+    },
+    { 
+      title: "Savings Rate", value: savingsRate, 
+      color: savingsRate >= 20 ? "from-emerald-400 to-teal-300" : savingsRate >= 10 ? "from-yellow-400 to-orange-300" : "from-rose-400 to-red-300", 
+      icon: Zap, isPercentage: true,
+      trend: savingsRate >= 20 ? "up" : savingsRate >= 10 ? "neutral" : "down",
+      subtitle: savingsRate >= 20 ? "Excellent!" : savingsRate >= 10 ? "Good progress" : "Needs improvement",
+      bg: savingsRate >= 20 ? "from-emerald-500/10 to-teal-500/5" : savingsRate >= 10 ? "from-yellow-500/10 to-orange-500/5" : "from-rose-500/10 to-red-500/5"
+    },
+  ];
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-[#0d1117] text-emerald-300">
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-[#030712] via-[#07101f] to-[#050816] text-emerald-300">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           className="flex items-center gap-3"
         >
-          <FiRefreshCw className="w-6 h-6" />
-          <span>Loading analytics...</span>
+          <RefreshCw className="w-6 h-6" />
+          <span className="text-slate-400">Loading analytics...</span>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-[#0d1117] text-gray-100">
+    <div className="relative flex min-h-screen overflow-hidden bg-gradient-to-br from-[#030712] via-[#07101f] to-[#050816] text-white">
+
+      {/* Animated Background */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-[-180px] left-[-120px] h-[420px] w-[420px] rounded-full bg-emerald-500/15 blur-[140px] animate-pulse" />
+        <div className="absolute bottom-[-150px] right-[-120px] h-[420px] w-[420px] rounded-full bg-cyan-500/15 blur-[150px] animate-pulse" />
+        <div className="absolute top-1/2 left-1/2 h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-teal-400/10 blur-[120px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,.05),transparent_40%)]" />
+      </div>
+
+      {/* Floating particles */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute top-20 left-1/4 h-2 w-2 rounded-full bg-emerald-400 animate-pulse"/>
+        <div className="absolute bottom-40 right-20 h-2 w-2 rounded-full bg-cyan-400 animate-ping"/>
+        <div className="absolute top-72 right-1/3 h-3 w-3 rounded-full bg-teal-400 animate-pulse"/>
+      </div>
+
+      {/* Sidebar */}
       <AdvancedSidebar
         user={user || { username: "Guest" }}
         mobileOpen={mobileSidebarOpen}
@@ -164,347 +231,400 @@ const AnalyticsPage = () => {
       <div className="flex-1 flex flex-col min-h-screen">
         <Header onMobileToggle={() => setMobileSidebarOpen(true)} />
 
-        <main className="p-4 md:p-6 mt-16 flex flex-col gap-8">
+        <main className="p-4 md:p-8 mt-16 flex flex-col gap-6 max-w-[1600px] mx-auto w-full">
 
-          {/* ── Page Header ── */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="flex flex-col md:flex-row md:items-center md:justify-between"
-          >
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold text-emerald-400">Analytics</h1>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-medium text-emerald-400 uppercase tracking-wider">
-                  <FiZap className="w-3 h-3" />
-                  AI Insights Active
-                </span>
-              </div>
-              <p className="text-gray-400 text-sm mt-1">
-                Deep insights into your spending &amp; saving patterns 📊
-              </p>
-            </div>
+          {/* Glow orbs */}
+          <div className="absolute left-1/2 top-0 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[180px]" />
+          <div className="absolute bottom-0 right-0 h-[450px] w-[450px] rounded-full bg-cyan-500/10 blur-[180px]" />
 
-            {/* Time range pills */}
-            <motion.div className="flex gap-2 mt-4 md:mt-0">
-              {[
-                { key: "week",  label: "This Week"  },
-                { key: "month", label: "This Month" },
-                { key: "year",  label: "This Year"  },
-                { key: "all",   label: "All Time"   },
-              ].map((range) => (
-                <motion.button
-                  key={range.key}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setTimeRange(range.key)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all border ${
-                    timeRange === range.key
-                      ? "bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/20 border-transparent"
-                      : "bg-[#161b22]/80 text-gray-400 hover:text-white hover:bg-[#1f2937] border-[#30363d]/60"
-                  }`}
-                >
-                  {range.label}
-                </motion.button>
-              ))}
-            </motion.div>
-          </motion.div>
-
-          {/* ── Financial Health Score ── */}
+          {/* ====== Page Header with Gradient ====== */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-[#161b22]/80 border border-[#30363d]/60 rounded-2xl p-6 shadow-xl"
+            transition={{ duration: 0.5 }}
+            className="relative overflow-hidden rounded-[32px] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-emerald-500/[0.03] backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,.45)] p-8"
           >
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-emerald-500/10">
-                  <FiAward className="w-8 h-8 text-emerald-400" />
+            <div className="absolute -top-28 -right-20 h-80 w-80 rounded-full bg-emerald-500/15 blur-[120px]" />
+            <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-cyan-500/15 blur-[120px]" />
+
+            <div className="relative flex flex-col lg:flex-row justify-between gap-8">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-emerald-300 text-sm font-semibold">
+                  <Brain className="w-4 h-4" />
+                  Deep Analytics Engine
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Financial Health</h3>
-                  <p className="text-gray-400 text-sm">Based on your spending patterns</p>
-                </div>
+                <h1 className="mt-6 text-5xl font-black leading-tight">
+                  <span className="bg-gradient-to-r from-white via-emerald-200 to-cyan-300 bg-clip-text text-transparent">
+                    Financial
+                  </span>
+                  <br/>
+                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                    Analytics Hub
+                  </span>
+                </h1>
+                <p className="mt-5 max-w-xl text-slate-400 leading-8">
+                  Deep insights into your spending &amp; saving patterns.
+                  Make data-driven decisions for a richer future.
+                </p>
               </div>
-              <div className="mt-4 md:mt-0 text-center">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.5, type: "spring" }}
-                  className={`text-4xl font-bold ${
-                    financialHealthScore >= 70 ? "text-emerald-400" :
-                    financialHealthScore >= 50 ? "text-yellow-400" : "text-red-400"
-                  }`}
-                >
-                  {financialHealthScore}/100
-                </motion.div>
-                <div className="w-32 h-2 bg-[#21262d] rounded-full mt-2 mx-auto">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${financialHealthScore}%` }}
-                    transition={{ delay: 0.7, duration: 1 }}
-                    className={`h-full rounded-full ${
-                      financialHealthScore >= 70
-                        ? "bg-gradient-to-r from-emerald-400 to-teal-400"
-                        : financialHealthScore >= 50
-                        ? "bg-gradient-to-r from-yellow-400 to-orange-400"
-                        : "bg-gradient-to-r from-red-400 to-rose-400"
+
+              {/* Time Range Pills */}
+              <div className="flex flex-wrap items-end gap-2">
+                {[
+                  { key: "week",  label: "This Week"  },
+                  { key: "month", label: "This Month" },
+                  { key: "year",  label: "This Year"  },
+                  { key: "all",   label: "All Time"   },
+                ].map((range) => (
+                  <motion.button
+                    key={range.key}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setTimeRange(range.key)}
+                    className={`px-5 py-3 rounded-2xl text-sm font-semibold transition-all ${
+                      timeRange === range.key
+                        ? "bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 text-white shadow-xl shadow-emerald-500/30"
+                        : "bg-white/5 backdrop-blur-xl border border-white/10 text-slate-400 hover:text-white hover:border-emerald-500/30"
                     }`}
-                  />
-                </div>
+                  >
+                    {range.label}
+                  </motion.button>
+                ))}
               </div>
             </div>
           </motion.div>
 
-          {/* ── Stat Cards ── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { title: "Total Income",   value: totalIncome,  color: "text-emerald-400", icon: FiTrendingUp, trend: "positive", subtitle: "This period" },
-              { title: "Total Expenses", value: totalExpense, color: "text-rose-400",    icon: FiPieChart,   trend: "negative", subtitle: "This period" },
-              {
-                title: "Net Savings",
-                value: netSavings,
-                color: netSavings >= 0 ? "text-emerald-400" : "text-rose-400",
-                icon: FiTarget,
-                trend: netSavings >= 0 ? "positive" : "negative",
-                subtitle: netSavings >= 0 ? "Saving progress" : "Deficit",
-              },
-              {
-                title: "Savings Rate",
-                value: savingsRate,
-                color: savingsRate >= 20 ? "text-emerald-400" : savingsRate >= 10 ? "text-yellow-400" : "text-rose-400",
-                icon: FiZap,
-                isPercentage: true,
-                trend: savingsRate >= 20 ? "positive" : savingsRate >= 10 ? "neutral" : "negative",
-                subtitle: savingsRate >= 20 ? "Excellent!" : savingsRate >= 10 ? "Good progress" : "Needs improvement",
-              },
-            ].map((stat, i) => (
+          {/* ====== Financial Health Score Card ====== */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <motion.div
+              variants={itemVariants}
+              className="relative overflow-hidden bg-gradient-to-br from-purple-500/10 to-violet-500/5 border border-white/10 rounded-2xl p-6 shadow-lg hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 group"
+              whileHover={{ y: -2, scale: 1.005 }}
+            >
+              {/* Glow Effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              
+              <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20 shadow-lg">
+                    <Award className="w-8 h-8 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Financial Health Score</h3>
+                    <p className="text-sm text-slate-400 mt-1">Based on your spending &amp; saving patterns</p>
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                    className={`text-5xl font-black bg-gradient-to-r ${healthColor} bg-clip-text text-transparent`}
+                  >
+                    {financialHealthScore}
+                    <span className="text-2xl">/100</span>
+                  </motion.div>
+                  
+                  <div className="w-40 h-3 bg-[#1a2228] rounded-full mt-3 mx-auto overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${financialHealthScore}%` }}
+                      transition={{ delay: 0.5, duration: 1.2, ease: "easeOut" }}
+                      className={`h-full rounded-full bg-gradient-to-r ${healthColor}`}
+                    />
+                  </div>
+                  
+                  <p className={`text-xs mt-2 font-medium ${
+                    financialHealthScore >= 70 ? "text-emerald-400" :
+                    financialHealthScore >= 50 ? "text-yellow-400" : "text-rose-400"
+                  }`}>
+                    {financialHealthScore >= 70 ? "Excellent Health" :
+                     financialHealthScore >= 50 ? "Good Standing" : "Needs Attention"}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* ====== Stat Cards Row ====== */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+          >
+            {statCards.map((stat, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 + i * 0.1 }}
-                whileHover={{ y: -2 }}
-                className="bg-[#161b22]/80 border border-[#30363d]/60 rounded-xl p-6 shadow-lg hover:shadow-emerald-500/5 transition-all duration-300"
+                variants={itemVariants}
+                className={`relative overflow-hidden bg-gradient-to-br ${stat.bg} border border-white/10 rounded-2xl p-6 shadow-lg hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 group`}
+                whileHover={{ y: -4, scale: 1.01 }}
               >
-                <div className="flex items-center justify-between">
+                {/* Glow Effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                
+                <div className="relative flex items-start justify-between">
                   <div>
-                    <p className="text-sm text-gray-400">{stat.title}</p>
-                    <h2 className={`text-2xl font-bold ${stat.color} mt-1`}>
+                    <p className="text-sm text-slate-300 font-medium">{stat.title}</p>
+                    <h2 className={`text-2xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mt-1`}>
                       {stat.isPercentage
                         ? `${stat.value.toFixed(1)}%`
                         : `₹${stat.value.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`}
                     </h2>
                     {stat.subtitle && (
-                      <p className={`text-xs mt-1 ${
-                        stat.trend === "positive" ? "text-emerald-400" :
-                        stat.trend === "negative" ? "text-rose-400" : "text-yellow-400"
-                      }`}>
-                        {stat.subtitle}
-                      </p>
+                      <p className="text-xs text-slate-500 mt-1">{stat.subtitle}</p>
                     )}
                   </div>
-                  <div className={`p-3 rounded-lg ${
-                    stat.trend === "positive" ? "bg-emerald-500/20" :
-                    stat.trend === "negative" ? "bg-rose-500/20"    : "bg-yellow-500/20"
-                  }`}>
+                  <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-10 shadow-lg`}>
                     <stat.icon className={`w-5 h-5 ${
-                      stat.trend === "positive" ? "text-emerald-400" :
-                      stat.trend === "negative" ? "text-rose-400"    : "text-yellow-400"
+                      stat.trend === "up" ? "text-emerald-400" :
+                      stat.trend === "down" ? "text-rose-400" : "text-yellow-400"
                     }`} />
                   </div>
                 </div>
+                
+                {/* Trend indicator */}
+                <div className="absolute bottom-4 right-4 flex items-center gap-1">
+                  <span className={`text-xs font-medium ${
+                    stat.trend === "up" ? "text-emerald-400" :
+                    stat.trend === "down" ? "text-rose-400" : "text-yellow-400"
+                  }`}>
+                    {stat.trend === "up" ? "↑" : stat.trend === "down" ? "↓" : "→"}
+                  </span>
+                </div>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
 
-          {/* ── AI Insight Banner ── */}
+          {/* ====== AI Insight Banner ====== */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="bg-[#161b22]/80 border border-emerald-500/20 rounded-xl p-4 flex items-center justify-between"
+            transition={{ delay: 0.2 }}
+            className="relative overflow-hidden bg-gradient-to-br from-emerald-500/10 to-teal-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-5 shadow-lg hover:border-emerald-500/40 transition-all"
+            whileHover={{ y: -1 }}
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/10">
-                <FiZap className="w-5 h-5 text-emerald-400" />
+            <div className="absolute -top-10 -right-10 h-20 w-20 rounded-full bg-emerald-500/20 blur-[40px]" />
+            
+            <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20">
+                  <Brain className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">AI Insight</p>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {savingsRate >= 20
+                      ? "Great job! Your savings rate is above 20%. Keep up the excellent work! 🎯"
+                      : savingsRate >= 10
+                      ? "Good progress! Try to increase your savings rate to 20% for better financial health."
+                      : "Consider reviewing your expenses. Small changes can make a big difference over time."}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-white">AI Insight</p>
-                <p className="text-xs text-gray-400">
-                  {savingsRate >= 20
-                    ? "Great job! Your savings rate is above 20%. Keep up the excellent work! 🎯"
-                    : savingsRate >= 10
-                    ? "Good progress! Try to increase your savings rate to 20% for better financial health."
-                    : "Consider reviewing your expenses. Small changes can make a big difference over time."}
-                </p>
+              <div className="flex items-center gap-4 text-xs text-slate-500">
+                <span className="flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                  Secure
+                </span>
+                <span className="hidden sm:flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" />
+                  Real-time
+                </span>
               </div>
-            </div>
-            <div className="flex items-center gap-4 text-xs text-gray-400">
-              <span className="flex items-center gap-1">
-                <FiShield className="w-3 h-3 text-emerald-400" />
-                Secure
-              </span>
-              <span className="hidden sm:flex items-center gap-1">
-                <FiClock className="w-3 h-3" />
-                Real-time
-              </span>
             </div>
           </motion.div>
 
-          {/* ── Charts Row ── */}
+          {/* ====== Charts Row ====== */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Monthly Overview */}
             <motion.div
-              className="bg-[#161b22]/80 border border-[#30363d]/60 rounded-xl p-6 shadow-lg"
+              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <div className="flex items-center gap-2 mb-6">
-                <FiCalendar className="text-emerald-400 w-5 h-5" />
-                <h3 className="text-lg font-semibold text-emerald-300">Monthly Overview</h3>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20">
+                  <Calendar className="w-5 h-5 text-emerald-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Monthly Overview</h3>
+                <span className="ml-auto text-xs text-slate-500 bg-[#1a2228] px-3 py-1 rounded-full">Last 6 months</span>
               </div>
               <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={monthlyChart}>
                   <defs>
-                    <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#22c55e" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0.1} />
+                    <linearGradient id="incomeGradient2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%"  stopColor="#22c55e" stopOpacity={0.6} />
+                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
                     </linearGradient>
-                    <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#ef4444" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1} />
+                    <linearGradient id="expenseGradient2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%"  stopColor="#ef4444" stopOpacity={0.6} />
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-                  <XAxis dataKey="month" stroke={axisStroke} fontSize={12} />
-                  <YAxis stroke={axisStroke} fontSize={12} />
-                  <Tooltip contentStyle={tooltipStyle} />
-                  <Legend wrapperStyle={{ color: "#9ca3af" }} />
-                  <Area type="monotone" dataKey="income"  stroke="#22c55e" fillOpacity={1} fill="url(#incomeGradient)" />
-                  <Area type="monotone" dataKey="expense" stroke="#ef4444" fillOpacity={1} fill="url(#expenseGradient)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1a252f" vertical={false} />
+                  <XAxis dataKey="month" stroke="#4a5a6a" fontSize={11} />
+                  <YAxis stroke="#4a5a6a" fontSize={11} tickFormatter={(v) => `₹${(v/1000).toFixed(0)}k`} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#0d141a",
+                      border: "1px solid #2a333d",
+                      borderRadius: "12px",
+                      padding: "12px",
+                    }}
+                    formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, '']}
+                  />
+                  <Area type="monotone" dataKey="income" stroke="#22c55e" strokeWidth={3} fillOpacity={1} fill="url(#incomeGradient2)" />
+                  <Area type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#expenseGradient2)" />
+                  <Legend />
                 </AreaChart>
               </ResponsiveContainer>
             </motion.div>
 
             {/* Expense Breakdown */}
             <motion.div
-              className="bg-[#161b22]/80 border border-[#30363d]/60 rounded-xl p-6 shadow-lg"
+              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <div className="flex items-center gap-2 mb-6">
-                <FiPieChart className="text-emerald-400 w-5 h-5" />
-                <h3 className="text-lg font-semibold text-emerald-300">Expense Breakdown</h3>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-purple-400/20 to-violet-400/20">
+                  <PieChartIcon className="w-5 h-5 text-purple-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Expense Breakdown</h3>
               </div>
+              
               {categoryData.length > 0 ? (
-                <div className="flex flex-col lg:flex-row items-center">
-                  <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                      <Pie
-                        data={categoryData}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                      >
-                        {categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        formatter={(value) => [`₹${value.toLocaleString()}`, "Amount"]}
-                        contentStyle={tooltipStyle}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="flex-1 space-y-3 mt-4 lg:mt-0 lg:ml-4">
+                <div className="flex flex-col lg:flex-row items-center gap-6">
+                  <div className="w-full lg:w-1/2 h-56 sm:h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={categoryData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          paddingAngle={2}
+                          label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                          labelLine={false}
+                        >
+                          {categoryData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} stroke="#0a0e12" strokeWidth={2} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#0d141a",
+                            border: "1px solid #2a333d",
+                            borderRadius: "12px",
+                            padding: "12px",
+                          }}
+                          formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, 'Amount']}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  
+                  <div className="flex-1 space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-emerald-500/20 w-full">
                     {categoryData.slice(0, 4).map((category, index) => (
                       <motion.div
                         key={index}
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.5 + index * 0.1 }}
-                        className="flex items-center justify-between p-3 rounded-lg bg-[#1a2f1a]/40 border border-[#30363d]/40 hover:border-emerald-600/30 transition-all"
+                        className="flex items-center justify-between p-3 rounded-lg hover:bg-[#1a2228] transition-colors"
                       >
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg">{category.icon}</span>
-                          <span className="text-sm text-gray-300">{category.name}</span>
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: category.color }} />
+                          <span className="text-sm text-gray-300 truncate">{category.name}</span>
                         </div>
-                        <div className="text-right">
-                          <div className="text-white font-medium text-sm">₹{category.value.toLocaleString()}</div>
-                          <div className="text-xs text-gray-400">{category.percentage.toFixed(1)}%</div>
+                        <div className="text-right flex-shrink-0 ml-3">
+                          <div className="text-white font-medium text-sm">₹{category.value.toLocaleString('en-IN')}</div>
+                          <div className="text-xs text-slate-500">{category.percentage.toFixed(1)}%</div>
                         </div>
                       </motion.div>
                     ))}
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-400 text-center py-6">No expense data available.</p>
+                <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+                  <PieChartIcon className="w-12 h-12 mb-3 opacity-20" />
+                  <p className="text-sm">No expense data available</p>
+                </div>
               )}
             </motion.div>
           </div>
 
-          {/* ── Bottom Row ── */}
+          {/* ====== Bottom Row ====== */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Income vs Expense Bar */}
             <motion.div
-              className="lg:col-span-2 bg-[#161b22]/80 border border-[#30363d]/60 rounded-xl p-6 shadow-lg"
+              className="lg:col-span-2 bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
-              <div className="flex items-center gap-2 mb-6">
-                <FiBarChart2 className="text-emerald-400 w-5 h-5" />
-                <h3 className="text-lg font-semibold text-emerald-300">Income vs Expenses</h3>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-400/20 to-indigo-400/20">
+                  <BarChart3 className="w-5 h-5 text-blue-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Income vs Expenses</h3>
               </div>
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart
-                  data={[{ name: "You", income: totalIncome, expense: totalExpense }]}
+                  data={[{ name: "Overview", income: totalIncome, expense: totalExpense }]}
                   barCategoryGap="30%"
-                  barGap={6}
+                  barGap={8}
                   margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-                  <XAxis dataKey="name" stroke={axisStroke} fontSize={12} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1a252f" vertical={false} />
+                  <XAxis dataKey="name" stroke="#4a5a6a" fontSize={12} />
                   <YAxis
-                    stroke={axisStroke}
+                    stroke="#4a5a6a"
                     fontSize={12}
-                    tickFormatter={(v) => v >= 100000 ? `${(v / 100000).toFixed(1)}L` : v}
+                    tickFormatter={(v) => `₹${(v/1000).toFixed(0)}k`}
                     domain={[0, "dataMax + 10000"]}
                   />
                   <Tooltip
-                    contentStyle={tooltipStyle}
-                    formatter={(value, name) => [
-                      `₹${value.toLocaleString("en-IN")}`,
-                      name.charAt(0).toUpperCase() + name.slice(1),
-                    ]}
+                    contentStyle={{
+                      backgroundColor: "#0d141a",
+                      border: "1px solid #2a333d",
+                      borderRadius: "12px",
+                      padding: "12px",
+                    }}
+                    formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, '']}
                   />
-                  <Legend wrapperStyle={{ fontSize: "12px", color: "#9ca3af" }} />
-                  <Bar dataKey="income"  fill="#22c55e" radius={[6, 6, 0, 0]} barSize={40} />
-                  <Bar dataKey="expense" fill="#ef4444" radius={[6, 6, 0, 0]} barSize={40} />
+                  <Legend wrapperStyle={{ fontSize: "12px" }} />
+                  <Bar dataKey="income" fill="#22c55e" radius={[8, 8, 0, 0]} barSize={50} />
+                  <Bar dataKey="expense" fill="#ef4444" radius={[8, 8, 0, 0]} barSize={50} />
                 </BarChart>
               </ResponsiveContainer>
             </motion.div>
 
             {/* Top Categories + Savings Tip */}
             <motion.div
-              className="bg-[#161b22]/80 border border-[#30363d]/60 rounded-xl p-6 shadow-lg"
+              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
             >
-              <div className="flex items-center gap-2 mb-6">
-                <FiActivity className="text-emerald-400 w-5 h-5" />
-                <h3 className="text-lg font-semibold text-emerald-300">Top Categories</h3>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-400/20 to-blue-400/20">
+                  <Activity className="w-5 h-5 text-cyan-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Top Categories</h3>
               </div>
-              <div className="space-y-3">
+              
+              <div className="space-y-2">
                 {topSpendingCategories.length > 0 ? (
                   topSpendingCategories.map((category, index) => (
                     <motion.div
@@ -512,20 +632,23 @@ const AnalyticsPage = () => {
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.7 + index * 0.1 }}
-                      className="flex items-center justify-between p-3 rounded-lg bg-[#1a2f1a]/40 border border-[#30363d]/40 hover:border-emerald-600/30 transition-all"
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-[#1a2228] transition-colors"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
-                        <span className="text-sm text-gray-300">{category.name}</span>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: category.color }} />
+                        <span className="text-sm text-gray-300 truncate">{category.name}</span>
                       </div>
-                      <div className="text-right">
-                        <div className="text-white font-medium text-sm">₹{category.value.toLocaleString()}</div>
-                        <div className="text-xs text-gray-400">{category.percentage.toFixed(1)}%</div>
+                      <div className="text-right flex-shrink-0 ml-3">
+                        <div className="text-white font-medium text-sm">₹{category.value.toLocaleString('en-IN')}</div>
+                        <div className="text-xs text-slate-500">{category.percentage.toFixed(1)}%</div>
                       </div>
                     </motion.div>
                   ))
                 ) : (
-                  <p className="text-gray-400 text-center py-6 text-sm">No spending data available.</p>
+                  <div className="flex flex-col items-center justify-center py-8 text-slate-500">
+                    <Eye className="w-8 h-8 mb-2 opacity-20" />
+                    <p className="text-xs">No spending data available</p>
+                  </div>
                 )}
               </div>
 
@@ -534,11 +657,11 @@ const AnalyticsPage = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 1 }}
-                  className="mt-6 p-4 rounded-xl bg-[#1a1a0d]/60 border border-yellow-500/20"
+                  className="mt-6 p-4 rounded-xl bg-gradient-to-br from-yellow-500/10 to-orange-500/5 border border-yellow-500/20"
                 >
                   <div className="flex items-center gap-2 text-yellow-400 mb-2">
-                    <FiTarget className="w-4 h-4" />
-                    <span className="text-sm font-medium">Savings Tip</span>
+                    <Target className="w-4 h-4" />
+                    <span className="text-sm font-semibold">Savings Tip</span>
                   </div>
                   <p className="text-xs text-yellow-300/80 leading-relaxed">
                     {savingsRate < 0
@@ -551,6 +674,18 @@ const AnalyticsPage = () => {
               )}
             </motion.div>
           </div>
+
+          {/* ====== Footer Branding ====== */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="text-center py-6 border-t border-white/10"
+          >
+            <p className="text-xs text-slate-500">
+              <span className="text-emerald-400 font-medium">FinTrack</span> — Trusted by finance professionals across India
+            </p>
+          </motion.div>
 
         </main>
       </div>

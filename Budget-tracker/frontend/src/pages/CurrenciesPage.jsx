@@ -1,4 +1,4 @@
-// CurrenciesPage.jsx - FinTrack Theme
+// CurrenciesPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
@@ -6,18 +6,22 @@ import AdvancedSidebar from "../components/Sidebar";
 import { useAuth, api } from "../context/AuthContext";
 import { motion } from "framer-motion";
 import {
-  FiPlus,
-  FiRefreshCw,
-  FiDollarSign,
-  FiGlobe,
-  FiTrendingUp,
-  FiZap,
-  FiShield,
-  FiClock,
-  FiStar,
-  FiTrash2,
-  FiCheckCircle
-} from "react-icons/fi";
+  Plus,
+  RefreshCw,
+  DollarSign,
+  Globe,
+  TrendingUp,
+  Zap,
+  Shield,
+  Clock,
+  Star,
+  Trash2,
+  CheckCircle,
+  Sparkles,
+  ArrowRightLeft,
+  Table,
+  ChevronRight
+} from "lucide-react";
 
 const CurrenciesPage = () => {
   const { user, token } = useAuth();
@@ -72,6 +76,7 @@ const CurrenciesPage = () => {
   useEffect(() => {
     document.body.style.overflow =
       mobileSidebarOpen || showAddCurrency ? "hidden" : "auto";
+    return () => { document.body.style.overflow = "auto"; };
   }, [mobileSidebarOpen, showAddCurrency]);
 
   useEffect(() => {
@@ -150,7 +155,7 @@ const CurrenciesPage = () => {
         rate_to_inr: rateNum,
         is_default: !!newCurrency.is_default,
       });
-      toast.success("Currency added successfully!");
+      toast.success("✨ Currency added successfully!");
       setShowAddCurrency(false);
       setNewCurrency({ code: "", name: "", rate_to_inr: "", is_default: false });
       fetchCurrencies();
@@ -244,152 +249,237 @@ const CurrenciesPage = () => {
     return isFinite(n) ? n : "N/A";
   };
 
+  // ====== Animation Variants ======
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 300, damping: 24 },
+    },
+  };
+
+  // ====== Stat Cards Data ======
+  const statCards = [
+    {
+      label: "Default Currency",
+      value: `${userCurrency} • ${getCurrencySymbol(userCurrency)}`,
+      subtext: "Your primary currency",
+      color: "from-emerald-400 to-teal-300",
+      icon: Star,
+      bg: "from-emerald-500/10 to-teal-500/5"
+    },
+    {
+      label: "Supported",
+      value: `${currencies.length} Currencies`,
+      subtext: "Available for conversion",
+      color: "from-cyan-400 to-blue-300",
+      icon: Globe,
+      bg: "from-cyan-500/10 to-blue-500/5"
+    },
+    {
+      label: "Base Currency",
+      value: "Indian Rupee (INR)",
+      subtext: "Rates shown vs INR",
+      color: "from-purple-400 to-violet-300",
+      icon: TrendingUp,
+      bg: "from-purple-500/10 to-violet-500/5"
+    }
+  ];
+
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-[#0a0a0f] text-gray-100">
-        <AdvancedSidebar user={user} mobileOpen={mobileSidebarOpen} onMobileClose={() => setMobileSidebarOpen(false)} />
-        <div className="flex-1 flex items-center justify-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="flex items-center gap-3 text-emerald-400"
-          >
-            <FiGlobe className="w-6 h-6" />
-            <span>Loading currencies...</span>
-          </motion.div>
-        </div>
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-[#030712] via-[#07101f] to-[#050816] text-emerald-300">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="flex items-center gap-3"
+        >
+          <Globe className="w-6 h-6" />
+          <span className="text-slate-400">Loading currencies...</span>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-[#0a0a0f] text-gray-100">
-      <AdvancedSidebar user={user} mobileOpen={mobileSidebarOpen} onMobileClose={() => setMobileSidebarOpen(false)} />
+    <div className="relative flex min-h-screen overflow-hidden bg-gradient-to-br from-[#030712] via-[#07101f] to-[#050816] text-white">
+
+      {/* Animated Background */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-[-180px] left-[-120px] h-[420px] w-[420px] rounded-full bg-emerald-500/15 blur-[140px] animate-pulse" />
+        <div className="absolute bottom-[-150px] right-[-120px] h-[420px] w-[420px] rounded-full bg-cyan-500/15 blur-[150px] animate-pulse" />
+        <div className="absolute top-1/2 left-1/2 h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-teal-400/10 blur-[120px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,.05),transparent_40%)]" />
+      </div>
+
+      {/* Floating particles */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute top-20 left-1/4 h-2 w-2 rounded-full bg-emerald-400 animate-pulse"/>
+        <div className="absolute bottom-40 right-20 h-2 w-2 rounded-full bg-cyan-400 animate-ping"/>
+        <div className="absolute top-72 right-1/3 h-3 w-3 rounded-full bg-teal-400 animate-pulse"/>
+      </div>
+
+      {/* Sidebar */}
+      <AdvancedSidebar 
+        user={user} 
+        mobileOpen={mobileSidebarOpen} 
+        onMobileClose={() => setMobileSidebarOpen(false)} 
+      />
 
       <div className="flex-1 flex flex-col min-h-screen">
         <Header onMobileToggle={() => setMobileSidebarOpen(true)} />
 
-        <main className="p-3 sm:p-4 md:p-6 mt-16 flex flex-col gap-6">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3"
-          >
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl md:text-3xl font-bold text-white">Currencies</h1>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-medium text-emerald-400 uppercase tracking-wider">
-                  <FiZap className="w-3 h-3" />
-                  AI Insights Active
-                </span>
-              </div>
-              <p className="text-gray-400 text-sm">Manage currencies & exchange rates</p>
-            </div>
+        <main className="p-4 md:p-8 mt-16 flex flex-col gap-6 max-w-[1600px] mx-auto w-full">
 
-            <button
-              onClick={() => setShowAddCurrency(true)}
-              className="w-full md:w-auto bg-gradient-to-r from-emerald-500 to-teal-400 text-white px-4 py-2.5 rounded-xl font-medium hover:from-emerald-600 hover:to-teal-500 transition-all duration-200 shadow-lg shadow-emerald-500/20 flex items-center gap-2 justify-center"
-            >
-              <FiPlus className="w-4 h-4" />
-              Add Currency
-            </button>
+          {/* Glow orbs */}
+          <div className="absolute left-1/2 top-0 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[180px]" />
+          <div className="absolute bottom-0 right-0 h-[450px] w-[450px] rounded-full bg-cyan-500/10 blur-[180px]" />
+
+          {/* ====== Page Header with Gradient ====== */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="relative overflow-hidden rounded-[32px] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-emerald-500/[0.03] backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,.45)] p-8"
+          >
+            <div className="absolute -top-28 -right-20 h-80 w-80 rounded-full bg-emerald-500/15 blur-[120px]" />
+            <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-cyan-500/15 blur-[120px]" />
+
+            <div className="relative flex flex-col lg:flex-row justify-between gap-6">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-emerald-300 text-sm font-semibold">
+                  <Sparkles className="w-4 h-4" />
+                  Multi-Currency Support
+                </div>
+                <h1 className="mt-6 text-5xl font-black leading-tight">
+                  <span className="bg-gradient-to-r from-white via-emerald-200 to-cyan-300 bg-clip-text text-transparent">
+                    Currency
+                  </span>
+                  <br/>
+                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                    Management
+                  </span>
+                </h1>
+                <p className="mt-5 max-w-xl text-slate-400 leading-8">
+                  Manage currencies & exchange rates.
+                  Convert between any supported currency instantly.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-end gap-3">
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setShowAddCurrency(true)}
+                  className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-5 py-3 font-semibold shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/60 transition-all flex items-center gap-2"
+                >
+                  <Plus size={16} />
+                  Add Currency
+                </motion.button>
+              </div>
+            </div>
           </motion.div>
 
-          {/* AI Insight Banner */}
+          {/* ====== Currency Overview Banner ====== */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-center justify-between"
+            transition={{ delay: 0.15 }}
+            className="relative overflow-hidden bg-gradient-to-br from-emerald-500/10 to-teal-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-5 shadow-lg hover:border-emerald-500/40 transition-all"
+            whileHover={{ y: -1 }}
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/20">
-                <FiGlobe className="w-5 h-5 text-emerald-400" />
+            <div className="absolute -top-10 -right-10 h-20 w-20 rounded-full bg-emerald-500/20 blur-[40px]" />
+            
+            <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20">
+                  <Globe className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">Currency Overview</p>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {currencies.length} currencies supported · Default: <span className="text-emerald-400 font-medium">{userCurrency}</span>
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-white">Currency Overview</p>
-                <p className="text-xs text-gray-400">
-                  {currencies.length} currencies supported · Default: {userCurrency}
-                </p>
+              <div className="flex items-center gap-4 text-xs text-slate-500">
+                <span className="flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                  Secure
+                </span>
+                <span className="hidden sm:flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" />
+                  Real-time rates
+                </span>
               </div>
-            </div>
-            <div className="flex items-center gap-4 text-xs text-gray-400">
-              <span className="flex items-center gap-1">
-                <FiShield className="w-3 h-3 text-emerald-400" />
-                Secure
-              </span>
-              <span className="hidden sm:inline">
-                <FiClock className="w-3 h-3 inline mr-1" />
-                Real-time rates
-              </span>
             </div>
           </motion.div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[
-              {
-                label: "Default Currency",
-                value: `${userCurrency} • ${getCurrencySymbol(userCurrency)}`,
-                subtext: "Your primary currency",
-                color: "text-emerald-400",
-                icon: FiStar,
-                bgColor: "bg-emerald-500/20"
-              },
-              {
-                label: "Supported",
-                value: `${currencies.length} Currencies`,
-                subtext: "Available for conversion",
-                color: "text-teal-400",
-                icon: FiGlobe,
-                bgColor: "bg-teal-500/20"
-              },
-              {
-                label: "Base Currency",
-                value: "Indian Rupee (INR)",
-                subtext: "Rates shown vs INR",
-                color: "text-yellow-400",
-                icon: FiTrendingUp,
-                bgColor: "bg-yellow-500/20"
-              }
-            ].map((stat, i) => (
+          {/* ====== Stat Cards ====== */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 sm:grid-cols-3 gap-5"
+          >
+            {statCards.map((stat, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + i * 0.05 }}
-                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 shadow-lg"
+                variants={itemVariants}
+                className={`relative overflow-hidden bg-gradient-to-br ${stat.bg} border border-white/10 rounded-2xl p-6 shadow-lg hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 group`}
+                whileHover={{ y: -4, scale: 1.01 }}
               >
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 ${stat.bgColor} rounded-lg`}>
-                    <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                {/* Glow Effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                
+                <div className="relative flex items-center gap-4">
+                  <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-10 shadow-lg`}>
+                    <stat.icon className="w-5 h-5 text-emerald-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-400">{stat.label}</p>
-                    <h3 className={`text-lg font-semibold ${stat.color}`}>
-                      {stat.value}
-                    </h3>
-                    <p className="text-xs text-gray-500">{stat.subtext}</p>
+                    <p className="text-sm text-slate-300 font-medium">{stat.label}</p>
+                    <h3 className="text-lg font-bold text-white mt-0.5">{stat.value}</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">{stat.subtext}</p>
                   </div>
                 </div>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
 
+          {/* ====== Main Content Row ====== */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Currencies list */}
+            {/* Currencies List */}
             <motion.div
+              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 md:p-5 shadow-lg"
+              transition={{ delay: 0.3 }}
             >
-              <h3 className="text-lg font-semibold text-white mb-4">Your Currencies</h3>
-              <div className="space-y-3 max-h-[40rem] overflow-y-auto pr-2">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20">
+                  <Globe className="w-5 h-5 text-emerald-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Your Currencies</h3>
+                <span className="ml-auto text-xs text-slate-500 bg-[#1a2228] px-3 py-1 rounded-full">
+                  {currencies.length} total
+                </span>
+              </div>
+              
+              <div className="space-y-2 max-h-[35rem] overflow-y-auto scrollbar-thin scrollbar-thumb-emerald-500/20 pr-1">
                 {currencies.length === 0 && (
-                  <div className="text-center py-8 text-gray-400">No currencies found. Add one.</div>
+                  <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+                    <Globe className="w-12 h-12 mb-3 opacity-20" />
+                    <p className="text-sm">No currencies found. Add one to get started.</p>
+                  </div>
                 )}
 
                 {currencies.map((currency, index) => (
@@ -398,77 +488,93 @@ const CurrenciesPage = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.03 }}
-                    className={`p-3 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${
+                    className={`p-4 rounded-xl border transition-all ${
                       currency.is_default 
-                        ? "bg-emerald-500/5 border-emerald-500/20" 
-                        : "bg-white/5 border-white/10 hover:border-emerald-500/10"
+                        ? "bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border-emerald-500/30" 
+                        : "bg-white/[0.03] backdrop-blur-xl border-white/10 hover:border-emerald-500/30 hover:bg-white/[0.05]"
                     }`}
+                    whileHover={{ x: 4 }}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="text-2xl">{getCurrencyFlag(currency.code)}</span>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-white text-sm truncate">{currency.name}</h4>
-                          <span className="text-xs text-gray-400 font-mono">{currency.code}</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="p-2.5 rounded-xl bg-white/[0.03] flex-shrink-0">
+                          <span className="text-2xl">{getCurrencyFlag(currency.code)}</span>
                         </div>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {getCurrencySymbol(currency.code)} • Rate: {formatRateToINR(currency.rate_to_inr)}
-                        </p>
-                        <p className="text-xs text-emerald-400 mt-0.5">
-                          1 INR = {(1 / (safeNumber(currency.rate_to_inr, 1))).toFixed(4)} {currency.code}
-                        </p>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold text-white text-sm truncate">{currency.name}</h4>
+                            <span className="text-xs text-slate-500 font-mono bg-[#1a2228] px-2 py-0.5 rounded-full">{currency.code}</span>
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1">
+                            <span className="text-slate-400">{getCurrencySymbol(currency.code)}</span> • Rate: {formatRateToINR(currency.rate_to_inr)} INR
+                          </p>
+                          <p className="text-xs text-emerald-400/80 mt-0.5 font-mono">
+                            1 INR = {(1 / (safeNumber(currency.rate_to_inr, 1))).toFixed(4)} {currency.code}
+                          </p>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                      {currency.is_default ? (
-                        <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full flex items-center gap-1">
-                          <FiCheckCircle className="w-3 h-3" />
-                          Default
-                        </span>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => handleSetDefault(currency.code)}
-                            className="px-3 py-1.5 bg-teal-500/20 text-teal-400 text-sm rounded-lg hover:bg-teal-500/30 w-full sm:w-auto transition flex items-center gap-1"
-                          >
-                            <FiStar className="w-3 h-3" />
-                            Set Default
-                          </button>
-                          <button
-                            onClick={() => handleRemoveCurrency(currency.code)}
-                            className="px-3 py-1.5 bg-rose-500/20 text-rose-400 text-sm rounded-lg hover:bg-rose-500/30 w-full sm:w-auto transition flex items-center gap-1"
-                          >
-                            <FiTrash2 className="w-3 h-3" />
-                            Remove
-                          </button>
-                        </>
-                      )}
+                      <div className="flex items-center gap-2 sm:flex-shrink-0">
+                        {currency.is_default ? (
+                          <span className="px-3 py-1.5 bg-emerald-500/20 text-emerald-400 text-xs rounded-full flex items-center gap-1.5 font-medium border border-emerald-500/20">
+                            <CheckCircle className="w-3 h-3" />
+                            Default
+                          </span>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleSetDefault(currency.code)}
+                              className="px-3 py-1.5 bg-gradient-to-br from-teal-500/20 to-cyan-500/20 text-teal-400 text-xs rounded-lg hover:from-teal-500/30 hover:to-cyan-500/30 transition-all flex items-center gap-1 border border-teal-500/20"
+                            >
+                              <Star className="w-3 h-3" />
+                              Set Default
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleRemoveCurrency(currency.code)}
+                              className="px-3 py-1.5 bg-rose-500/10 text-rose-400 text-xs rounded-lg hover:bg-rose-500/20 transition-all flex items-center gap-1 border border-rose-500/10"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              Remove
+                            </motion.button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </motion.div>
                 ))}
               </div>
             </motion.div>
 
-            {/* Converter */}
+            {/* Currency Converter */}
             <motion.div
+              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 md:p-5 shadow-lg"
+              transition={{ delay: 0.4 }}
             >
-              <h3 className="text-lg font-semibold text-white mb-4">💱 Currency Converter</h3>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-400/20 to-blue-400/20">
+                  <ArrowRightLeft className="w-5 h-5 text-cyan-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Currency Converter</h3>
+                <span className="ml-auto text-xs text-slate-500 bg-[#1a2228] px-3 py-1 rounded-full">Live rates</span>
+              </div>
+              
               <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1.5">From</label>
+                    <label className="block text-sm text-slate-400 mb-2 font-medium">From</label>
                     <select
                       value={converter.fromCurrency}
                       onChange={(e) => setConverter({ ...converter, fromCurrency: e.target.value })}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
+                      className="w-full p-3 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none"
                     >
                       {currencies.map((c) => (
-                        <option key={`from-${c.code}`} value={c.code}>
+                        <option key={`from-${c.code}`} value={c.code} className="bg-[#0d141a]">
                           {c.code} - {c.name}
                         </option>
                       ))}
@@ -476,14 +582,14 @@ const CurrenciesPage = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1.5">To</label>
+                    <label className="block text-sm text-slate-400 mb-2 font-medium">To</label>
                     <select
                       value={converter.toCurrency}
                       onChange={(e) => setConverter({ ...converter, toCurrency: e.target.value })}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
+                      className="w-full p-3 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none"
                     >
                       {currencies.map((c) => (
-                        <option key={`to-${c.code}`} value={c.code}>
+                        <option key={`to-${c.code}`} value={c.code} className="bg-[#0d141a]">
                           {c.code} - {c.name}
                         </option>
                       ))}
@@ -492,23 +598,36 @@ const CurrenciesPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1.5">Amount</label>
+                  <label className="block text-sm text-slate-400 mb-2 font-medium">Amount</label>
                   <input
                     type="number"
                     step="any"
                     placeholder="Enter amount"
                     value={converter.amount}
                     onChange={(e) => setConverter({ ...converter, amount: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
+                    className="w-full p-3 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
                   />
                 </div>
 
-                <div className="p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
-                  <p className="text-sm text-gray-400">Result</p>
-                  <h4 className="text-lg md:text-xl font-bold text-emerald-400 mt-1">
-                    {converter.amount} {converter.fromCurrency} = {convertedAmount || "—"} {converter.toCurrency}
+                <div className="p-5 bg-gradient-to-br from-emerald-500/10 to-teal-500/5 rounded-xl border border-emerald-500/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <DollarSign className="w-4 h-4 text-emerald-400" />
+                    <p className="text-sm text-slate-400 font-medium">Converted Amount</p>
+                  </div>
+                  <h4 className="text-xl md:text-2xl font-bold text-white mt-1">
+                    {convertedAmount ? (
+                      <>
+                        <span className="text-slate-400">{converter.amount} {converter.fromCurrency}</span>
+                        <span className="mx-2 text-emerald-400">=</span>
+                        <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                          {convertedAmount} {converter.toCurrency}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-slate-600">—</span>
+                    )}
                   </h4>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-slate-500 mt-3 pt-3 border-t border-emerald-500/10">
                     Rate: 1 {converter.fromCurrency} = {getExchangeRate(converter.fromCurrency, converter.toCurrency)} {converter.toCurrency}
                   </p>
                 </div>
@@ -516,54 +635,70 @@ const CurrenciesPage = () => {
             </motion.div>
           </div>
 
-          {/* Exchange rates table */}
+          {/* ====== Exchange Rates Table ====== */}
           <motion.div
+            className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all overflow-hidden"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 md:p-5 shadow-lg"
+            transition={{ delay: 0.5 }}
           >
-            <div className="flex items-center gap-2 mb-4">
-              <FiTrendingUp className="text-emerald-400 w-5 h-5" />
-              <h3 className="text-lg font-semibold text-white">📈 Exchange Rates (Base: INR)</h3>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-400/20 to-indigo-400/20">
+                <Table className="w-5 h-5 text-blue-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white">Exchange Rates</h3>
+              <span className="ml-auto text-xs text-slate-500 bg-[#1a2228] px-3 py-1 rounded-full">
+                Base: INR
+              </span>
             </div>
-            <div className="overflow-x-auto rounded-xl">
+            
+            <div className="overflow-x-auto rounded-xl border border-white/5">
               <table className="w-full text-sm min-w-[640px]">
-                <thead className="bg-white/5 text-gray-400 uppercase text-xs">
-                  <tr>
-                    <th className="py-3.5 px-4 text-left font-medium">Currency</th>
+                <thead>
+                  <tr className="bg-white/[0.03] text-slate-400 text-xs uppercase">
+                    <th className="py-3.5 px-4 text-left font-medium rounded-tl-xl">Currency</th>
                     <th className="py-3.5 px-4 text-left font-medium">Code</th>
                     <th className="py-3.5 px-4 text-left font-medium">Symbol</th>
                     <th className="py-3.5 px-4 text-left font-medium">Rate to INR</th>
                     <th className="py-3.5 px-4 text-left font-medium">INR → Currency</th>
-                    <th className="py-3.5 px-4 text-left font-medium">Status</th>
+                    <th className="py-3.5 px-4 text-left font-medium rounded-tr-xl">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {currencies.map((currency) => (
-                    <tr key={currency.code} className="hover:bg-white/5 transition">
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">{getCurrencyFlag(currency.code)}</span>
-                          <span className="truncate text-white">{currency.name}</span>
+                    <tr key={currency.code} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl">{getCurrencyFlag(currency.code)}</span>
+                          <span className="text-white font-medium truncate">{currency.name}</span>
                         </div>
                       </td>
-                      <td className="py-3 px-4 font-mono text-emerald-400">{currency.code}</td>
-                      <td className="py-3 px-4 text-gray-400">{getCurrencySymbol(currency.code)}</td>
-                      <td className="py-3 px-4 font-semibold text-gray-300">
-                        1 {currency.code} = {formatRateToINR(currency.rate_to_inr)} INR
+                      <td className="py-3.5 px-4">
+                        <span className="font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full text-xs">
+                          {currency.code}
+                        </span>
                       </td>
-                      <td className="py-3 px-4 font-semibold text-emerald-400">
-                        1 INR = {(1 / safeNumber(currency.rate_to_inr, 1)).toFixed(4)} {currency.code}
+                      <td className="py-3.5 px-4 text-slate-400 font-medium">
+                        {getCurrencySymbol(currency.code)}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-4">
+                        <span className="text-white font-semibold">
+                          1 {currency.code} = <span className="text-emerald-400">{formatRateToINR(currency.rate_to_inr)}</span> INR
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className="font-mono text-cyan-400">
+                          1 INR = {(1 / safeNumber(currency.rate_to_inr, 1)).toFixed(4)} {currency.code}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4">
                         {currency.is_default ? (
-                          <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full flex items-center gap-1 w-fit">
-                            <FiCheckCircle className="w-3 h-3" />
+                          <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full flex items-center gap-1.5 w-fit font-medium border border-emerald-500/20">
+                            <CheckCircle className="w-3 h-3" />
                             Default
                           </span>
                         ) : (
-                          <span className="px-2.5 py-1 bg-white/5 text-gray-400 text-xs rounded-full w-fit">
+                          <span className="px-3 py-1 bg-white/5 text-slate-400 text-xs rounded-full w-fit border border-white/5">
                             Active
                           </span>
                         )}
@@ -573,32 +708,54 @@ const CurrenciesPage = () => {
 
                   {currencies.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="text-center py-8 text-gray-400">No currencies available.</td>
+                      <td colSpan={6} className="text-center py-12 text-slate-500">
+                        <Globe className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                        <p className="text-sm">No currencies available</p>
+                      </td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
           </motion.div>
+
+          {/* ====== Footer Branding ====== */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="text-center py-6 border-t border-white/10"
+          >
+            <p className="text-xs text-slate-500">
+              <span className="text-emerald-400 font-medium">FinTrack</span> — Trusted by finance professionals across India
+            </p>
+          </motion.div>
+
         </main>
 
-        {/* Add Currency Modal - FinTrack Style */}
+        {/* ====== Add Currency Modal ====== */}
         {showAddCurrency && (
           <div
             className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[11000] p-4"
             onClick={() => setShowAddCurrency(false)}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-[#111118] border border-white/10 p-5 sm:p-6 rounded-2xl w-full max-w-md shadow-2xl overflow-y-auto max-h-[90vh]"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 p-6 rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-xl font-semibold text-white mb-4">Add New Currency</h2>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20">
+                  <Plus className="w-5 h-5 text-emerald-400" />
+                </div>
+                <h2 className="text-xl font-bold text-white">Add New Currency</h2>
+              </div>
 
               <form onSubmit={handleAddCurrency} className="space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1.5">Select Currency</label>
+                  <label className="text-sm text-slate-400 mb-1.5 block font-medium">Select Currency</label>
                   <select
                     value={newCurrency.code}
                     onChange={(e) => {
@@ -611,11 +768,11 @@ const CurrenciesPage = () => {
                       });
                     }}
                     required
-                    className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
+                    className="w-full p-3 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none"
                   >
-                    <option value="">Select Currency</option>
+                    <option value="" className="bg-[#0d141a]">Select Currency</option>
                     {popularCurrencies.map((c) => (
-                      <option key={c.code} value={c.code}>
+                      <option key={c.code} value={c.code} className="bg-[#0d141a]">
                         {c.flag} {c.code} - {c.name}
                       </option>
                     ))}
@@ -623,19 +780,19 @@ const CurrenciesPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1.5">Currency Name</label>
+                  <label className="text-sm text-slate-400 mb-1.5 block font-medium">Currency Name</label>
                   <input
                     type="text"
                     placeholder="Currency Name"
                     value={newCurrency.name}
                     onChange={(e) => setNewCurrency({ ...newCurrency, name: e.target.value })}
                     required
-                    className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
+                    className="w-full p-3 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1.5">Rate to INR</label>
+                  <label className="text-sm text-slate-400 mb-1.5 block font-medium">Rate to INR</label>
                   <input
                     type="number"
                     step="any"
@@ -643,37 +800,44 @@ const CurrenciesPage = () => {
                     value={newCurrency.rate_to_inr}
                     onChange={(e) => setNewCurrency({ ...newCurrency, rate_to_inr: e.target.value })}
                     required
-                    className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
+                    className="w-full p-3 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
                   />
+                  <p className="text-xs text-slate-500 mt-1.5">
+                    How many INR equals 1 unit of this currency?
+                  </p>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
+                <div className="flex items-center gap-3 p-3 bg-white/[0.03] backdrop-blur-xl rounded-xl border border-white/10">
                   <input
                     id="is_default"
                     type="checkbox"
                     checked={newCurrency.is_default}
                     onChange={(e) => setNewCurrency({ ...newCurrency, is_default: e.target.checked })}
-                    className="h-4 w-4 rounded border-white/10 bg-white/5 text-emerald-500 focus:ring-emerald-500/40"
+                    className="h-4 w-4 rounded border-white/20 bg-white/5 text-emerald-500 focus:ring-emerald-500/40"
                   />
-                  <label htmlFor="is_default" className="text-sm text-gray-300 cursor-pointer">
+                  <label htmlFor="is_default" className="text-sm text-slate-300 cursor-pointer font-medium">
                     Set as default currency
                   </label>
                 </div>
 
-                <div className="flex justify-end gap-3 mt-2 pt-4 border-t border-white/5">
-                  <button
+                <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     type="button"
                     onClick={() => setShowAddCurrency(false)}
-                    className="px-4 py-2.5 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all duration-200"
+                    className="rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 px-5 py-3 font-semibold text-slate-300 hover:text-white hover:border-slate-400/30 transition-all"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     type="submit"
-                    className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-400 text-white rounded-xl hover:from-emerald-600 hover:to-teal-500 transition-all duration-200 shadow-lg shadow-emerald-500/20"
+                    className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-5 py-3 font-semibold shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/60 transition-all"
                   >
                     Add Currency
-                  </button>
+                  </motion.button>
                 </div>
               </form>
             </motion.div>

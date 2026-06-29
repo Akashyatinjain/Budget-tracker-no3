@@ -9,16 +9,20 @@ import {
   PieChart, Pie, Cell, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, Tooltip,
   CartesianGrid, LineChart, Line, AreaChart,
-  Area, Legend
+  Area, Legend, ComposedChart
 } from "recharts";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp, TrendingDown, Wallet,
   Target, Calendar, ArrowUpRight,
   ArrowDownRight, PieChart as PieChartIcon,
-  BarChart3, Download, PlusCircle, Import, Search
+  BarChart3, Download, PlusCircle, Import, Search,
+  Sparkles, Shield, Zap, Crown, Activity,
+  CreditCard, Home, ShoppingBag, Coffee,
+  Award, Clock, Star, Gem
 } from "lucide-react";
 
+// ====== ImportButton Component ======
 function ImportButton() {
   const fileRef = useRef();
 
@@ -37,16 +41,15 @@ function ImportButton() {
         const rows = result.data;
         try {
           const response = await api.post("/api/transactions/import", { rows });
-          console.log("Received CSV rows:", rows);
-          alert("Imported successfully: " + (response.data.inserted ?? response.data.insertedRows ?? 0) + " rows");
+          toast.success(`Imported ${response.data.inserted ?? response.data.insertedRows ?? 0} rows successfully!`);
         } catch (err) {
           console.error("Import failed:", err);
-          alert("Import failed: " + (err?.response?.data?.message || err?.response?.data?.error || err.message));
+          toast.error("Import failed: " + (err?.response?.data?.message || err?.response?.data?.error || err.message));
         }
       },
       error: (err) => {
         console.error("CSV parse error:", err);
-        alert("CSV parse error: " + err.message);
+        toast.error("CSV parse error: " + err.message);
       },
     });
 
@@ -64,12 +67,25 @@ function ImportButton() {
       />
       <button
         onClick={openFilePicker}
-        className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:from-blue-700 hover:to-cyan-600 transition-all"
+      className="
+rounded-2xl
+bg-gradient-to-r
+from-emerald-500
+via-green-500
+to-lime-400
+px-5
+py-3
+font-semibold
+shadow-xl
+shadow-emerald-500/30
+hover:shadow-emerald-500/60
+transition-all
+"
       >
-        <Import size={16} /> Import
+        <Import size={16} /> Import CSV
       </button>
       <button
-        onClick={() => alert(
+        onClick={() => toast(
           "📌 Required CSV Columns:\n\n" +
           "• category_id\n" +
           "• type\n" +
@@ -80,7 +96,20 @@ function ImportButton() {
           "• transaction_date\n\n" +
           "⚠️ Column names must match exactly!"
         )}
-        className="bg-[#1f2937] border border-[#30363d] text-white px-3 py-2 rounded-lg text-sm hover:bg-[#374151] transition-all"
+        className="
+rounded-2xl
+bg-gradient-to-r
+from-emerald-500
+via-green-500
+to-lime-400
+px-5
+py-3
+font-semibold
+shadow-xl
+shadow-emerald-500/30
+hover:shadow-emerald-500/60
+transition-all
+"
       >
         CSV Format
       </button>
@@ -88,6 +117,7 @@ function ImportButton() {
   );
 }
 
+// ====== Main Dashboard Component ======
 const FinanceDashboard = () => {
   const { user, token } = useAuth();
   const [transactions, setTransactions] = useState([]);
@@ -97,6 +127,7 @@ const FinanceDashboard = () => {
   const [timeRange, setTimeRange] = useState("month");
   const [pieChartRadius, setPieChartRadius] = useState(80);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
 
   const [newTransaction, setNewTransaction] = useState({
     merchant: "",
@@ -108,15 +139,16 @@ const FinanceDashboard = () => {
     transaction_date: "",
   });
 
+  // ====== Categories ======
   const categories = [
-    { id: 1, name: "Food & Dining",    color: "#f43f5e" },
-    { id: 2, name: "Shopping",         color: "#8b5cf6" },
-    { id: 3, name: "Transportation",   color: "#06b6d4" },
-    { id: 4, name: "Entertainment",    color: "#eab308" },
-    { id: 5, name: "Bills & Utilities",color: "#84cc16" },
-    { id: 6, name: "Healthcare",       color: "#ef4444" },
-    { id: 7, name: "Salary",           color: "#22c55e" },
-    { id: 8, name: "Investment",       color: "#3b82f6" },
+    { id: 1, name: "Food & Dining",    color: "#f43f5e", icon: Coffee },
+    { id: 2, name: "Shopping",         color: "#8b5cf6", icon: ShoppingBag },
+    { id: 3, name: "Transportation",   color: "#06b6d4", icon: Activity },
+    { id: 4, name: "Entertainment",    color: "#f59e0b", icon: Star },
+    { id: 5, name: "Bills & Utilities",color: "#84cc16", icon: Home },
+    { id: 6, name: "Healthcare",       color: "#ef4444", icon: Shield },
+    { id: 7, name: "Salary",           color: "#22c55e", icon: Award },
+    { id: 8, name: "Investment",       color: "#3b82f6", icon: Gem },
   ];
 
   const getCategoryName = (id) => {
@@ -131,6 +163,7 @@ const FinanceDashboard = () => {
     return cat ? cat.color : "#6b7280";
   };
 
+  // ====== Fetch Transactions ======
   const fetchTransactions = async () => {
     if (!token) {
       setTransactions(getMockTransactions());
@@ -155,12 +188,17 @@ const FinanceDashboard = () => {
   };
 
   const getMockTransactions = () => [
-    { transaction_id: 1, merchant: "Supermarket",     category_id: 1, type: "expense", amount: 1500,  transaction_date: "2024-01-15" },
-    { transaction_id: 2, merchant: "Salary",          category_id: 7, type: "income",  amount: 50000, transaction_date: "2024-01-01" },
-    { transaction_id: 3, merchant: "Electricity Bill",category_id: 5, type: "expense", amount: 2000,  transaction_date: "2024-01-10" },
-    { transaction_id: 4, merchant: "Movie Theater",   category_id: 4, type: "expense", amount: 800,   transaction_date: "2024-01-12" },
+    { transaction_id: 1, merchant: "Punjab Grill",        category_id: 1, type: "expense", amount: 2450,  transaction_date: "2026-06-15" },
+    { transaction_id: 2, merchant: "Monthly Salary",      category_id: 7, type: "income",  amount: 125000, transaction_date: "2026-06-01" },
+    { transaction_id: 3, merchant: "Electricity Bill",    category_id: 5, type: "expense", amount: 3200,  transaction_date: "2026-06-10" },
+    { transaction_id: 4, merchant: "PVR Cinemas",         category_id: 4, type: "expense", amount: 1200,  transaction_date: "2026-06-12" },
+    { transaction_id: 5, merchant: "Amazon Shopping",     category_id: 2, type: "expense", amount: 8500,  transaction_date: "2026-06-08" },
+    { transaction_id: 6, merchant: "Freelance Project",   category_id: 8, type: "income",  amount: 45000, transaction_date: "2026-06-05" },
+    { transaction_id: 7, merchant: "Uber Ride",           category_id: 3, type: "expense", amount: 450,   transaction_date: "2026-06-14" },
+    { transaction_id: 8, merchant: "MedPlus Pharmacy",    category_id: 6, type: "expense", amount: 780,   transaction_date: "2026-06-13" },
   ];
 
+  // ====== Custom Label for Pie Chart ======
   const CustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) => {
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
@@ -168,12 +206,13 @@ const FinanceDashboard = () => {
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
     if (percent < 0.05) return null;
     return (
-      <text x={x} y={y} fill="#fff" textAnchor="middle" dominantBaseline="central" fontSize="10" style={{ pointerEvents: "none" }}>
-        {`${name} ${(percent * 100).toFixed(0)}%`}
+      <text x={x} y={y} fill="#fff" textAnchor="middle" dominantBaseline="central" fontSize="11" fontWeight="600" style={{ pointerEvents: "none", textShadow: "0 2px 4px rgba(0,0,0,0.5)" }}>
+        {`${(percent * 100).toFixed(0)}%`}
       </text>
     );
   };
 
+  // ====== Export CSV ======
   const exportCSV = () => {
     const headers = ["Date", "Merchant", "Category", "Type", "Amount"];
     const csvData = transactions.map(t => [
@@ -195,8 +234,10 @@ const FinanceDashboard = () => {
     a.download = `transactions-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
+    toast.success("CSV exported successfully!");
   };
 
+  // ====== Filters ======
   const filteredTransactions = Array.isArray(transactions)
     ? transactions.filter(transaction =>
         (transaction.merchant?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
@@ -212,6 +253,7 @@ const FinanceDashboard = () => {
     return parseFloat(transaction.amount) || 0;
   };
 
+  // ====== Calculations ======
   const totalIncome = Array.isArray(transactions)
     ? transactions.filter((t) => t?.type === "income").reduce((sum, t) => sum + getSafeAmount(t), 0)
     : 0;
@@ -221,9 +263,11 @@ const FinanceDashboard = () => {
     : 0;
 
   const totalBalance = totalIncome - totalExpenses;
-  const savingsGoal = 5000;
+  const savingsGoal = 50000;
   const goalProgress = Math.min((totalBalance / savingsGoal) * 100, 100);
+  const savingsRate = totalIncome > 0 ? ((totalBalance / totalIncome) * 100) : 0;
 
+  // ====== Monthly Data ======
   const getMonthlyData = () => {
     if (!Array.isArray(transactions)) return [];
     const monthlyData = {};
@@ -232,7 +276,7 @@ const FinanceDashboard = () => {
       try {
         const date = new Date(transaction.transaction_date);
         if (isNaN(date.getTime())) return;
-        const monthYear = `${date.getFullYear()}-${date.getMonth() + 1}`;
+        const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         if (!monthlyData[monthYear]) {
           monthlyData[monthYear] = {
             income: 0, expenses: 0,
@@ -249,6 +293,7 @@ const FinanceDashboard = () => {
     return Object.values(monthlyData).slice(-6);
   };
 
+  // ====== Weekly Spending ======
   const getWeeklySpending = () => {
     if (!Array.isArray(transactions)) {
       return Array.from({ length: 7 }, (_, i) => ({
@@ -279,11 +324,13 @@ const FinanceDashboard = () => {
     return weeklyData;
   };
 
+  // ====== Add Transaction ======
   const handleAddTransaction = async () => {
     try {
       await api.post("/api/transactions", newTransaction);
-      toast.success("Transaction Added!");
+      toast.success("✨ Transaction Added Successfully!");
       setShowAddModal(false);
+      setNewTransaction({ merchant: "", amount: "", category_id: "", type: "", currency: "INR", description: "", transaction_date: "" });
       fetchTransactions();
     } catch (err) {
       console.log(err);
@@ -291,6 +338,7 @@ const FinanceDashboard = () => {
     }
   };
 
+  // ====== Expense by Category ======
   const expenseByCategory = Array.isArray(transactions)
     ? categories.map((cat) => ({
         name: cat.name,
@@ -301,16 +349,12 @@ const FinanceDashboard = () => {
       })).filter((c) => c.value > 0)
     : [];
 
-  const barData = [
-    { name: "Income",  amount: totalIncome,   fill: "#22c55e" },
-    { name: "Expense", amount: totalExpenses,  fill: "#ef4444" },
-    { name: "Balance", amount: totalBalance,   fill: "#8b5cf6" },
-  ];
-
+  // ====== Recent Transactions ======
   const recentTransactions = Array.isArray(filteredTransactions)
-    ? filteredTransactions.slice().reverse().slice(0, 8)
+    ? filteredTransactions.slice().reverse().slice(0, 6)
     : [];
 
+  // ====== Responsive ======
   useEffect(() => {
     document.body.style.overflow = mobileSidebarOpen ? "hidden" : "auto";
   }, [mobileSidebarOpen]);
@@ -326,8 +370,85 @@ const FinanceDashboard = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // ====== Animation Variants ======
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 300, damping: 24 },
+    },
+  };
+
+  // ====== Summary Cards Data ======
+  const summaryCards = [
+    { 
+      title: "Net Worth", 
+      value: totalBalance, 
+      subtitle: `${savingsRate.toFixed(1)}% savings rate`,
+      color: "from-emerald-400 to-teal-300", 
+      icon: Wallet, 
+      trend: totalBalance >= 0 ? "up" : "down",
+      bg: "from-emerald-500/10 to-teal-500/5"
+    },
+    { 
+      title: "Income", 
+      value: totalIncome, 
+      subtitle: "This month",
+      color: "from-green-400 to-emerald-300", 
+      icon: TrendingUp, 
+      trend: "up",
+      bg: "from-green-500/10 to-emerald-500/5"
+    },
+    { 
+      title: "Expenses", 
+      value: totalExpenses, 
+      subtitle: "This month",
+      color: "from-rose-400 to-red-300", 
+      icon: TrendingDown, 
+      trend: "down",
+      bg: "from-rose-500/10 to-red-500/5"
+    },
+    { 
+      title: "Savings Goal", 
+      value: goalProgress, 
+      subtitle: `${savingsGoal.toLocaleString('en-IN')} target`,
+      color: "from-purple-400 to-violet-300", 
+      icon: Target, 
+      isProgress: true,
+      bg: "from-purple-500/10 to-violet-500/5"
+    },
+  ];
+
   return (
-    <div className="flex min-h-screen bg-[#0d1117] text-gray-100">
+    <div className="relative flex min-h-screen overflow-hidden bg-gradient-to-br
+from-[#030712]
+via-[#07101f]
+to-[#050816] text-white">
+
+  {/* Animated Background */}
+  <div className="absolute inset-0 -z-10">
+
+    <div className="absolute top-[-180px] left-[-120px] h-[420px] w-[420px] rounded-full bg-emerald-500/15 blur-[140px] animate-pulse" />
+
+    <div className="absolute bottom-[-150px] right-[-120px] h-[420px] w-[420px] rounded-full bg-cyan-500/15 blur-[150px] animate-pulse" />
+
+    <div className="absolute top-1/2 left-1/2 h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-teal-400/10 blur-[120px]" />
+
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,.05),transparent_40%)]" />
+
+  </div>
       {/* Sidebar */}
       <AdvancedSidebar
         user={user || { username: "Guest" }}
@@ -337,143 +458,239 @@ const FinanceDashboard = () => {
 
       <div className="flex-1 flex flex-col min-h-screen">
         <Header onMobileToggle={() => setMobileSidebarOpen(true)} />
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
 
-        <main className="p-4 md:p-6 mt-16 flex flex-col gap-8">
-          {/* Page Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="flex flex-col md:flex-row md:items-center md:justify-between"
-          >
-            <div>
-              <h1 className="text-3xl font-bold text-emerald-400">Dashboard</h1>
-              <p className="text-gray-400 text-sm">
-                Welcome back, {user ? user.username : "User"} 👋
-              </p>
-            </div>
-            <div className="flex gap-2 mt-4 md:mt-0">
-              <button
-                onClick={exportCSV}
-                className="bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:from-emerald-700 hover:to-teal-600 transition-all"
-              >
-                <Download size={16} /> Export CSV
-              </button>
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="bg-gradient-to-r from-green-600 to-emerald-500 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:from-green-700 hover:to-emerald-600 transition-all"
-              >
-                <PlusCircle size={16} /> Add
-              </button>
-              <ImportButton />
-            </div>
-          </motion.div>
+<div className="absolute top-20 left-1/4 h-2 w-2 rounded-full bg-emerald-400 animate-pulse"/>
 
-          {/* Search Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="relative"
-          >
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search transactions by merchant, category, or type..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-[#161b22]/80 border border-[#30363d]/60 rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
-              />
-            </div>
-          </motion.div>
+<div className="absolute bottom-40 right-20 h-2 w-2 rounded-full bg-cyan-400 animate-ping"/>
 
-          {/* Summary Cards */}
+<div className="absolute top-72 right-1/3 h-3 w-3 rounded-full bg-teal-400 animate-pulse"/>
+
+</div>
+        <main className="p-4 md:p-8 mt-16 flex flex-col gap-6 max-w-[1600px] mx-auto w-full">
+          <div className="absolute left-1/2 top-0 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[180px]" />
+
+<div className="absolute bottom-0 right-0 h-[450px] w-[450px] rounded-full bg-cyan-500/10 blur-[180px]" />
+          
+          {/* ====== Page Header with Gradient ====== */}
           <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
+initial={{opacity:0,y:20}}
+animate={{opacity:1,y:0}}
+transition={{duration:.5}}
+className="relative overflow-hidden rounded-[32px]
+border border-white/10
+bg-gradient-to-br
+from-white/[0.08]
+via-white/[0.04]
+to-emerald-500/[0.03]
+backdrop-blur-2xl
+shadow-[0_20px_80px_rgba(0,0,0,.45)]
+p-8"
+>
+
+<div className="absolute -top-28 -right-20 h-80 w-80 rounded-full bg-emerald-500/15 blur-[120px]" />
+
+<div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-cyan-500/15 blur-[120px]" />
+
+<div className="relative flex flex-col lg:flex-row justify-between gap-8">
+
+<div>
+
+<div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-emerald-300 text-sm font-semibold">
+
+<Sparkles className="w-4 h-4"/>
+
+AI Powered Finance Dashboard
+
+</div>
+
+<h1 className="mt-6 text-5xl font-black leading-tight">
+
+<span className="bg-gradient-to-r from-white via-emerald-200 to-cyan-300 bg-clip-text text-transparent">
+
+Master Your
+
+</span>
+
+<br/>
+
+<span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+
+Financial Future
+
+</span>
+
+</h1>
+
+<p className="mt-5 max-w-xl text-slate-400 leading-8">
+
+Track every rupee.
+
+Analyze your spending.
+
+Reach your goals faster.
+
+Everything in one beautiful dashboard.
+
+</p>
+
+</div>
+
+<div className="grid grid-cols-2 gap-5">
+
+<div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
+
+<p className="text-slate-400 text-sm">
+
+Portfolio
+
+</p>
+
+<h2 className="mt-2 text-4xl font-black text-emerald-400">
+
+₹{totalBalance.toLocaleString("en-IN")}
+
+</h2>
+
+<p className="mt-2 text-green-400">
+
++12.8%
+
+</p>
+
+</div>
+
+<div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
+
+<p className="text-slate-400 text-sm">
+
+Transactions
+
+</p>
+
+<h2 className="mt-2 text-4xl font-black text-cyan-400">
+
+{transactions.length}
+
+</h2>
+
+<p className="mt-2 text-cyan-300">
+
+This Month
+
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</motion.div>
+
+
+          {/* ====== Summary Cards ====== */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
           >
-            {[
-              { title: "Total Balance",  value: totalBalance,   color: "text-teal-300",    icon: Wallet,    trend: totalBalance >= 0 ? "up" : "down" },
-              { title: "Total Income",   value: totalIncome,    color: "text-green-400",   icon: TrendingUp,   trend: "up" },
-              { title: "Total Expenses", value: totalExpenses,  color: "text-red-400",     icon: TrendingDown, trend: "down" },
-              { title: "Savings Goal",   value: goalProgress,   color: "text-emerald-400", icon: Target,    isProgress: true },
-            ].map((card, i) => (
+            {summaryCards.map((card, i) => (
               <motion.div
                 key={i}
-                className="bg-[#161b22]/80 border border-[#30363d]/60 rounded-xl p-6 shadow-lg hover:shadow-emerald-500/5 transition-all duration-300"
-                whileHover={{ y: -2 }}
+                variants={itemVariants}
+                className={`relative overflow-hidden bg-gradient-to-br ${card.bg} border border-white/10/60 rounded-2xl p-6 shadow-lg hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 group`}
+                whileHover={{ y: -4, scale: 1.01 }}
               >
-                <div className="flex items-center justify-between">
+                {/* Glow Effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                
+                <div className="relative flex items-start justify-between">
                   <div>
-                    <p className="text-sm text-gray-400">{card.title}</p>
-                    <h2 className={`text-2xl font-bold ${card.color} mt-2`}>
+                    <p className="text-sm text-slate-300 font-medium">{card.title}</p>
+                    <h2 className={`text-2xl font-bold bg-gradient-to-r ${card.color} bg-clip-text text-transparent mt-1`}>
                       {card.isProgress
                         ? `${card.value.toFixed(1)}%`
                         : `₹${card.value.toLocaleString("en-IN")}`}
                     </h2>
+                    <p className="text-xs text-slate-500 mt-1">{card.subtitle}</p>
                   </div>
-                  <div className={`p-3 rounded-lg ${
-                    card.trend === "up"   ? "bg-green-500/20" :
-                    card.trend === "down" ? "bg-red-500/20"   : "bg-emerald-500/20"
-                  }`}>
-                    <card.icon className={`w-6 h-6 ${
-                      card.trend === "up"   ? "text-green-400" :
-                      card.trend === "down" ? "text-red-400"   : "text-emerald-400"
-                    }`} />
+                  <div className={`p-3 rounded-xl bg-gradient-to-br ${card.color} bg-opacity-10 shadow-lg`}>
+                    <card.icon className={`w-5 h-5 text-${card.trend === "up" ? "emerald" : card.trend === "down" ? "rose" : "purple"}-400`} />
                   </div>
                 </div>
+                
                 {card.isProgress && (
-                  <div className="w-full bg-[#21262d] rounded-full h-2 mt-4">
-                    <div
-                      className="bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${card.value}%` }}
-                    />
+                  <div className="relative mt-4">
+                    <div className="w-full bg-[#1a2228] rounded-full h-2.5 overflow-hidden">
+                      <motion.div
+                        className={`h-full bg-gradient-to-r ${card.color} rounded-full`}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${card.value}%` }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Trend indicator */}
+                {!card.isProgress && (
+                  <div className="absolute bottom-4 right-4 flex items-center gap-1">
+                    <span className={`text-xs font-medium ${card.trend === "up" ? "text-emerald-400" : "text-rose-400"}`}>
+                      {card.trend === "up" ? "↑" : "↓"}
+                    </span>
                   </div>
                 )}
               </motion.div>
             ))}
           </motion.div>
 
-          {/* Charts Section */}
+          {/* ====== Charts Row ====== */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Monthly Trends */}
             <motion.div
-              className="bg-[#161b22]/80 border border-[#30363d]/60 rounded-xl p-6 shadow-lg"
+              className="bg-white/[0.04]
+backdrop-blur-2xl
+border
+border-white/10 border border-white/10/60 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <div className="flex items-center gap-2 mb-6">
-                <TrendingUp className="w-5 h-5 text-emerald-400" />
-                <h3 className="text-xl font-semibold text-emerald-300">Monthly Trends</h3>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20">
+                  <TrendingUp className="w-5 h-5 text-emerald-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Monthly Trends</h3>
+                <span className="ml-auto text-xs text-slate-500 bg-[#1a2228] px-3 py-1 rounded-full">Last 6 months</span>
               </div>
               <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={getMonthlyData()}>
                   <defs>
                     <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#22c55e" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0.1} />
+                      <stop offset="5%"  stopColor="#22c55e" stopOpacity={0.6} />
+                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#ef4444" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1} />
+                      <stop offset="5%"  stopColor="#ef4444" stopOpacity={0.6} />
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e2a1e" />
-                  <XAxis dataKey="month" stroke="#10b981" />
-                  <YAxis stroke="#10b981" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1a252f" vertical={false} />
+                  <XAxis dataKey="month" stroke="#4a5a6a" fontSize={11} />
+                  <YAxis stroke="#4a5a6a" fontSize={11} tickFormatter={(v) => `₹${(v/1000).toFixed(0)}k`} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "#0d1117",
-                      border: "1px solid #065f46",
-                      borderRadius: "8px",
+                      backgroundColor: "#0d141a",
+                      border: "1px solid #2a333d",
+                      borderRadius: "12px",
+                      padding: "12px",
                     }}
+                    formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, '']}
                   />
-                  <Area type="monotone" dataKey="income"   stroke="#22c55e" fillOpacity={1} fill="url(#colorIncome)" />
-                  <Area type="monotone" dataKey="expenses" stroke="#ef4444" fillOpacity={1} fill="url(#colorExpenses)" />
+                  <Area type="monotone" dataKey="income" stroke="#22c55e" strokeWidth={3} fillOpacity={1} fill="url(#colorIncome)" />
+                  <Area type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorExpenses)" />
                   <Legend />
                 </AreaChart>
               </ResponsiveContainer>
@@ -481,30 +698,42 @@ const FinanceDashboard = () => {
 
             {/* Weekly Spending */}
             <motion.div
-              className="bg-[#161b22]/80 border border-[#30363d]/60 rounded-xl p-6 shadow-lg"
+              className="bg-white/[0.04]
+backdrop-blur-2xl
+border
+border-white/10 border border-white/10/60 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <div className="flex items-center gap-2 mb-6">
-                <Calendar className="w-5 h-5 text-emerald-400" />
-                <h3 className="text-xl font-semibold text-emerald-300">Weekly Spending</h3>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-400/20 to-blue-400/20">
+                  <Calendar className="w-5 h-5 text-cyan-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Weekly Spending</h3>
+                <span className="ml-auto text-xs text-slate-500 bg-[#1a2228] px-3 py-1 rounded-full">This week</span>
               </div>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={getWeeklySpending()}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e2a1e" />
-                  <XAxis dataKey="day" stroke="#10b981" />
-                  <YAxis stroke="#10b981" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1a252f" vertical={false} />
+                  <XAxis dataKey="day" stroke="#4a5a6a" fontSize={11} />
+                  <YAxis stroke="#4a5a6a" fontSize={11} tickFormatter={(v) => `₹${v}`} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "#0d1117",
-                      border: "1px solid #065f46",
-                      borderRadius: "8px",
+                      backgroundColor: "#0d141a",
+                      border: "1px solid #2a333d",
+                      borderRadius: "12px",
+                      padding: "12px",
                     }}
+                    formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, '']}
                   />
-                  <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
+                  <Bar dataKey="amount" radius={[8, 8, 0, 0]}>
                     {getWeeklySpending().map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={categories[index % categories.length].color} />
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={categories[index % categories.length].color}
+                        className="hover:opacity-80 transition-opacity"
+                      />
                     ))}
                   </Bar>
                 </BarChart>
@@ -512,23 +741,28 @@ const FinanceDashboard = () => {
             </motion.div>
           </div>
 
-          {/* Bottom Section */}
+          {/* ====== Bottom Section ====== */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Expense Distribution */}
             <motion.div
-              className="lg:col-span-1 bg-[#161b22]/80 border border-[#30363d]/60 rounded-xl p-6 shadow-lg"
+              className="lg:col-span-1 bg-white/[0.04]
+backdrop-blur-2xl
+border
+border-white/10 border border-white/10/60 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
-              <div className="flex items-center gap-2 mb-6">
-                <PieChartIcon className="w-5 h-5 text-emerald-400" />
-                <h3 className="text-xl font-semibold text-emerald-300">Expense Distribution</h3>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-purple-400/20 to-violet-400/20">
+                  <PieChartIcon className="w-5 h-5 text-purple-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Expense Distribution</h3>
               </div>
 
               {expenseByCategory.length > 0 ? (
                 <>
-                  <div className="w-full h-56 sm:h-64 md:h-72">
+                  <div className="w-full h-56 sm:h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
@@ -538,31 +772,33 @@ const FinanceDashboard = () => {
                           outerRadius={pieChartRadius}
                           labelLine={false}
                           label={CustomLabel}
+                          paddingAngle={2}
                         >
                           {expenseByCategory.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
+                            <Cell key={`cell-${index}`} fill={entry.color} stroke="#0a0e12" strokeWidth={2} />
                           ))}
                         </Pie>
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: "#0d1117",
-                            border: "1px solid #065f46",
-                            borderRadius: "8px",
-                            color: "#fff",
+                            backgroundColor: "#0d141a",
+                            border: "1px solid #2a333d",
+                            borderRadius: "12px",
+                            padding: "12px",
                           }}
+                          formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, 'Amount']}
                         />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
 
-                  <div className="mt-4 space-y-2">
+                  <div className="mt-4 space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-emerald-500/20">
                     {expenseByCategory.map((category, index) => (
-                      <div key={index} className="flex items-center justify-between text-sm">
+                      <div key={index} className="flex items-center justify-between p-2 rounded-lg hover:bg-[#1a2228] transition-colors">
                         <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
-                          <span className="text-gray-300">{category.name}</span>
+                          <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: category.color }} />
+                          <span className="text-sm text-gray-300">{category.name}</span>
                         </div>
-                        <span className="text-emerald-300 font-medium">
+                        <span className="text-sm text-emerald-300 font-medium">
                           ₹{category.value.toLocaleString("en-IN")}
                         </span>
                       </div>
@@ -570,41 +806,55 @@ const FinanceDashboard = () => {
                   </div>
                 </>
               ) : (
-                <p className="text-gray-400 text-sm text-center py-8">No expense data available.</p>
+                <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+                  <PieChartIcon className="w-12 h-12 mb-3 opacity-20" />
+                  <p className="text-sm">No expense data available</p>
+                </div>
               )}
             </motion.div>
 
             {/* Recent Transactions */}
             <motion.div
-              className="lg:col-span-2 bg-[#161b22]/80 border border-[#30363d]/60 rounded-xl p-6 shadow-lg"
+              className="lg:col-span-2 bg-white/[0.04]
+backdrop-blur-2xl
+border
+border-white/10 border border-white/10/60 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
             >
               <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-emerald-400" />
-                  <h3 className="text-xl font-semibold text-emerald-300">Recent Transactions</h3>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-blue-400/20 to-indigo-400/20">
+                    <BarChart3 className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">Recent Transactions</h3>
                 </div>
-                <span className="text-sm text-emerald-500">
-                  {filteredTransactions.length} transactions found
+                <span className="text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                  {filteredTransactions.length} transactions
                 </span>
               </div>
 
               {loading ? (
-                <p className="text-gray-400 text-center py-6">Loading transactions...</p>
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-emerald-500 border-t-transparent" />
+                </div>
               ) : (
                 <div className="space-y-3">
                   {recentTransactions.length > 0 ? (
-                    recentTransactions.map((t) => (
+                    recentTransactions.map((t, idx) => (
                       <motion.div
-                        key={t.transaction_id || Math.random()}
-                        className="flex items-center justify-between p-4 bg-[#1a2f1a]/40 rounded-lg border border-[#30363d]/50 hover:border-emerald-600/40 transition-all"
-                        whileHover={{ scale: 1.02 }}
+                        key={t.transaction_id || idx}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className="flex items-center justify-between p-4 bg-white/[0.03]
+backdrop-blur-xl rounded-xl border border-white/10/40 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5 transition-all group"
+                        whileHover={{ scale: 1.01 }}
                       >
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 min-w-0">
                           <div
-                            className="p-2 rounded-lg"
+                            className="p-2.5 rounded-xl flex-shrink-0"
                             style={{ backgroundColor: `${getCategoryColor(t.category_id)}20` }}
                           >
                             {t.type === "income" ? (
@@ -613,108 +863,172 @@ const FinanceDashboard = () => {
                               <ArrowDownRight className="w-4 h-4" style={{ color: getCategoryColor(t.category_id) }} />
                             )}
                           </div>
-                          <div>
-                            <p className="font-medium text-gray-100">{t.merchant || "Unknown Merchant"}</p>
-                            <p className="text-sm text-gray-400">{getCategoryName(t.category_id)}</p>
+                          <div className="min-w-0">
+                            <p className="font-medium text-white truncate">{t.merchant || "Unknown Merchant"}</p>
+                            <p className="text-xs text-slate-500">{getCategoryName(t.category_id)}</p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className={`font-semibold ${t.type === "income" ? "text-green-400" : "text-red-400"}`}>
+                        <div className="text-right flex-shrink-0 ml-4">
+                          <p className={`font-semibold ${t.type === "income" ? "text-green-400" : "text-rose-400"}`}>
                             {t.type === "income" ? "+" : "-"}₹{getSafeAmount(t).toLocaleString("en-IN")}
                           </p>
-                          <p className="text-sm text-gray-400">
-                            {t.transaction_date ? new Date(t.transaction_date).toLocaleDateString() : "Unknown date"}
+                          <p className="text-xs text-slate-500">
+                            {t.transaction_date ? new Date(t.transaction_date).toLocaleDateString() : "Unknown"}
                           </p>
                         </div>
                       </motion.div>
                     ))
                   ) : (
-                    <p className="text-gray-400 text-center py-6">
-                      {searchTerm ? "No transactions match your search." : "No transactions found."}
-                    </p>
+                    <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+                      <Search className="w-12 h-12 mb-3 opacity-20" />
+                      <p className="text-sm">
+                        {searchTerm ? "No transactions match your search." : "No transactions found."}
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
             </motion.div>
           </div>
+
+          {/* ====== Footer Branding ====== */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="text-center py-6 border-t border-white/10/40"
+          >
+            <p className="text-xs text-slate-500">
+              <span className="text-emerald-400 font-medium">FinTrack</span> — Trusted by finance professionals across India
+            </p>
+          </motion.div>
         </main>
 
-        {/* Add Transaction Modal */}
-        {showAddModal && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="bg-[#0d1117] border border-[#30363d] p-6 rounded-xl w-full max-w-md">
-              <h2 className="text-xl font-bold text-emerald-300 mb-4">Add Transaction</h2>
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Merchant"
-                  value={newTransaction.merchant}
-                  onChange={(e) => setNewTransaction({ ...newTransaction, merchant: e.target.value })}
-                  className="w-full p-3 bg-[#161b22] border border-[#30363d] rounded-lg text-gray-200 focus:outline-none focus:border-emerald-500 transition-all"
-                />
-                <input
-                  type="number"
-                  placeholder="Amount"
-                  value={newTransaction.amount}
-                  onChange={(e) => setNewTransaction({ ...newTransaction, amount: e.target.value })}
-                  className="w-full p-3 bg-[#161b22] border border-[#30363d] rounded-lg text-gray-200 focus:outline-none focus:border-emerald-500 transition-all"
-                />
-                <select
-                  value={newTransaction.category_id}
-                  onChange={(e) => setNewTransaction({ ...newTransaction, category_id: e.target.value })}
-                  className="w-full p-3 bg-[#161b22] border border-[#30363d] rounded-lg text-gray-200 focus:outline-none focus:border-emerald-500 transition-all"
-                >
-                  <option value="">Select Category</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-                <select
-                  value={newTransaction.type}
-                  onChange={(e) => setNewTransaction({ ...newTransaction, type: e.target.value })}
-                  className="w-full p-3 bg-[#161b22] border border-[#30363d] rounded-lg text-gray-200 focus:outline-none focus:border-emerald-500 transition-all"
-                >
-                  <option value="">Select Type</option>
-                  <option value="income">Income</option>
-                  <option value="expense">Expense</option>
-                </select>
-                <input
-                  type="text"
-                  placeholder="Currency (INR)"
-                  value={newTransaction.currency}
-                  onChange={(e) => setNewTransaction({ ...newTransaction, currency: e.target.value })}
-                  className="w-full p-3 bg-[#161b22] border border-[#30363d] rounded-lg text-gray-200 focus:outline-none focus:border-emerald-500 transition-all"
-                />
-                <textarea
-                  placeholder="Description"
-                  value={newTransaction.description}
-                  onChange={(e) => setNewTransaction({ ...newTransaction, description: e.target.value })}
-                  className="w-full p-3 bg-[#161b22] border border-[#30363d] rounded-lg text-gray-200 focus:outline-none focus:border-emerald-500 transition-all"
-                />
-                <input
-                  type="date"
-                  value={newTransaction.transaction_date}
-                  onChange={(e) => setNewTransaction({ ...newTransaction, transaction_date: e.target.value })}
-                  className="w-full p-3 bg-[#161b22] border border-[#30363d] rounded-lg text-gray-200 focus:outline-none focus:border-emerald-500 transition-all"
-                />
-              </div>
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddTransaction}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white transition-all"
-                >
-                  Add
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* ====== Add Transaction Modal ====== */}
+        <AnimatePresence>
+          {showAddModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+              onClick={() => setShowAddModal(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                className="bg-white/[0.04]
+backdrop-blur-2xl
+border
+border-white/10 border border-white/10 p-6 rounded-2xl w-full max-w-md shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20">
+                    <PlusCircle className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <h2 className="text-xl font-bold text-white">Add Transaction</h2>
+                </div>
+
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    placeholder="Merchant"
+                    value={newTransaction.merchant}
+                    onChange={(e) => setNewTransaction({ ...newTransaction, merchant: e.target.value })}
+                    className="w-full p-3 bg-white/[0.03]
+backdrop-blur-xl border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Amount"
+                    value={newTransaction.amount}
+                    onChange={(e) => setNewTransaction({ ...newTransaction, amount: e.target.value })}
+                    className="w-full p-3 bg-white/[0.03]
+backdrop-blur-xl border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                  />
+                  <select
+                    value={newTransaction.category_id}
+                    onChange={(e) => setNewTransaction({ ...newTransaction, category_id: e.target.value })}
+                    className="w-full p-3 bg-white/[0.03]
+backdrop-blur-xl border border-white/10 rounded-xl text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none"
+                  >
+                    <option value="">Select Category</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={newTransaction.type}
+                    onChange={(e) => setNewTransaction({ ...newTransaction, type: e.target.value })}
+                    className="w-full p-3 bg-white/[0.03]
+backdrop-blur-xl border border-white/10 rounded-xl text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none"
+                  >
+                    <option value="">Select Type</option>
+                    <option value="income" className="text-green-400">Income</option>
+                    <option value="expense" className="text-rose-400">Expense</option>
+                  </select>
+                  <input
+                    type="date"
+                    value={newTransaction.transaction_date}
+                    onChange={(e) => setNewTransaction({ ...newTransaction, transaction_date: e.target.value })}
+                    className="w-full p-3 bg-white/[0.03]
+backdrop-blur-xl border border-white/10 rounded-xl text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                  />
+                  <textarea
+                    placeholder="Description (optional)"
+                    value={newTransaction.description}
+                    onChange={(e) => setNewTransaction({ ...newTransaction, description: e.target.value })}
+                    className="w-full p-3 bg-white/[0.03]
+backdrop-blur-xl border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all resize-none h-20"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 mt-6">
+                  <button
+                    onClick={() => setShowAddModal(false)}
+                    className="
+rounded-2xl
+bg-gradient-to-r
+from-emerald-500
+via-green-500
+to-lime-400
+px-5
+py-3
+font-semibold
+shadow-xl
+shadow-emerald-500/30
+hover:shadow-emerald-500/60
+transition-all
+"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAddTransaction}
+                    className="
+rounded-2xl
+bg-gradient-to-r
+from-emerald-500
+via-green-500
+to-lime-400
+px-5
+py-3
+font-semibold
+shadow-xl
+shadow-emerald-500/30
+hover:shadow-emerald-500/60
+transition-all
+"
+                  >
+                    Add Transaction
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
