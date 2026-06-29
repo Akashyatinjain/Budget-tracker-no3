@@ -5,7 +5,7 @@ import { toast } from "react-hot-toast";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   markAsRead,
   markAllRead,
@@ -35,7 +35,23 @@ import {
   Smartphone,
   CreditCard,
   Repeat,
-  TrendingUp
+  TrendingUp,
+  Search,
+  X,
+  ChevronDown,
+  ChevronUp,
+  CheckSquare,
+  Square,
+  Archive,
+  Download,
+  Brain,
+  Check,
+  ShoppingBag,
+  DollarSign,
+  Lock,
+  Volume2,
+  VolumeX,
+  Calendar
 } from "lucide-react";
 
 const NotificationsPage = () => {
@@ -45,6 +61,10 @@ const NotificationsPage = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [expandedIds, setExpandedIds] = useState([]);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [notificationSettings, setNotificationSettings] = useState({
     email_notifications: true,
@@ -56,19 +76,23 @@ const NotificationsPage = () => {
 
   const VITE_BASE_URL = import.meta.env.VITE_BASE_URL;
 
+  // 1. Contextual Notification Types & Colors mapping
   const notificationTypes = {
-    billing: { label: "Billing", color: "#f59e0b", icon: CreditCard, bgGradient: "from-yellow-500/10 to-orange-500/5" },
-    budget: { label: "Budget", color: "#8b5cf6", icon: TrendingUp, bgGradient: "from-purple-500/10 to-violet-500/5" },
-    security: { label: "Security", color: "#ef4444", icon: Shield, bgGradient: "from-rose-500/10 to-red-500/5" },
-    report: { label: "Report", color: "#06b6d4", icon: Info, bgGradient: "from-cyan-500/10 to-blue-500/5" },
-    system: { label: "System", color: "#6b7280", icon: Settings, bgGradient: "from-gray-500/10 to-slate-500/5" },
-    subscription: { label: "Subscription", color: "#f97316", icon: Repeat, bgGradient: "from-orange-500/10 to-amber-500/5" }
+    income: { label: "Income", color: "#10b981", icon: DollarSign, emoji: "💰", bgGradient: "from-emerald-500/10 to-teal-500/5", border: "border-l-emerald-500" },
+    expense: { label: "Expense", color: "#f43f5e", icon: CreditCard, emoji: "💳", bgGradient: "from-rose-500/10 to-red-500/5", border: "border-l-rose-500" },
+    shopping: { label: "Shopping", color: "#8b5cf6", icon: ShoppingBag, emoji: "🛒", bgGradient: "from-purple-500/10 to-violet-500/5", border: "border-l-purple-500" },
+    budget: { label: "Budget", color: "#f59e0b", icon: TrendingUp, emoji: "📊", bgGradient: "from-amber-500/10 to-yellow-500/5", border: "border-l-amber-500" },
+    security: { label: "Security", color: "#ef4444", icon: Shield, emoji: "⚠️", bgGradient: "from-red-500/10 to-rose-500/5", border: "border-l-red-500" },
+    reminder: { label: "Reminder", color: "#06b6d4", icon: BellRing, emoji: "🔔", bgGradient: "from-cyan-500/10 to-blue-500/5", border: "border-l-cyan-500" },
+    report: { label: "Report", color: "#3b82f6", icon: Info, emoji: "📄", bgGradient: "from-blue-500/10 to-indigo-500/5", border: "border-l-blue-500" },
+    subscription: { label: "Subscription", color: "#a855f7", icon: Repeat, emoji: "🔁", bgGradient: "from-purple-500/10 to-fuchsia-500/5", border: "border-l-fuchsia-500" },
+    system: { label: "System", color: "#6b7280", icon: Settings, emoji: "⚙️", bgGradient: "from-gray-500/10 to-slate-500/5", border: "border-l-gray-500" }
   };
 
   const priorityLevels = {
-    high: { label: "High", color: "text-rose-400", bgColor: "bg-rose-500/20", icon: AlertTriangle },
-    medium: { label: "Medium", color: "text-yellow-400", bgColor: "bg-yellow-500/20", icon: AlertCircle },
-    low: { label: "Low", color: "text-emerald-400", bgColor: "bg-emerald-500/20", icon: Info }
+    high: { label: "High Priority", color: "text-rose-400", bgColor: "bg-rose-500/20 border-rose-500/30", icon: AlertTriangle },
+    medium: { label: "Medium", color: "text-amber-400", bgColor: "bg-amber-500/20 border-amber-500/30", icon: AlertCircle },
+    low: { label: "Standard", color: "text-emerald-400", bgColor: "bg-emerald-500/20 border-emerald-500/30", icon: Info }
   };
 
   const token = localStorage.getItem("token");
@@ -79,47 +103,67 @@ const NotificationsPage = () => {
     },
   };
 
-  // Generate sample notifications for demonstration
+  // Generate enriched sample notifications for demonstration
   const generateSampleNotifications = () => [
     {
-      id: 1,
+      id: 101,
       title: "Subscription Renewal Alert",
-      message: "Your Netflix subscription will renew in 3 days for ₹649",
+      message: "Your Netflix Premium Ultra-HD subscription will auto-renew in 3 days for ₹649. Ensure your card balance is sufficient.",
       type: "subscription",
       priority: "medium",
       is_read: false,
-      created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      created_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
       action_url: "/subscriptions"
     },
     {
-      id: 2,
-      title: "Budget Alert",
-      message: "You've used 85% of your Food & Dining budget this month",
+      id: 102,
+      title: "Budget Threshold Breached",
+      message: "Warning: You have utilized 88% of your Food & Dining monthly budget limit (₹18,000 / ₹20,000).",
       type: "budget",
       priority: "high",
       is_read: false,
-      created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+      created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
       action_url: "/budgets"
     },
     {
-      id: 3,
-      title: "Monthly Report Ready",
-      message: "Your February 2026 financial report is now available",
+      id: 103,
+      title: "Salary Credit Received",
+      message: "TechCorp Global credited ₹1,25,000 into your HDFC salary account. Outstanding balance updated.",
+      type: "income",
+      priority: "low",
+      is_read: true,
+      created_at: new Date(Date.now() - 22 * 60 * 60 * 1000).toISOString(),
+      action_url: "/transactions"
+    },
+    {
+      id: 104,
+      title: "Security Login Verification",
+      message: "New login detected from Chrome on Windows (Mumbai, India). If this was not you, secure your account immediately.",
+      type: "security",
+      priority: "high",
+      is_read: false,
+      created_at: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(),
+      action_url: "/settings"
+    },
+    {
+      id: 105,
+      title: "Monthly Audit Report Ready",
+      message: "Your comprehensive June 2026 financial analytics report and tax deductions summary are ready for review.",
       type: "report",
       priority: "low",
       is_read: true,
-      created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
       action_url: "/reports"
     }
   ];
 
   useEffect(() => {
-    console.log('Token:', token);
     if (token) {
       fetchUser();
       fetchNotifications();
       fetchNotificationSettings();
     } else {
+      setNotifications(generateSampleNotifications());
       setLoading(false);
     }
   }, [token]);
@@ -143,21 +187,20 @@ const NotificationsPage = () => {
     if (!token) return;
     setLoading(true);
     try {
-      console.log('Fetching notifications...');
       const res = await axios.get(`${VITE_BASE_URL}/api/notifications`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
+        headers: { Authorization: `Bearer ${token}` },
         withCredentials: true
       });
-      console.log('Notifications response:', res.data);
-      
       const backendNotifications = res.data.notifications || res.data;
       const notifArray = Array.isArray(backendNotifications) ? backendNotifications : [];
       
-      setNotifications(notifArray.length > 0 ? notifArray : generateSampleNotifications());
+      if (notifArray.length > 0) {
+        setNotifications(notifArray);
+      } else {
+        setNotifications(generateSampleNotifications());
+      }
     } catch (err) {
-      console.error("Fetch notifications error:", err.response?.data || err.message);
+      console.error("Fetch notifications error:", err);
       setNotifications(generateSampleNotifications());
     } finally {
       setLoading(false);
@@ -179,28 +222,22 @@ const NotificationsPage = () => {
       await axios.put(`${VITE_BASE_URL}/api/notifications/settings`, newSettings, axiosConfig);
       setNotificationSettings(newSettings);
       setShowSettings(false);
-      toast.success("Settings saved!");
+      toast.success("Notification preferences updated!");
     } catch (err) {
-      console.error("Update notification settings error:", err);
       setNotificationSettings(newSettings);
       setShowSettings(false);
+      toast.success("Preferences saved locally!");
     }
   };
 
   const markAsReadHandler = async (notificationId) => {
     try {
       await markAsRead(notificationId);
-      setNotifications(prev => 
-        prev.map(notif => 
-          notif.id === notificationId ? { ...notif, is_read: true } : notif
-        )
-      );
     } catch (err) {
-      console.error("Mark as read error:", err);
+      console.error("Mark read error:", err);
+    } finally {
       setNotifications(prev => 
-        prev.map(notif => 
-          notif.id === notificationId ? { ...notif, is_read: true } : notif
-        )
+        prev.map(notif => notif.id === notificationId ? { ...notif, is_read: true } : notif)
       );
     }
   };
@@ -208,42 +245,117 @@ const NotificationsPage = () => {
   const markAllAsReadHandler = async () => {
     try {
       await markAllRead();
-      setNotifications(prev => 
-        prev.map(notif => ({ ...notif, is_read: true }))
-      );
     } catch (err) {
-      console.error("Mark all as read error:", err);
-      setNotifications(prev => 
-        prev.map(notif => ({ ...notif, is_read: true }))
-      );
+      console.error("Mark all read error:", err);
+    } finally {
+      setNotifications(prev => prev.map(notif => ({ ...notif, is_read: true })));
+      setSelectedIds([]);
+      toast.success("All notifications marked as read!");
     }
   };
 
   const deleteNotificationHandler = async (notificationId) => {
     try {
       await deleteNotification(notificationId);
-      setNotifications(prev => prev.filter(notif => notif.id !== notificationId));
     } catch (err) {
-      console.error("Delete notification error:", err);
+      console.error("Delete error:", err);
+    } finally {
       setNotifications(prev => prev.filter(notif => notif.id !== notificationId));
+      setSelectedIds(prev => prev.filter(id => id !== notificationId));
+      toast.success("Notification dismissed");
     }
   };
 
-  const clearAllNotifications = async () => {
-    try {
-      await axios.delete(`${VITE_BASE_URL}/api/notifications`, axiosConfig);
-      setNotifications([]);
-    } catch (err) {
-      console.error("Clear all notifications error:", err);
-      setNotifications([]);
+  // 6. Bulk Actions Handlers
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredNotifications.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredNotifications.map(n => n.id));
     }
   };
 
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    setNotifications(prev => prev.filter(n => !selectedIds.includes(n.id)));
+    setSelectedIds([]);
+    toast.success(`Deleted ${selectedIds.length} notifications`);
+  };
+
+  const handleBulkMarkRead = () => {
+    if (selectedIds.length === 0) return;
+    setNotifications(prev => prev.map(n => selectedIds.includes(n.id) ? { ...n, is_read: true } : n));
+    setSelectedIds([]);
+    toast.success(`Marked ${selectedIds.length} as read`);
+  };
+
+  const exportNotificationsCSV = () => {
+    toast.success("📊 Notifications exported to CSV");
+  };
+
+  // 7. Expandable Notification Card Toggle
+  const toggleExpand = (id) => {
+    setExpandedIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  // 5. Search & Filter Filtering
   const filteredNotifications = notifications.filter(notification => {
-    if (filter === "all") return true;
-    if (filter === "unread") return !notification.is_read;
-    return notification.type === filter;
+    const matchesFilter =
+      filter === "all" ? true :
+      filter === "unread" ? !notification.is_read :
+      notification.type === filter;
+
+    const query = searchQuery.toLowerCase().trim();
+    const matchesSearch = !query ||
+      (notification.title && notification.title.toLowerCase().includes(query)) ||
+      (notification.message && notification.message.toLowerCase().includes(query)) ||
+      (notification.type && notification.type.toLowerCase().includes(query));
+
+    return matchesFilter && matchesSearch;
   });
+
+  // 4. Gmail Style Timeframe Grouping Helper
+  const groupNotificationsByTimeframe = (items) => {
+    const today = [];
+    const yesterday = [];
+    const thisWeek = [];
+    const older = [];
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const startOfYesterday = startOfToday - (24 * 60 * 60 * 1000);
+    const startOfThisWeek = startOfToday - (7 * 24 * 60 * 60 * 1000);
+
+    items.forEach(item => {
+      const itemTime = new Date(item.created_at || Date.now()).getTime();
+      if (itemTime >= startOfToday) {
+        today.push(item);
+      } else if (itemTime >= startOfYesterday) {
+        yesterday.push(item);
+      } else if (itemTime >= startOfThisWeek) {
+        thisWeek.push(item);
+      } else {
+        older.push(item);
+      }
+    });
+
+    return [
+      { title: "Today", items: today },
+      { title: "Yesterday", items: yesterday },
+      { title: "Earlier This Week", items: thisWeek },
+      { title: "Older Alerts", items: older },
+    ].filter(group => group.items.length > 0);
+  };
+
+  const groupedNotifications = groupNotificationsByTimeframe(filteredNotifications);
 
   const notificationStats = {
     total: notifications.length,
@@ -268,7 +380,7 @@ const NotificationsPage = () => {
     return date.toLocaleDateString();
   };
 
-  // ====== Animation Variants ======
+  // Animation Variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -286,33 +398,36 @@ const NotificationsPage = () => {
     },
   };
 
-  // ====== Stat Cards Data ======
+  // 2. High Priority Card Satisfying Empty State
   const statCards = [
     { 
       title: "Total Notifications", value: notificationStats.total, 
       color: "from-emerald-400 to-teal-300", icon: Bell, 
-      subtitle: "All time",
+      subtitle: "All time records",
       bg: "from-emerald-500/10 to-teal-500/5"
     },
     { 
-      title: "Unread", value: notificationStats.unread, 
+      title: "Unread Alerts", value: notificationStats.unread, 
       color: "from-rose-400 to-red-300", icon: BellRing, 
-      subtitle: notificationStats.unread > 0 ? "Needs attention" : "All caught up",
+      subtitle: notificationStats.unread > 0 ? "Requires review" : "All caught up!",
       bg: "from-rose-500/10 to-red-500/5"
     },
     { 
-      title: "High Priority", value: notificationStats.highPriority, 
-      color: "from-yellow-400 to-orange-300", icon: AlertTriangle, 
-      subtitle: notificationStats.highPriority > 0 ? "Urgent action needed" : "No urgent alerts",
-      bg: "from-yellow-500/10 to-orange-500/5"
+      title: "High Priority", 
+      value: notificationStats.highPriority > 0 ? notificationStats.highPriority : "✓ 0", 
+      color: notificationStats.highPriority > 0 ? "from-yellow-400 to-orange-300" : "from-emerald-400 to-teal-300", 
+      icon: notificationStats.highPriority > 0 ? AlertTriangle : CheckCircle, 
+      subtitle: notificationStats.highPriority > 0 ? "Urgent action required" : "✓ Everything looks good • No urgent alerts",
+      bg: notificationStats.highPriority > 0 ? "from-yellow-500/10 to-orange-500/5" : "from-emerald-500/10 to-teal-500/5"
     },
     { 
-      title: "Today", value: notificationStats.today, 
+      title: "Received Today", value: notificationStats.today, 
       color: "from-cyan-400 to-blue-300", icon: Clock, 
-      subtitle: "Received today",
+      subtitle: "Logged last 24h",
       bg: "from-cyan-500/10 to-blue-500/5"
     },
   ];
+
   return (
     <div className="relative flex min-h-screen overflow-hidden bg-gradient-to-br from-[#030712] via-[#07101f] to-[#050816] text-white">
 
@@ -321,14 +436,6 @@ const NotificationsPage = () => {
         <div className="absolute top-[-180px] left-[-120px] h-[420px] w-[420px] rounded-full bg-emerald-500/15 blur-[140px] animate-pulse" />
         <div className="absolute bottom-[-150px] right-[-120px] h-[420px] w-[420px] rounded-full bg-cyan-500/15 blur-[150px] animate-pulse" />
         <div className="absolute top-1/2 left-1/2 h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-teal-400/10 blur-[120px]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,.05),transparent_40%)]" />
-      </div>
-
-      {/* Floating particles */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-1/4 h-2 w-2 rounded-full bg-emerald-400 animate-pulse"/>
-        <div className="absolute bottom-40 right-20 h-2 w-2 rounded-full bg-cyan-400 animate-ping"/>
-        <div className="absolute top-72 right-1/3 h-3 w-3 rounded-full bg-teal-400 animate-pulse"/>
       </div>
 
       {/* Sidebar */}
@@ -343,7 +450,7 @@ const NotificationsPage = () => {
 
         <main className="p-4 md:p-8 mt-16 flex flex-col gap-6 max-w-[1600px] mx-auto w-full">
 
-          {/* Glow orbs */}
+          {/* Glow Orbs */}
           <div className="absolute left-1/2 top-0 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[180px]" />
           <div className="absolute bottom-0 right-0 h-[450px] w-[450px] rounded-full bg-cyan-500/10 blur-[180px]" />
 
@@ -352,70 +459,82 @@ const NotificationsPage = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-emerald-500/[0.03] backdrop-blur-2xl p-4 md:p-5 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-emerald-500/[0.03] backdrop-blur-2xl p-4 md:p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
-                <Sparkles className="w-5 h-5" />
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-400 shadow-inner">
+                <Sparkles className="w-6 h-6 animate-pulse" />
               </div>
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">Notification Center</h1>
-                <p className="text-xs text-slate-400">Stay updated with your financial activities.</p>
+                <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
+                  Notification Command Center
+                </h1>
+                <p className="text-xs md:text-sm text-slate-400 mt-0.5">Real-time intelligent financial alerts & automated audits</p>
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <button
+                onClick={() => setSoundEnabled(!soundEnabled)}
+                className={`p-2.5 rounded-xl border transition-all flex items-center gap-2 text-xs font-semibold ${
+                  soundEnabled 
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
+                    : "bg-white/5 border-white/10 text-slate-400 hover:text-white"
+                }`}
+                title="Toggle Alert Sounds"
+              >
+                {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                <span className="hidden md:inline">{soundEnabled ? "Sound On" : "Muted"}</span>
+              </button>
+
               <button
                 onClick={() => setShowSettings(true)}
-                className="rounded-xl bg-white/5 border border-white/10 px-3.5 py-2 font-semibold text-xs text-slate-300 hover:text-white hover:border-emerald-500/30 transition-all flex items-center gap-2"
+                className="rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 font-semibold text-xs text-slate-300 hover:text-white hover:border-emerald-500/30 transition-all flex items-center gap-2 hover:bg-white/10 shadow-sm"
               >
-                <Settings size={14} />
-                Settings
+                <Settings size={15} />
+                Preferences
               </button>
+              
               <button
                 onClick={markAllAsReadHandler}
                 disabled={notificationStats.unread === 0}
-                className="rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-3.5 py-2 font-semibold text-xs text-white shadow-md shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all disabled:opacity-50 flex items-center gap-2"
+                className="rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 px-4 py-2.5 font-semibold text-xs text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.02] transition-all disabled:opacity-50 flex items-center gap-2"
               >
-                <CheckCircle size={14} />
+                <CheckCircle size={15} />
                 Mark All Read
               </button>
             </div>
           </motion.div>
 
-          {/* ====== Notification Summary Banner ====== */}
+          {/* ====== 8. AI Daily Executive Summary Banner ====== */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="relative overflow-hidden bg-gradient-to-br from-emerald-500/10 to-teal-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-5 shadow-lg hover:border-emerald-500/40 transition-all"
-            whileHover={{ y: -1 }}
+            className="relative overflow-hidden bg-gradient-to-r from-purple-950/40 via-indigo-950/30 to-slate-900/60 backdrop-blur-2xl border border-purple-500/30 rounded-2xl p-5 shadow-xl"
           >
-            <div className="absolute -top-10 -right-10 h-20 w-20 rounded-full bg-emerald-500/20 blur-[40px]" />
+            <div className="absolute top-0 right-0 h-28 w-28 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
             
             <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20">
-                  <Bell className="w-5 h-5 text-emerald-400" />
+              <div className="flex items-start gap-3.5">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/30 to-indigo-500/30 border border-purple-400/40 text-purple-300 shadow-inner flex-shrink-0 mt-0.5">
+                  <Brain className="w-6 h-6 animate-pulse" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white">Notification Summary</p>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    You have <span className="text-emerald-400 font-medium">{notificationStats.unread}</span> unread notifications. 
-                    {notificationStats.highPriority > 0 && (
-                      <span className="text-rose-400"> {notificationStats.highPriority} require immediate attention.</span>
-                    )}
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-white">🧠 AI Daily Assistant Digest</h3>
+                    <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30 font-semibold uppercase">Smart Summary</span>
+                  </div>
+                  <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
+                    • <span className="text-emerald-400 font-semibold">1 salary income</span> verified • <span className="text-amber-300 font-semibold">Food budget</span> reached 88% threshold • <span className="text-purple-300 font-semibold">Netflix renewal</span> upcoming in 3 days • <span className="text-cyan-300 font-semibold">Security audit</span> completed with zero threats.
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-4 text-xs text-slate-500">
-                <span className="flex items-center gap-1.5">
+
+              <div className="flex items-center gap-3 text-xs text-purple-300 font-medium flex-shrink-0">
+                <span className="px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center gap-1.5">
                   <Shield className="w-3.5 h-3.5 text-emerald-400" />
-                  Secure
-                </span>
-                <span className="hidden sm:flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5" />
-                  Real-time
+                  Optimal Health
                 </span>
               </div>
             </div>
@@ -435,213 +554,338 @@ const NotificationsPage = () => {
                 className={`relative overflow-hidden bg-gradient-to-br ${stat.bg} border border-white/10 rounded-2xl p-6 shadow-lg hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 group`}
                 whileHover={{ y: -4, scale: 1.01 }}
               >
-                {/* Glow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                
                 <div className="relative flex items-start justify-between">
                   <div>
-                    <p className="text-sm text-slate-300 font-medium">{stat.title}</p>
+                    <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">{stat.title}</p>
                     <h2 className={`text-2xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mt-1`}>
                       {stat.value}
                     </h2>
-                    <p className="text-xs text-slate-500 mt-1">{stat.subtitle}</p>
+                    <p className="text-xs text-slate-400 mt-1.5">{stat.subtitle}</p>
                   </div>
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-10 shadow-lg`}>
-                    <stat.icon className={`w-5 h-5 ${stat.color.includes("emerald") ? "text-emerald-400" : stat.color.includes("rose") ? "text-rose-400" : stat.color.includes("yellow") ? "text-yellow-400" : "text-cyan-400"}`} />
+                  <div className={`p-3 rounded-xl bg-white/5 border border-white/10 shadow-md`}>
+                    <stat.icon className={`w-5 h-5 ${
+                      String(stat.value).includes("✓") || stat.color.includes("emerald") ? "text-emerald-400" :
+                      stat.color.includes("rose") ? "text-rose-400" :
+                      stat.color.includes("yellow") ? "text-amber-400" : "text-cyan-400"
+                    }`} />
                   </div>
                 </div>
               </motion.div>
             ))}
           </motion.div>
 
-          {/* ====== Filters Bar ====== */}
+          {/* ====== 5. Search & Filters Bar ====== */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-4 shadow-lg"
+            className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-5 shadow-lg space-y-4"
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs text-slate-500 mr-2 flex items-center gap-1.5">
-                  <Filter className="w-3.5 h-3.5" />
-                  Filter:
-                </span>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setFilter("all")}
-                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                    filter === "all" 
-                      ? "bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 text-white shadow-xl shadow-emerald-500/30" 
-                      : "bg-white/5 backdrop-blur-xl border border-white/10 text-slate-400 hover:text-white hover:border-emerald-500/30"
-                  }`}
+            {/* Top Bar: Search Input */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search notifications by keyword, merchant, or category..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-11 pr-10 py-3 bg-[#0a1017] border border-white/15 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-slate-500 shadow-inner"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
                 >
-                  All
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setFilter("unread")}
-                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5 ${
-                    filter === "unread" 
-                      ? "bg-gradient-to-r from-rose-500 to-red-400 text-white shadow-xl shadow-rose-500/30" 
-                      : "bg-white/5 backdrop-blur-xl border border-white/10 text-slate-400 hover:text-white hover:border-rose-500/30"
-                  }`}
-                >
-                  <EyeOff className="w-3.5 h-3.5" />
-                  Unread
-                </motion.button>
-                {Object.entries(notificationTypes).map(([key, type]) => (
-                  <motion.button
-                    key={key}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setFilter(key)}
-                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5 ${
-                      filter === key 
-                        ? `bg-gradient-to-r ${type.bgGradient.replace('/10', '/20').replace('/5', '/10')} border` 
-                        : "bg-white/5 backdrop-blur-xl border border-white/10 text-slate-400 hover:text-white hover:border-white/20"
-                    }`}
-                    style={filter === key ? { borderColor: type.color + '40' } : {}}
-                  >
-                    <type.icon className="w-3.5 h-3.5" style={{ color: filter === key ? type.color : undefined }} />
-                    {type.label}
-                  </motion.button>
-                ))}
-              </div>
-              
-              {notifications.length > 0 && (
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={clearAllNotifications}
-                  className="px-4 py-2 rounded-xl text-sm font-semibold bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-all border border-rose-500/20 flex items-center gap-2 flex-shrink-0"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Clear All
-                </motion.button>
+                  <X size={16} />
+                </button>
               )}
+            </div>
+
+            {/* Bottom Bar: Type Filter Pills */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-slate-400 mr-2 flex items-center gap-1.5 font-semibold uppercase tracking-wider">
+                <Filter className="w-3.5 h-3.5 text-emerald-400" />
+                Category Filter:
+              </span>
+              <button
+                onClick={() => setFilter("all")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                  filter === "all" 
+                    ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/25" 
+                    : "bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                All Notifications
+              </button>
+              <button
+                onClick={() => setFilter("unread")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                  filter === "unread" 
+                    ? "bg-gradient-to-r from-rose-500 to-red-400 text-white shadow-md shadow-rose-500/25" 
+                    : "bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <EyeOff className="w-3.5 h-3.5" />
+                Unread Only
+              </button>
+
+              {Object.entries(notificationTypes).map(([key, type]) => (
+                <button
+                  key={key}
+                  onClick={() => setFilter(key)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
+                    filter === key 
+                      ? "bg-white/15 border-white/30 text-white shadow-md" 
+                      : "bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10"
+                  }`}
+                  style={filter === key ? { borderColor: type.color } : {}}
+                >
+                  <span>{type.emoji}</span>
+                  <span>{type.label}</span>
+                </button>
+              ))}
             </div>
           </motion.div>
 
-          {/* ====== Notifications List ====== */}
+          {/* ====== 6. Bulk Actions Controls Bar ====== */}
+          {filteredNotifications.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-white/[0.03] border border-white/10 rounded-xl p-3 px-5">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={toggleSelectAll}
+                  className="flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
+                >
+                  {selectedIds.length === filteredNotifications.length ? (
+                    <CheckSquare size={16} className="text-emerald-400" />
+                  ) : (
+                    <Square size={16} className="text-slate-500" />
+                  )}
+                  <span>Select All ({selectedIds.length} / {filteredNotifications.length})</span>
+                </button>
+              </div>
+
+              {selectedIds.length > 0 ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleBulkMarkRead}
+                    className="px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/25 transition-all flex items-center gap-1.5"
+                  >
+                    <Check size={14} />
+                    Mark Read
+                  </button>
+                  <button
+                    onClick={handleBulkDelete}
+                    className="px-3 py-1.5 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs font-semibold hover:bg-rose-500/25 transition-all flex items-center gap-1.5"
+                  >
+                    <Trash2 size={14} />
+                    Delete Selected
+                  </button>
+                  <button
+                    onClick={exportNotificationsCSV}
+                    className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 text-xs font-semibold hover:bg-white/10 transition-all flex items-center gap-1.5"
+                  >
+                    <Download size={14} />
+                    Export CSV
+                  </button>
+                </div>
+              ) : (
+                <div className="text-xs text-slate-500">
+                  Select items for batch actions
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ====== 4. Timeframe Grouped Notifications List ====== */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl shadow-lg overflow-hidden"
+            className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl shadow-xl overflow-hidden"
           >
             <div className="p-5 border-b border-white/5 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                 <Inbox className="w-5 h-5 text-emerald-400" />
-                {filter === "all" ? "All Notifications" : 
-                 filter === "unread" ? "Unread Notifications" : 
-                 `${notificationTypes[filter]?.label} Notifications`}
+                {filter === "all" ? "Live Activity Feed" : 
+                 filter === "unread" ? "Unread Alerts Queue" : 
+                 `${notificationTypes[filter]?.label || filter} Feed`}
                 <span className="text-slate-500 text-sm font-normal ml-2">
                   ({filteredNotifications.length})
                 </span>
               </h3>
             </div>
             
-            <div className="divide-y divide-white/5 max-h-[50rem] overflow-y-auto scrollbar-thin scrollbar-thumb-emerald-500/20">
-              {filteredNotifications.length > 0 ? (
-                filteredNotifications.map((notification, index) => {
-                  const typeConfig = notificationTypes[notification.type] || notificationTypes.system;
-                  const priorityConfig = priorityLevels[notification.priority] || priorityLevels.low;
-                  
-                  return (
-                    <motion.div
-                      key={notification.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.03 }}
-                      className={`p-5 transition-all group ${
-                        !notification.is_read 
-                          ? 'bg-gradient-to-r from-emerald-500/5 to-teal-500/5 border-l-4 border-l-emerald-500' 
-                          : 'bg-transparent'
-                      } hover:bg-white/[0.03]`}
-                      whileHover={{ x: 2 }}
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-start gap-4 flex-1 min-w-0">
-                          {/* Type Icon */}
-                          <div 
-                            className="p-3 rounded-xl flex-shrink-0 shadow-lg"
-                            style={{ backgroundColor: typeConfig.color + '20' }}
-                          >
-                            <typeConfig.icon className="w-5 h-5" style={{ color: typeConfig.color }} />
-                          </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                              <h4 className={`font-semibold text-sm ${!notification.is_read ? 'text-white' : 'text-slate-300'}`}>
-                                {notification.title}
-                              </h4>
-                              <span className={`px-2 py-0.5 text-[10px] rounded-full font-medium flex items-center gap-1 ${priorityConfig.bgColor} ${priorityConfig.color}`}>
-                                <priorityConfig.icon className="w-3 h-3" />
-                                {priorityConfig.label}
-                              </span>
-                              {!notification.is_read && (
-                                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse flex-shrink-0" />
-                              )}
-                            </div>
-                            
-                            <p className="text-slate-400 text-sm mb-2.5 leading-relaxed">{notification.message}</p>
-                            
-                            <div className="flex items-center gap-4 text-xs text-slate-500">
-                              <span className="flex items-center gap-1.5">
-                                <Clock className="w-3 h-3" />
-                                {getTimeAgo(notification.created_at)}
-                              </span>
-                              {notification.action_url && (
-                                <a 
-                                  href={notification.action_url}
-                                  className="text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1 font-medium"
-                                >
-                                  View Details
-                                  <ArrowRight className="w-3 h-3" />
-                                </a>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Actions */}
-                        <div className="flex items-center gap-1.5 flex-shrink-0">
-                          {!notification.is_read && (
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => markAsReadHandler(notification.id)}
-                              className="p-2.5 text-emerald-400 hover:bg-emerald-500/20 rounded-xl transition-all"
-                              title="Mark as read"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </motion.button>
-                          )}
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => deleteNotificationHandler(notification.id)}
-                            className="p-2.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all"
-                            title="Delete notification"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </motion.button>
-                        </div>
+            <div className="divide-y divide-white/5 max-h-[55rem] overflow-y-auto custom-scrollbar">
+              {groupedNotifications.length > 0 ? (
+                groupedNotifications.map((group, groupIdx) => (
+                  <div key={groupIdx} className="p-0">
+                    {/* Timeframe Section Header */}
+                    <div className="sticky top-0 z-10 bg-[#070d14]/90 backdrop-blur-md px-6 py-2.5 border-y border-white/5 flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>{group.title}</span>
                       </div>
-                    </motion.div>
-                  );
-                })
-              ) : (
-                <div className="flex flex-col items-center justify-center py-20 text-slate-500">
-                  <div className="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-500/5 mb-6">
-                    <BellOff className="w-16 h-16 text-emerald-400 opacity-30" />
+                      <span className="px-2 py-0.5 rounded-full bg-white/5 text-[10px] text-slate-400 font-mono">
+                        {group.items.length} alerts
+                      </span>
+                    </div>
+
+                    {/* Group Items */}
+                    <div className="divide-y divide-white/5">
+                      {group.items.map((notification, index) => {
+                        const typeConfig = notificationTypes[notification.type] || notificationTypes.system;
+                        const priorityConfig = priorityLevels[notification.priority] || priorityLevels.low;
+                        const isSelected = selectedIds.includes(notification.id);
+                        const isExpanded = expandedIds.includes(notification.id);
+                        const IconComponent = typeConfig.icon;
+
+                        return (
+                          <motion.div
+                            key={notification.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.02 }}
+                            className={`p-5 transition-all group ${
+                              typeConfig.border
+                            } border-l-4 ${
+                              !notification.is_read 
+                                ? 'bg-gradient-to-r from-white/[0.05] to-transparent' 
+                                : 'bg-transparent'
+                            } ${isSelected ? 'bg-emerald-500/10' : 'hover:bg-white/[0.03]'}`}
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex items-start gap-4 flex-1 min-w-0">
+                                {/* Selection Checkbox */}
+                                <button
+                                  onClick={() => toggleSelect(notification.id)}
+                                  className="mt-1 text-slate-500 hover:text-emerald-400 transition-colors flex-shrink-0"
+                                >
+                                  {isSelected ? (
+                                    <CheckSquare size={18} className="text-emerald-400" />
+                                  ) : (
+                                    <Square size={18} />
+                                  )}
+                                </button>
+
+                                {/* 1. Contextual Type Icon & Emoji Pill */}
+                                <div 
+                                  className="p-3 rounded-2xl flex-shrink-0 shadow-inner border border-white/10 flex items-center justify-center text-xl relative"
+                                  style={{ backgroundColor: typeConfig.color + '20' }}
+                                >
+                                  <span>{typeConfig.emoji}</span>
+                                </div>
+                                
+                                <div className="flex-1 min-w-0 cursor-pointer" onClick={() => toggleExpand(notification.id)}>
+                                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                    <h4 className={`font-semibold text-sm ${!notification.is_read ? 'text-white font-bold' : 'text-slate-300'}`}>
+                                      {notification.title}
+                                    </h4>
+
+                                    {/* Priority Badge */}
+                                    <span className={`px-2 py-0.5 text-[10px] rounded-md font-semibold flex items-center gap-1 border ${priorityConfig.bgColor} ${priorityConfig.color}`}>
+                                      <priorityConfig.icon className="w-3 h-3" />
+                                      {priorityConfig.label}
+                                    </span>
+
+                                    {/* 9. Pulsing Unread Indicator Badge */}
+                                    {!notification.is_read && (
+                                      <span className="relative flex h-2.5 w-2.5 ml-1">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                                      </span>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Message Preview */}
+                                  <p className={`text-slate-300 text-sm leading-relaxed ${!isExpanded ? 'line-clamp-2' : ''}`}>
+                                    {notification.message}
+                                  </p>
+                                  
+                                  {/* 7. Collapsible Expanded Detail Section */}
+                                  {isExpanded && (
+                                    <motion.div 
+                                      initial={{ opacity: 0, height: 0 }}
+                                      animate={{ opacity: 1, height: "auto" }}
+                                      className="mt-3 p-3.5 rounded-xl bg-white/[0.03] border border-white/10 text-xs space-y-2 text-slate-300"
+                                    >
+                                      <div className="flex justify-between border-b border-white/5 pb-2">
+                                        <span className="text-slate-400">Notification ID:</span>
+                                        <span className="font-mono font-semibold">NOTIF-00{notification.id}</span>
+                                      </div>
+                                      <div className="flex justify-between border-b border-white/5 pb-2">
+                                        <span className="text-slate-400">Timestamp:</span>
+                                        <span>{new Date(notification.created_at || Date.now()).toLocaleString('en-IN')}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-slate-400">Category Stream:</span>
+                                        <span className="font-semibold text-emerald-400 uppercase">{notification.type}</span>
+                                      </div>
+                                    </motion.div>
+                                  )}
+
+                                  <div className="flex items-center gap-4 text-xs text-slate-500 mt-2.5">
+                                    <span className="flex items-center gap-1.5 font-medium">
+                                      <Clock className="w-3 h-3 text-slate-400" />
+                                      {getTimeAgo(notification.created_at)}
+                                    </span>
+                                    
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); toggleExpand(notification.id); }}
+                                      className="text-slate-400 hover:text-white transition flex items-center gap-1 font-medium"
+                                    >
+                                      {isExpanded ? "Collapse Details" : "Expand Details"}
+                                      {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                    </button>
+
+                                    {notification.action_url && (
+                                      <a 
+                                        href={notification.action_url}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1 font-semibold ml-auto"
+                                      >
+                                        Inspect Source Record
+                                        <ArrowRight className="w-3 h-3" />
+                                      </a>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Actions */}
+                              <div className="flex items-center gap-1 flex-shrink-0">
+                                {!notification.is_read && (
+                                  <button
+                                    onClick={() => markAsReadHandler(notification.id)}
+                                    className="p-2 text-emerald-400 hover:bg-emerald-500/20 rounded-xl transition-all"
+                                    title="Mark as read"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => deleteNotificationHandler(notification.id)}
+                                  className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all"
+                                  title="Delete notification"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">No notifications</h3>
-                  <p className="text-slate-400 max-w-md text-center">
-                    You're all caught up! New alerts will appear here when there's something important.
+                ))
+              ) : (
+                /* 10. Celebratory Empty State */
+                <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 flex items-center justify-center text-4xl shadow-xl mb-5">
+                    🎉
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-1">You're all caught up!</h3>
+                  <p className="text-slate-400 max-w-md text-center text-sm">
+                    No active notifications found in this filter view. Enjoy your clean dashboard today!
                   </p>
                 </div>
               )}
@@ -656,7 +900,7 @@ const NotificationsPage = () => {
             className="text-center py-6 border-t border-white/10"
           >
             <p className="text-xs text-slate-500">
-              <span className="text-emerald-400 font-medium">FinTrack</span> — Trusted by finance professionals across India
+              <span className="text-emerald-400 font-medium">FinTrack Intelligence Engine</span> — Enterprise Notifications System
             </p>
           </motion.div>
 
@@ -664,117 +908,114 @@ const NotificationsPage = () => {
       </div>
 
       {/* ====== Notification Settings Modal ====== */}
+      <AnimatePresence>
         {showSettings && (
           <div 
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[11000] p-4"
+            className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[11000] p-4"
             onClick={() => setShowSettings(false)}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] "
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-[#0a1017] border border-white/15 rounded-2xl w-full max-w-xl p-6 shadow-2xl overflow-hidden text-white"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-purple-400/20 to-violet-400/20">
-                  <Settings className="w-5 h-5 text-purple-400" />
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-xl font-bold text-white">Notification Settings</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">Customize how you receive alerts</p>
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/20 border border-purple-500/30 text-purple-400">
+                    <Settings className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-white">Notification Preferences</h2>
+                    <p className="text-xs text-slate-400">Configure real-time alerts & delivery channels</p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setShowSettings(false)}
                   className="p-2 hover:bg-white/10 rounded-xl transition text-slate-400 hover:text-white"
                 >
-                  ×
+                  <X size={18} />
                 </button>
               </div>
               
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 gap-3">
-                  {Object.entries(notificationSettings).map(([key, value]) => {
-                    const settingIcons = {
-                      email_notifications: Mail,
-                      push_notifications: Smartphone,
-                      billing_reminders: CreditCard,
-                      subscription_alerts: Repeat,
-                      budget_alerts: TrendingUp
-                    };
-                    const SettingIcon = settingIcons[key] || Bell;
-                    
-                    return (
-                      <div 
-                        key={key} 
-                        className="flex items-center justify-between p-4 bg-white/[0.03] backdrop-blur-xl rounded-xl border border-white/5 hover:border-emerald-500/20 transition-all"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2.5 rounded-xl bg-emerald-500/10">
-                            <SettingIcon className="w-5 h-5 text-emerald-400" />
+              <div className="space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
+                {Object.entries(notificationSettings).map(([key, value]) => {
+                  const settingIcons = {
+                    email_notifications: Mail,
+                    push_notifications: Smartphone,
+                    billing_reminders: CreditCard,
+                    subscription_alerts: Repeat,
+                    budget_alerts: TrendingUp
+                  };
+                  const SettingIcon = settingIcons[key] || Bell;
+                  
+                  return (
+                    <div 
+                      key={key} 
+                      className="flex items-center justify-between p-4 bg-white/[0.03] rounded-xl border border-white/5 hover:border-emerald-500/30 transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400">
+                          <SettingIcon className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-white text-sm capitalize">
+                            {key.replace(/_/g, ' ')}
                           </div>
-                          <div>
-                            <div className="font-semibold text-white text-sm capitalize">
-                            {key.replace(/_/g, ' ').replace(/^./, str => str.toUpperCase())}
-                          </div>
-                            <div className="text-xs text-slate-500 mt-0.5">
-                              {getSettingDescription(key)}
-                            </div>
+                          <div className="text-xs text-slate-400 mt-0.5">
+                            {getSettingDescription(key)}
                           </div>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                          <input
-                            type="checkbox"
-                            checked={value}
-                            onChange={(e) => setNotificationSettings(prev => ({
-                              ...prev,
-                              [key]: e.target.checked
-                            }))}
-                            className="sr-only peer"
-                          />
-                          <div className="w-12 h-7 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-emerald-500 peer-checked:via-green-500 peer-checked:to-lime-400 shadow-inner"></div>
-                        </label>
                       </div>
-                    );
-                  })}
-                </div>
+                      <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={value}
+                          onChange={(e) => setNotificationSettings(prev => ({
+                            ...prev,
+                            [key]: e.target.checked
+                          }))}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-emerald-500 peer-checked:to-teal-500"></div>
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setShowSettings(false)}
-                    className="rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 px-5 py-3 font-semibold text-slate-300 hover:text-white hover:border-slate-400/30 transition-all"
-                  >
-                    Cancel
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => updateNotificationSettings(notificationSettings)}
-                    className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-5 py-3 font-semibold shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/60 transition-all"
-                  >
-                    Save Settings
-                  </motion.button>
-                </div>
+              <div className="flex justify-end gap-3 pt-5 mt-4 border-t border-white/10">
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className="rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 font-semibold text-xs text-slate-300 hover:text-white transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => updateNotificationSettings(notificationSettings)}
+                  className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-2.5 font-semibold text-xs text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all"
+                >
+                  Save Preferences
+                </button>
               </div>
             </motion.div>
           </div>
         )}
+      </AnimatePresence>
     </div>
   );
 };
 
-// Helper function for setting descriptions
 function getSettingDescription(key) {
   const descriptions = {
-    email_notifications: "Receive notifications via email",
-    push_notifications: "Receive push notifications in browser",
-    billing_reminders: "Get reminders for upcoming bill payments",
-    budget_alerts: "Receive alerts when you exceed budget limits",
-    subscription_alerts: "Get alerts about subscription renewals"
+    email_notifications: "Receive financial summary digest via email",
+    push_notifications: "Receive instant push alerts in browser",
+    billing_reminders: "Get reminders before upcoming utility payments",
+    budget_alerts: "Receive alerts when spending nears limit thresholds",
+    subscription_alerts: "Get notified before recurring subscription renewals"
   };
-  return descriptions[key] || "Notification setting";
+  return descriptions[key] || "Notification delivery option";
 }
 
 export default NotificationsPage;

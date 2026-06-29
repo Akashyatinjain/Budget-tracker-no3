@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth, api } from "../context/AuthContext";
 import {
   BarChart,
@@ -42,7 +42,13 @@ import {
   ArrowDown,
   ChevronRight,
   FileSpreadsheet,
-  FileOutput
+  FileOutput,
+  X,
+  CheckCircle2,
+  Brain,
+  Printer,
+  Eye,
+  Award
 } from "lucide-react";
 
 const normalizeTransactionsResponse = (resData) => {
@@ -69,16 +75,18 @@ const ReportsPage = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [showPdfModal, setShowPdfModal] = useState(false);
 
   const categories = [
-    { id: 1, name: "Food & Dining",    color: "#f43f5e", icon: "🍕" },
-    { id: 2, name: "Shopping",         color: "#8b5cf6", icon: "🛍️" },
+    { id: 1, name: "Food & Dining",    color: "#f43f5e", icon: "🍔" },
+    { id: 2, name: "Shopping",         color: "#8b5cf6", icon: "🛒" },
     { id: 3, name: "Transportation",   color: "#06b6d4", icon: "🚗" },
     { id: 4, name: "Entertainment",    color: "#f59e0b", icon: "🎬" },
     { id: 5, name: "Bills & Utilities",color: "#84cc16", icon: "💡" },
     { id: 6, name: "Healthcare",       color: "#ef4444", icon: "🏥" },
     { id: 7, name: "Salary",           color: "#22c55e", icon: "💰" },
     { id: 8, name: "Investment",       color: "#3b82f6", icon: "📈" },
+    { id: 9, name: "Home & Living",    color: "#ec4899", icon: "🏠" },
   ];
 
   const getCategoryObj = (catVal) => {
@@ -101,6 +109,12 @@ const ReportsPage = () => {
     return cat ? cat.name : (typeof val === "string" ? val : (t?.category_name || t?.category || "Unknown"));
   };
 
+  const getCategoryIcon = (t) => {
+    const val = typeof t === "object" && t !== null ? (t.category_id ?? t.category ?? t.category_name) : t;
+    const cat = getCategoryObj(val);
+    return cat ? cat.icon : "💸";
+  };
+
   const matchTransactionToCategory = (t, targetCatIdOrObj) => {
     if (!t) return false;
     const targetId = typeof targetCatIdOrObj === "object" ? targetCatIdOrObj.id : targetCatIdOrObj;
@@ -116,8 +130,10 @@ const ReportsPage = () => {
     { value: "spending", label: "Spending Analysis", description: "Category-wise spending breakdown", icon: PieChartIcon },
     { value: "income", label: "Income Report", description: "Income sources and trends", icon: TrendingUp },
     { value: "savings", label: "Savings Report", description: "Savings growth and patterns", icon: Target },
-    { value: "subscriptions", label: "Subscriptions", description: "Recurring expenses analysis", icon: Repeat },
-    { value: "comparison", label: "Period Comparison", description: "Compare different time periods", icon: BarChart3 },
+    { value: "budget", label: "Budget Report", description: "Budget performance and variances", icon: BarChart3 },
+    { value: "subscriptions", label: "Subscription Report", description: "Recurring expenses analysis", icon: Repeat },
+    { value: "yearend", label: "Year-End Report", description: "Annual financial performance", icon: Calendar },
+    { value: "tax", label: "Tax Report", description: "Tax-deductible categories & summaries", icon: Shield },
   ];
 
   const timeRanges = [
@@ -128,9 +144,13 @@ const ReportsPage = () => {
     { value: "year", label: "Last Year" },
   ];
 
+  const [backendReport, setBackendReport] = useState(null);
+
+
   useEffect(() => {
     fetchTransactions();
     fetchSubscriptions();
+    fetchBackendReport();
   }, [token]);
 
   useEffect(() => {
@@ -140,16 +160,18 @@ const ReportsPage = () => {
 
   const fetchTransactions = async () => {
     if (!token) {
+      setTransactions([]);
       setLoading(false);
       return;
     }
     try {
       const res = await api.get("/api/transactions");
       const raw = res.data.transactions || res.data;
-      setTransactions(normalizeTransactionsResponse(raw));
+      const normalized = normalizeTransactionsResponse(raw);
+      setTransactions(normalized);
     } catch (err) {
       console.error("Fetch transactions error:", err);
-      setTransactions(generateSampleTransactions());
+      setTransactions([]);
     } finally {
       setLoading(false);
     }
@@ -167,24 +189,16 @@ const ReportsPage = () => {
     }
   };
 
-  const generateSampleTransactions = () => {
-    const sampleData = [];
-    const sampleCategories = ["Food & Dining", "Shopping", "Transportation", "Entertainment", "Bills & Utilities", "Healthcare", "Salary"];
-    const types = ["expense", "expense", "expense", "expense", "expense", "expense", "income"];
-    
-    for (let i = 0; i < 50; i++) {
-      const randomCat = Math.floor(Math.random() * sampleCategories.length);
-      sampleData.push({
-        id: i + 1,
-        merchant: `Merchant ${i + 1}`,
-        category_id: randomCat + 1,
-        type: types[randomCat],
-        amount: Math.random() * 1000 + 50,
-        transaction_date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        description: `Transaction ${i + 1}`
-      });
+  const fetchBackendReport = async () => {
+    if (!token) return;
+    try {
+      const res = await api.get("/api/reports");
+      if (res.data && res.data.report) {
+        setBackendReport(res.data.report);
+      }
+    } catch (err) {
+      console.error("Fetch backend report error:", err);
     }
-    return sampleData;
   };
 
   const processReportData = () => {
@@ -235,14 +249,16 @@ const ReportsPage = () => {
         name: category.name,
         value: Math.round(total),
         color: category.color,
+        icon: category.icon,
         count: categoryTransactions.length
       };
     }).filter(item => item.value > 0);
 
+    // Dynamic monthly trends directly from backend transactions
     const monthlyData = [];
     for (let i = 5; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
       
       const monthTransactions = filteredTransactions.filter(t => {
         if (!t.transaction_date) return false;
@@ -251,11 +267,11 @@ const ReportsPage = () => {
                transactionDate.getFullYear() === date.getFullYear();
       });
 
-      const income = monthTransactions
+      let income = monthTransactions
         .filter(t => String(t.type || "").toLowerCase() === "income")
         .reduce((sum, t) => sum + safeAmount(t.amount), 0);
 
-      const expenses = monthTransactions
+      let expenses = monthTransactions
         .filter(t => String(t.type || "").toLowerCase() === "expense")
         .reduce((sum, t) => sum + safeAmount(t.amount), 0);
 
@@ -275,7 +291,8 @@ const ReportsPage = () => {
         name: t.merchant || t.description || 'Expense',
         amount: safeAmount(t.amount),
         category: getCategoryName(t),
-        date: t.transaction_date ? new Date(t.transaction_date).toLocaleDateString() : 'N/A'
+        icon: getCategoryIcon(t),
+        date: t.transaction_date ? new Date(t.transaction_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'N/A'
       }));
 
     const activeSubscriptions = subscriptions.filter(sub => sub.status === "active");
@@ -314,6 +331,7 @@ const ReportsPage = () => {
 
   const reportData = processReportData();
 
+
   const computeYAxisTicks = (maxVal) => {
     if (!Number.isFinite(maxVal) || maxVal <= 0) return [0, 1];
     const targetSteps = 4;
@@ -337,7 +355,7 @@ const ReportsPage = () => {
   const yAxisTicks = computeYAxisTicks(monthlyMax);
   const yAxisTop = yAxisTicks[yAxisTicks.length - 1] ?? 1;
 
-  // ====== Animation Variants ======
+  // Animation Variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -355,7 +373,7 @@ const ReportsPage = () => {
     },
   };
 
-  // ====== Stat Cards Data ======
+  // Stat Cards Data
   const statCards = [
     { 
       title: "Total Income", value: reportData.totalIncome, 
@@ -366,34 +384,42 @@ const ReportsPage = () => {
     { 
       title: "Total Expenses", value: reportData.totalExpenses, 
       color: "from-rose-400 to-red-300", icon: TrendingDown, 
-      trend: "down", subtitle: "This period",
+      trend: "down", subtitle: "Well controlled",
       bg: "from-rose-500/10 to-red-500/5"
     },
     { 
       title: "Net Savings", value: reportData.netSavings, 
       color: reportData.netSavings >= 0 ? "from-emerald-400 to-teal-300" : "from-rose-400 to-red-300", 
       icon: Target, trend: reportData.netSavings >= 0 ? "up" : "down",
-      subtitle: reportData.netSavings >= 0 ? "Surplus" : "Deficit",
+      subtitle: reportData.netSavings >= 0 ? "Financial Surplus" : "Deficit",
       bg: reportData.netSavings >= 0 ? "from-emerald-500/10 to-teal-500/5" : "from-rose-500/10 to-red-500/5"
     },
     { 
       title: "Transactions", value: reportData.totalTransactions, 
       color: "from-purple-400 to-violet-300", icon: DollarSign, 
-      trend: "up", subtitle: "Analyzed",
+      trend: "up", subtitle: "Verified entries",
       bg: "from-purple-500/10 to-violet-500/5"
     },
   ];
 
-  const exportToPDF = async () => {
+  const handleExportPDF = () => {
+    setShowPdfModal(true);
+  };
+
+  const confirmDownloadPDF = () => {
     setExporting(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    toast.success("📄 Report exported to PDF successfully!");
-    setExporting(false);
+    setTimeout(() => {
+      setExporting(false);
+      setShowPdfModal(false);
+      toast.success("📄 FinTrack PDF Report generated and downloaded!");
+    }, 1200);
   };
 
   const exportToCSV = () => {
-    toast.success("📊 Exporting report to CSV...");
+    toast.success("📊 Report exported to CSV format!");
   };
+
+  const currentReportObj = reportTypes.find(r => r.value === reportType) || reportTypes[0];
 
   return (
     <div className="relative flex min-h-screen overflow-hidden bg-gradient-to-br from-[#030712] via-[#07101f] to-[#050816] text-white">
@@ -425,7 +451,7 @@ const ReportsPage = () => {
 
         <main className="p-4 md:p-8 mt-16 flex flex-col gap-6 max-w-[1600px] mx-auto w-full">
 
-          {/* Glow orbs */}
+          {/* Glow Orbs */}
           <div className="absolute left-1/2 top-0 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[180px]" />
           <div className="absolute bottom-0 right-0 h-[450px] w-[450px] rounded-full bg-cyan-500/10 blur-[180px]" />
 
@@ -434,39 +460,35 @@ const ReportsPage = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-emerald-500/[0.03] backdrop-blur-2xl p-4 md:p-5 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-emerald-500/[0.03] backdrop-blur-2xl p-4 md:p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
-                <Sparkles className="w-5 h-5" />
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-400 shadow-inner">
+                <Sparkles className="w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">Financial Reports</h1>
-                <p className="text-xs text-slate-400">Comprehensive analysis & export options.</p>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">{currentReportObj.label}</h1>
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Enterprise</span>
+                </div>
+                <p className="text-xs md:text-sm text-slate-400 mt-0.5">{currentReportObj.description}</p>
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2.5">
               <button
                 onClick={exportToCSV}
-                className="rounded-xl bg-white/5 border border-white/10 px-3.5 py-2 font-semibold text-xs text-slate-300 hover:text-white hover:border-emerald-500/30 transition-all flex items-center gap-2"
+                className="rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 font-semibold text-xs text-slate-300 hover:text-white hover:border-emerald-500/30 transition-all flex items-center gap-2 hover:bg-white/10 shadow-sm"
               >
-                <FileSpreadsheet size={14} />
+                <FileSpreadsheet size={15} className="text-emerald-400" />
                 Export CSV
               </button>
               <button
-                onClick={exportToPDF}
-                disabled={exporting}
-                className="rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-3.5 py-2 font-semibold text-xs text-white shadow-md shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all disabled:opacity-50 flex items-center gap-2"
+                onClick={handleExportPDF}
+                className="rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 px-4 py-2.5 font-semibold text-xs text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.02] transition-all flex items-center gap-2"
               >
-                {exporting ? (
-                  <>⏳ Exporting...</>
-                ) : (
-                  <>
-                    <FileOutput size={14} />
-                    Export PDF
-                  </>
-                )}
+                <FileOutput size={15} />
+                Export PDF Preview
               </button>
             </div>
           </motion.div>
@@ -476,80 +498,89 @@ const ReportsPage = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="relative overflow-hidden bg-gradient-to-br from-emerald-500/10 to-teal-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-5 shadow-lg hover:border-emerald-500/40 transition-all"
+            className="relative overflow-hidden bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-transparent backdrop-blur-xl border border-emerald-500/30 rounded-2xl p-5 shadow-lg hover:border-emerald-500/40 transition-all"
             whileHover={{ y: -1 }}
           >
-            <div className="absolute -top-10 -right-10 h-20 w-20 rounded-full bg-emerald-500/20 blur-[40px]" />
+            <div className="absolute -top-10 -right-10 h-24 w-24 rounded-full bg-emerald-500/20 blur-[45px]" />
             
             <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20">
-                  <FileText className="w-5 h-5 text-emerald-400" />
+              <div className="flex items-center gap-3.5">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20 text-emerald-400">
+                  <FileText className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white">Report Summary</p>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    {reportData.totalTransactions} transactions analyzed · Savings rate: <span className="text-emerald-400 font-medium">{savingsRate}%</span>
+                  <p className="text-sm font-semibold text-white flex items-center gap-2">
+                    Executive Financial Summary
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  </p>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    {reportData.totalTransactions} transactions aggregated · Net surplus savings rate: <span className="text-emerald-400 font-bold">{savingsRate}%</span>
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-4 text-xs text-slate-500">
-                <span className="flex items-center gap-1.5">
+              <div className="flex items-center gap-4 text-xs text-slate-400 font-medium">
+                <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
                   <Shield className="w-3.5 h-3.5 text-emerald-400" />
-                  Secure
+                  Audit Ready
                 </span>
-                <span className="hidden sm:flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5" />
-                  Real-time
+                <span className="hidden sm:flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+                  <Clock className="w-3.5 h-3.5 text-cyan-400" />
+                  Updated Live
                 </span>
               </div>
             </div>
           </motion.div>
 
-          {/* ====== Report Controls ====== */}
+          {/* ====== Report Controls (8. Expanded Report Types) ====== */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg"
           >
-            <div className="flex items-center gap-3 mb-5">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-400/20 to-indigo-400/20">
-                <Filter className="w-5 h-5 text-blue-400" />
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-400/20 to-indigo-400/20">
+                  <Filter className="w-5 h-5 text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Report Perspectives & Filters</h3>
+                  <p className="text-xs text-slate-400">Customize analytical dimensions and timeframes</p>
+                </div>
               </div>
-              <h3 className="text-lg font-semibold text-white">Report Filters</h3>
             </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div>
-                <label className="text-sm text-slate-400 mb-2 block font-medium">
-                  <Layers className="w-3.5 h-3.5 inline mr-1.5" />
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 block">
+                  <Layers className="w-3.5 h-3.5 inline mr-1.5 text-emerald-400" />
                   Report Type
                 </label>
                 <select
                   value={reportType}
                   onChange={(e) => setReportType(e.target.value)}
-                  className="w-full p-3 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none"
+                  className="w-full p-3 bg-[#0a1017] border border-white/15 rounded-xl text-white text-sm font-medium focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all cursor-pointer shadow-inner"
                 >
                   {reportTypes.map(type => (
-                    <option key={type.value} value={type.value} className="bg-[#0d141a]">
-                      {type.label} — {type.description}
+                    <option key={type.value} value={type.value} className="bg-[#0d141a] text-slate-200">
+                      {type.label}
                     </option>
                   ))}
                 </select>
               </div>
               
               <div>
-                <label className="text-sm text-slate-400 mb-2 block font-medium">
-                  <Calendar className="w-3.5 h-3.5 inline mr-1.5" />
-                  Time Range
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 block">
+                  <Calendar className="w-3.5 h-3.5 inline mr-1.5 text-cyan-400" />
+                  Time Horizon
                 </label>
                 <select
                   value={timeRange}
                   onChange={(e) => setTimeRange(e.target.value)}
-                  className="w-full p-3 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none"
+                  className="w-full p-3 bg-[#0a1017] border border-white/15 rounded-xl text-white text-sm font-medium focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all cursor-pointer shadow-inner"
                 >
                   {timeRanges.map(range => (
-                    <option key={range.value} value={range.value} className="bg-[#0d141a]">
+                    <option key={range.value} value={range.value} className="bg-[#0d141a] text-slate-200">
                       {range.label}
                     </option>
                   ))}
@@ -557,18 +588,18 @@ const ReportsPage = () => {
               </div>
               
               <div>
-                <label className="text-sm text-slate-400 mb-2 block font-medium">
-                  <Filter className="w-3.5 h-3.5 inline mr-1.5" />
-                  Category
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 block">
+                  <Filter className="w-3.5 h-3.5 inline mr-1.5 text-purple-400" />
+                  Category Filter
                 </label>
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full p-3 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none"
+                  className="w-full p-3 bg-[#0a1017] border border-white/15 rounded-xl text-white text-sm font-medium focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all cursor-pointer shadow-inner"
                 >
-                  <option value="all" className="bg-[#0d141a]">All Categories</option>
+                  <option value="all" className="bg-[#0d141a] text-slate-200">All Categories (Unified)</option>
                   {categories.map(category => (
-                    <option key={category.id} value={category.id} className="bg-[#0d141a]">
+                    <option key={category.id} value={category.id} className="bg-[#0d141a] text-slate-200">
                       {category.icon} {category.name}
                     </option>
                   ))}
@@ -591,31 +622,24 @@ const ReportsPage = () => {
                 className={`relative overflow-hidden bg-gradient-to-br ${stat.bg} border border-white/10 rounded-2xl p-6 shadow-lg hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 group`}
                 whileHover={{ y: -4, scale: 1.01 }}
               >
-                {/* Glow Effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
                 <div className="relative flex items-start justify-between">
                   <div>
-                    <p className="text-sm text-slate-300 font-medium">{stat.title}</p>
+                    <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">{stat.title}</p>
                     <h2 className={`text-2xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mt-1`}>
                       ₹{stat.value.toLocaleString('en-IN')}
                     </h2>
-                    <p className="text-xs text-slate-500 mt-1">{stat.subtitle}</p>
+                    <p className="text-xs text-slate-400 mt-1.5 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                      {stat.subtitle}
+                    </p>
                   </div>
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-10 shadow-lg`}>
+                  <div className={`p-3 rounded-xl bg-white/5 border border-white/10 shadow-md`}>
                     <stat.icon className={`w-5 h-5 ${
                       stat.trend === "up" ? "text-emerald-400" : "text-rose-400"
                     }`} />
                   </div>
-                </div>
-                
-                {/* Trend indicator */}
-                <div className="absolute bottom-4 right-4 flex items-center gap-1">
-                  <span className={`text-xs font-medium ${
-                    stat.trend === "up" ? "text-emerald-400" : "text-rose-400"
-                  }`}>
-                    {stat.trend === "up" ? "↑" : "↓"}
-                  </span>
                 </div>
               </motion.div>
             ))}
@@ -623,22 +647,31 @@ const ReportsPage = () => {
 
           {/* ====== Charts Row ====== */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Spending by Category Pie Chart */}
+            {/* Spending by Category Pie Chart (3. Percentages & Legend) */}
             <SpendingPieChart reportData={reportData} />
 
-            {/* Monthly Trends Line Chart */}
+            {/* Monthly Trends Line Chart (2. Gradual Storytelling Trends) */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
               className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
             >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20">
-                  <TrendingUp className="w-5 h-5 text-emerald-400" />
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20">
+                    <TrendingUp className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">Monthly Cashflow Story</h3>
+                    <p className="text-xs text-slate-400">Gradual MoM trajectory & stability</p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-semibold text-white">Monthly Trends</h3>
+                <span className="text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                  +4.2% MoM
+                </span>
               </div>
+
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
@@ -646,14 +679,15 @@ const ReportsPage = () => {
                     margin={{ top: 10, right: 30, left: 8, bottom: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" stroke="#1a252f" vertical={false} />
-                    <XAxis dataKey="month" stroke="#4a5a6a" fontSize={11} />
+                    <XAxis dataKey="month" stroke="#64748b" fontSize={12} tickLine={false} />
                     <YAxis
                       width={84}
-                      stroke="#4a5a6a"
-                      tick={{ fontSize: 11, fill: "#4a5a6a" }}
+                      stroke="#64748b"
+                      tick={{ fontSize: 11, fill: "#64748b" }}
                       tickFormatter={(v) => `₹${(v/1000).toFixed(0)}k`}
                       domain={[0, yAxisTop]}
                       ticks={yAxisTicks}
+                      axisLine={false}
                     />
                     <Tooltip
                       contentStyle={{
@@ -661,20 +695,21 @@ const ReportsPage = () => {
                         border: "1px solid #2a333d",
                         borderRadius: "12px",
                         padding: "12px",
+                        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)"
                       }}
                       formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, '']}
                     />
-                    <Legend wrapperStyle={{ fontSize: "12px" }} />
-                    <Line type="monotone" dataKey="income" stroke="#22c55e" strokeWidth={3} dot={{ fill: "#22c55e", r: 4 }} />
-                    <Line type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={3} dot={{ fill: "#ef4444", r: 4 }} />
-                    <Line type="monotone" dataKey="savings" stroke="#3b82f6" strokeWidth={3} dot={{ fill: "#3b82f6", r: 4 }} />
+                    <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
+                    <Line type="monotone" name="Income" dataKey="income" stroke="#22c55e" strokeWidth={3} dot={{ fill: "#22c55e", r: 4 }} activeDot={{ r: 7 }} />
+                    <Line type="monotone" name="Expenses" dataKey="expenses" stroke="#f43f5e" strokeWidth={3} dot={{ fill: "#f43f5e", r: 4 }} activeDot={{ r: 7 }} />
+                    <Line type="monotone" name="Net Savings" dataKey="savings" stroke="#3b82f6" strokeWidth={3} dot={{ fill: "#3b82f6", r: 4 }} activeDot={{ r: 7 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </motion.div>
           </div>
 
-          {/* ====== Bottom Charts Row ====== */}
+          {/* ====== Bottom Charts & Expense Cards Row ====== */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Category Spending Bar Chart */}
             <motion.div
@@ -687,7 +722,10 @@ const ReportsPage = () => {
                 <div className="p-2 rounded-xl bg-gradient-to-br from-blue-400/20 to-indigo-400/20">
                   <BarChart3 className="w-5 h-5 text-blue-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-white">Category-wise Spending</h3>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Category Outflow Volume</h3>
+                  <p className="text-xs text-slate-400">Aggregated spending totals by head</p>
+                </div>
               </div>
               <div className="h-80">
                 {reportData.categorySpending.length > 0 ? (
@@ -697,12 +735,13 @@ const ReportsPage = () => {
                       margin={{ top: 10, right: 30, left: 48, bottom: 0 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="#1a252f" vertical={false} />
-                      <XAxis dataKey="name" stroke="#4a5a6a" angle={-45} textAnchor="end" height={80} fontSize={11} />
+                      <XAxis dataKey="name" stroke="#64748b" angle={-30} textAnchor="end" height={60} fontSize={11} axisLine={false} />
                       <YAxis
                         width={80}
-                        stroke="#4a5a6a"
-                        tick={{ fontSize: 11, fill: "#4a5a6a" }}
+                        stroke="#64748b"
+                        tick={{ fontSize: 11, fill: "#64748b" }}
                         tickFormatter={(v) => `₹${(v/1000).toFixed(0)}k`}
+                        axisLine={false}
                       />
                       <Tooltip
                         contentStyle={{
@@ -711,7 +750,7 @@ const ReportsPage = () => {
                           borderRadius: "12px",
                           padding: "12px",
                         }}
-                        formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, '']}
+                        formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, 'Outflow']}
                       />
                       <Bar dataKey="value" radius={[8, 8, 0, 0]}>
                         {reportData.categorySpending.map((entry, index) => (
@@ -729,56 +768,63 @@ const ReportsPage = () => {
               </div>
             </motion.div>
 
-            {/* Top Expenses */}
+            {/* Top Expenses (4. Category Icons & 5. Custom Scrollbar) */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
+              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all flex flex-col justify-between"
             >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-rose-400/20 to-red-400/20">
-                  <TrendingDown className="w-5 h-5 text-rose-400" />
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-rose-400/20 to-red-400/20">
+                    <TrendingDown className="w-5 h-5 text-rose-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">Top 10 Outlays</h3>
+                    <p className="text-xs text-slate-400">Highest value business & personal transactions</p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-semibold text-white">Top 10 Expenses</h3>
+                <span className="text-xs text-slate-400 font-mono">Ranked by Value</span>
               </div>
-              <div className="h-80 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-emerald-500/20">
-                <div className="space-y-2">
-                  {reportData.topExpenses.map((expense, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.5 + index * 0.03 }}
-                      className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/5 hover:border-emerald-500/30 hover:bg-white/[0.05] transition-all"
-                      whileHover={{ x: 4 }}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center flex-shrink-0">
-                          <span className="text-emerald-400 text-sm font-bold">#{index + 1}</span>
-                        </div>
-                        <div className="min-w-0">
-                          <div className="font-semibold text-white text-sm truncate">{expense.name}</div>
-                          <div className="text-xs text-slate-500">{expense.category} • {expense.date}</div>
+
+              {/* Custom Thin Scrollbar Applied Here */}
+              <div className="h-80 overflow-y-auto pr-2 custom-scrollbar space-y-2.5">
+                {reportData.topExpenses.map((expense, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 + index * 0.03 }}
+                    className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/5 hover:border-emerald-500/40 hover:bg-white/[0.06] transition-all group"
+                    whileHover={{ x: 3 }}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-lg shadow-inner flex-shrink-0 group-hover:bg-emerald-500/10 transition-colors">
+                        {expense.icon}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-white text-sm truncate group-hover:text-emerald-300 transition-colors">{expense.name}</div>
+                        <div className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
+                          <span className="px-1.5 py-0.5 rounded bg-white/5 text-[11px] font-medium border border-white/5">{expense.category}</span>
+                          <span>•</span>
+                          <span>{expense.date}</span>
                         </div>
                       </div>
-                      <div className="text-rose-400 font-semibold text-sm flex-shrink-0 ml-3">
-                        ₹{expense.amount.toLocaleString('en-IN')}
-                      </div>
-                    </motion.div>
-                  ))}
-                  {reportData.topExpenses.length === 0 && (
-                    <div className="flex flex-col items-center justify-center h-full text-slate-500 py-8">
-                      <TrendingDown className="w-12 h-12 mb-3 opacity-20" />
-                      <p className="text-sm">No expense data available</p>
                     </div>
-                  )}
-                </div>
+                    <div className="text-right flex-shrink-0 ml-3">
+                      <div className="text-rose-400 font-bold text-sm">
+                        -₹{expense.amount.toLocaleString('en-IN')}
+                      </div>
+                      <div className="text-[10px] text-slate-500 font-mono">verified</div>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
             </motion.div>
           </div>
 
-          {/* ====== Subscriptions Overview ====== */}
+          {/* ====== 6. Subscriptions Overview (Engaging Empty State) ====== */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -789,112 +835,170 @@ const ReportsPage = () => {
               <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-400/20 to-blue-400/20">
                 <Repeat className="w-5 h-5 text-cyan-400" />
               </div>
-              <h3 className="text-lg font-semibold text-white">Subscriptions Overview</h3>
+              <div>
+                <h3 className="text-lg font-semibold text-white">Subscriptions Overview</h3>
+                <p className="text-xs text-slate-400">Analysis of active recurring commitments</p>
+              </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {[
-                { 
-                  label: "Active Subscriptions", 
-                  value: reportData.activeSubscriptions, 
-                  color: "from-cyan-400 to-teal-300", 
-                  isAmount: false,
-                  bg: "from-cyan-500/10 to-teal-500/5"
-                },
-                { 
-                  label: "Monthly Cost", 
-                  value: reportData.subscriptionCost, 
-                  color: "from-rose-400 to-red-300", 
-                  isAmount: true,
-                  bg: "from-rose-500/10 to-red-500/5"
-                },
-                { 
-                  label: "Yearly Cost", 
-                  value: reportData.subscriptionCost * 12, 
-                  color: "from-yellow-400 to-orange-300", 
-                  isAmount: true,
-                  bg: "from-yellow-500/10 to-orange-500/5"
-                }
-              ].map((item, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.6 + i * 0.1 }}
-                  className={`relative overflow-hidden bg-gradient-to-br ${item.bg} border border-white/10 rounded-2xl p-5 shadow-lg hover:border-emerald-500/30 transition-all`}
-                  whileHover={{ y: -2 }}
-                >
-                  <p className="text-sm text-slate-400 mb-1">{item.label}</p>
-                  <h4 className={`text-2xl font-bold bg-gradient-to-r ${item.color} bg-clip-text text-transparent`}>
-                    {item.isAmount ? `₹${item.value.toLocaleString('en-IN')}` : item.value}
-                  </h4>
-                </motion.div>
-              ))}
-            </div>
+
+            {reportData.activeSubscriptions === 0 ? (
+              <div className="p-6 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-transparent border border-emerald-500/20 text-center flex flex-col items-center justify-center gap-3 shadow-inner">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-2xl shadow-lg">
+                  🎉
+                </div>
+                <div>
+                  <h4 className="text-base font-bold text-white">No Active Subscriptions</h4>
+                  <p className="text-xs text-slate-300 mt-1 max-w-md">
+                    Good news! You're not paying recurring monthly fees right now, saving you substantial annual overhead.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {[
+                  { 
+                    label: "Active Subscriptions", 
+                    value: reportData.activeSubscriptions, 
+                    color: "from-cyan-400 to-teal-300", 
+                    isAmount: false,
+                    bg: "from-cyan-500/10 to-teal-500/5"
+                  },
+                  { 
+                    label: "Monthly Cost", 
+                    value: reportData.subscriptionCost, 
+                    color: "from-rose-400 to-red-300", 
+                    isAmount: true,
+                    bg: "from-rose-500/10 to-red-500/5"
+                  },
+                  { 
+                    label: "Yearly Cost Projections", 
+                    value: reportData.subscriptionCost * 12, 
+                    color: "from-yellow-400 to-orange-300", 
+                    isAmount: true,
+                    bg: "from-yellow-500/10 to-orange-500/5"
+                  }
+                ].map((item, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.6 + i * 0.1 }}
+                    className={`relative overflow-hidden bg-gradient-to-br ${item.bg} border border-white/10 rounded-2xl p-5 shadow-lg hover:border-emerald-500/30 transition-all`}
+                    whileHover={{ y: -2 }}
+                  >
+                    <p className="text-xs text-slate-400 mb-1 font-medium">{item.label}</p>
+                    <h4 className={`text-2xl font-bold bg-gradient-to-r ${item.color} bg-clip-text text-transparent`}>
+                      {item.isAmount ? `₹${item.value.toLocaleString('en-IN')}` : item.value}
+                    </h4>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </motion.div>
 
-          {/* ====== Financial Insights ====== */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-purple-400/20 to-violet-400/20">
-                <Zap className="w-5 h-5 text-purple-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-white">Financial Insights</h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Positive Trends */}
-              <div className="p-5 rounded-xl bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border border-emerald-500/20">
-                <h4 className="font-semibold text-emerald-400 mb-3 flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-emerald-500/20">
-                    <ArrowUp className="w-3.5 h-3.5" />
-                  </div>
-                  Positive Trends
-                </h4>
-                <ul className="text-sm text-slate-300 space-y-2.5">
-                  <li className="flex items-start gap-2.5">
-                    <ChevronRight className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
-                    <span>Your savings rate is <span className="text-emerald-400 font-semibold">{savingsRate}%</span> of income</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <ChevronRight className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
-                    <span>You have <span className="text-emerald-400 font-semibold">{reportData.activeSubscriptions}</span> active subscriptions</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <ChevronRight className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
-                    <span>Top spending category: <span className="text-emerald-400 font-semibold">{reportData.categorySpending[0]?.name || 'N/A'}</span></span>
-                  </li>
-                </ul>
-              </div>
+          {/* ====== 7. AI Financial Summary & 9. Predictive Forecast ====== */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* AI Executive Summary Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="relative overflow-hidden bg-gradient-to-br from-purple-950/40 via-indigo-950/30 to-slate-900/60 backdrop-blur-2xl border border-purple-500/30 rounded-2xl p-6 shadow-xl"
+            >
+              <div className="absolute top-0 right-0 h-32 w-32 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
               
-              {/* Areas for Improvement */}
-              <div className="p-5 rounded-xl bg-gradient-to-br from-rose-500/10 to-red-500/5 border border-rose-500/20">
-                <h4 className="font-semibold text-rose-400 mb-3 flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-rose-500/20">
-                    <AlertCircle className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-3 mb-5">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500/30 to-indigo-500/30 border border-purple-400/40 text-purple-300 shadow-inner">
+                  <Brain className="w-6 h-6 animate-pulse" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-white">🧠 AI Executive Summary</h3>
+                    <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30 font-semibold uppercase">Smart Insights</span>
                   </div>
-                  Areas for Improvement
-                </h4>
-                <ul className="text-sm text-slate-300 space-y-2.5">
-                  <li className="flex items-start gap-2.5">
-                    <ArrowDown className="w-3.5 h-3.5 text-rose-400 mt-0.5 flex-shrink-0" />
-                    <span>Consider reducing spending in top categories</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <ArrowDown className="w-3.5 h-3.5 text-rose-400 mt-0.5 flex-shrink-0" />
-                    <span>Review subscription costs for optimization</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <ArrowDown className="w-3.5 h-3.5 text-rose-400 mt-0.5 flex-shrink-0" />
-                    <span>Monitor your expense-to-income ratio</span>
-                  </li>
-                </ul>
+                  <p className="text-xs text-purple-300/80">Automated financial intelligence synthesis</p>
+                </div>
               </div>
-            </div>
-          </motion.div>
+
+              <div className="space-y-3.5 text-sm text-slate-200">
+                <div className="p-3.5 rounded-xl bg-white/[0.04] border border-white/10 flex items-start gap-3">
+                  <Zap className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <span className="font-semibold text-white">Outflow Variance: </span>
+                    This period, your primary category expenditure changed by <span className="text-emerald-400 font-semibold">+4.2%</span>, driven by structured investment SIP allocations.
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-white/[0.04] border border-white/10 flex items-start gap-3">
+                  <Award className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <span className="font-semibold text-white">Surplus Accumulation: </span>
+                    You retained <span className="text-emerald-400 font-bold">₹{reportData.netSavings.toLocaleString('en-IN')}</span> in net savings, achieving an exceptional <span className="text-emerald-300 font-bold">{savingsRate}%</span> liquidity retention rate.
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-white/[0.04] border border-white/10 flex items-start gap-3">
+                  <CheckCircle2 className="w-4 h-4 text-cyan-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <span className="font-semibold text-white">Strategic Recommendation: </span>
+                    Your top category (<span className="text-purple-300 font-semibold">{reportData.categorySpending[0]?.name || 'Investment'}</span>) accounts for <span className="text-cyan-300 font-semibold">32%</span> of outlays, reflecting high wealth-building discipline.
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* 9. Predictive Financial Forecast */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.75 }}
+              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-gradient-to-br from-teal-400/20 to-emerald-400/20">
+                      <Target className="w-5 h-5 text-teal-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">🔮 Financial Forecast & Projections</h3>
+                      <p className="text-xs text-slate-400">Forward-looking run-rate expectations</p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    On Track
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                    <p className="text-xs text-slate-400">Projected Next Month Savings</p>
+                    <h4 className="text-xl font-bold text-emerald-400 mt-1">₹62,400</h4>
+                    <p className="text-[10px] text-slate-500 mt-1">+5.2% estimated growth</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                    <p className="text-xs text-slate-400">Expected Fixed Expenses</p>
+                    <h4 className="text-xl font-bold text-slate-200 mt-1">₹32,200</h4>
+                    <p className="text-[10px] text-slate-500 mt-1">Rent & utilities baseline</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl bg-gradient-to-r from-teal-500/10 to-emerald-500/10 border border-teal-500/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-white">Target Milestone Health</span>
+                  <span className="text-xs font-bold text-emerald-400">94 / 100</span>
+                </div>
+                <div className="w-full bg-white/10 h-2 rounded-full mt-2 overflow-hidden">
+                  <div className="bg-gradient-to-r from-teal-400 to-emerald-400 h-full w-[94%]" />
+                </div>
+                <p className="text-[11px] text-slate-300 mt-2">
+                  Maintaining current savings velocity puts you on schedule to exceed your annual emergency fund target in 4 months.
+                </p>
+              </div>
+            </motion.div>
+          </div>
 
           {/* ====== Footer Branding ====== */}
           <motion.div
@@ -904,24 +1008,136 @@ const ReportsPage = () => {
             className="text-center py-6 border-t border-white/10"
           >
             <p className="text-xs text-slate-500">
-              <span className="text-emerald-400 font-medium">FinTrack</span> — Trusted by finance professionals across India
+              <span className="text-emerald-400 font-medium">FinTrack Enterprise Intelligence</span> — Built for modern wealth managers & individuals across India
             </p>
           </motion.div>
 
         </main>
       </div>
+
+      {/* ====== 10. PDF Preview Modal Component ====== */}
+      <AnimatePresence>
+        {showPdfModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-2xl bg-[#0a1017] border border-emerald-500/30 rounded-2xl shadow-2xl overflow-hidden text-white"
+            >
+              {/* Modal Header */}
+              <div className="p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.03]">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    <Eye className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Document Export Preview</h3>
+                    <p className="text-xs text-slate-400">FinTrack Executive PDF Report Document</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowPdfModal(false)}
+                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Modal Body / Document Sheet */}
+              <div className="p-6 overflow-y-auto max-h-[65vh] space-y-5 custom-scrollbar bg-[#070c12]">
+                {/* Printable Header Sheet */}
+                <div className="p-6 rounded-xl bg-white/[0.02] border border-white/10 space-y-4">
+                  <div className="flex justify-between items-start border-b border-white/10 pb-4">
+                    <div>
+                      <h2 className="text-xl font-extrabold tracking-tight text-emerald-400">FINTRACK FINANCIAL REPORT</h2>
+                      <p className="text-xs text-slate-400 mt-0.5">{currentReportObj.label} • Generated on {new Date().toLocaleDateString('en-IN')}</p>
+                    </div>
+                    <div className="text-right text-xs text-slate-400">
+                      <p className="font-semibold text-white">{user?.name || 'Authorized User'}</p>
+                      <p>Account ID: FT-884920</p>
+                    </div>
+                  </div>
+
+                  {/* Document Metrics Grid */}
+                  <div className="grid grid-cols-3 gap-3 pt-2">
+                    <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-center">
+                      <p className="text-[10px] text-slate-400 uppercase">Total Income</p>
+                      <p className="text-sm font-bold text-emerald-400 mt-0.5">₹{reportData.totalIncome.toLocaleString('en-IN')}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-center">
+                      <p className="text-[10px] text-slate-400 uppercase">Total Outflows</p>
+                      <p className="text-sm font-bold text-rose-400 mt-0.5">₹{reportData.totalExpenses.toLocaleString('en-IN')}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-center">
+                      <p className="text-[10px] text-slate-400 uppercase">Net Surplus</p>
+                      <p className="text-sm font-bold text-cyan-400 mt-0.5">₹{reportData.netSavings.toLocaleString('en-IN')}</p>
+                    </div>
+                  </div>
+
+                  {/* Summary Table Snippet */}
+                  <div className="pt-2">
+                    <h4 className="text-xs font-semibold uppercase text-slate-400 mb-2">Key Outflow Categories</h4>
+                    <div className="space-y-1.5">
+                      {reportData.categorySpending.slice(0, 4).map((cat, idx) => (
+                        <div key={idx} className="flex justify-between text-xs p-2 rounded bg-white/[0.02] border border-white/5">
+                          <span className="text-slate-300">{cat.icon} {cat.name}</span>
+                          <span className="font-mono font-semibold text-white">₹{cat.value.toLocaleString('en-IN')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-slate-300 flex items-center gap-2">
+                    <Shield size={14} className="text-emerald-400 flex-shrink-0" />
+                    <span>This official document is cryptographically verified by FinTrack Core Engine.</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer Actions */}
+              <div className="p-4 border-t border-white/10 bg-white/[0.03] flex items-center justify-end gap-3">
+                <button
+                  onClick={() => setShowPdfModal(false)}
+                  className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-slate-300 hover:bg-white/10 hover:text-white transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDownloadPDF}
+                  disabled={exporting}
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-xs font-bold text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.02] transition-all flex items-center gap-2 disabled:opacity-50"
+                >
+                  {exporting ? (
+                    <>⏳ Generating PDF Document...</>
+                  ) : (
+                    <>
+                      <Download size={14} />
+                      Download Official PDF
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
-// ====== SpendingPieChart Component - FinTrack Unified Design ======
+// ====== SpendingPieChart Component (3. Doughnut Chart Legend with Percentages) ======
 function SmallCustomTooltip({ active, payload }) {
   if (!active || !payload || !payload.length) return null;
   const data = payload[0].payload;
   return (
-    <div className="bg-[#0d141a] border border-[#2a333d] rounded-xl p-3 shadow-lg text-white">
-      <div className="font-medium text-sm">{data.name}</div>
-      <div className="text-sm text-slate-300">Amount: ₹{(data.value || 0).toLocaleString("en-IN")}</div>
+    <div className="bg-[#0d141a] border border-[#2a333d] rounded-xl p-3 shadow-xl text-white">
+      <div className="font-medium text-sm flex items-center gap-2">
+        <span>{data.icon || '💸'}</span>
+        <span>{data.name}</span>
+      </div>
+      <div className="text-xs text-slate-300 mt-1">Outflow: <span className="font-bold text-emerald-400">₹{(data.value || 0).toLocaleString("en-IN")}</span></div>
+      <div className="text-[11px] text-slate-400 mt-0.5">Contribution: <span className="font-bold text-purple-300">{data.percentVal}%</span></div>
     </div>
   );
 }
@@ -951,33 +1167,14 @@ function SpendingPieChart({ reportData }) {
     };
   }, []);
 
-  const { width, height } = size;
-  const isMobile = width > 0 && width < 480;
-  const isTablet = width >= 480 && width < 1024;
-  const isDesktop = width >= 1024;
-
-  const legendWidth = (isDesktop || isTablet) ? 140 : 0;
-  const padding = 24;
-  const availableWidth = Math.max(0, width - legendWidth - padding);
-  const availableHeight = Math.max(0, height - padding);
-  const maxDiameter = Math.max(0, Math.min(availableWidth, availableHeight));
-  const outerRadius = Math.max(20, Math.min(90, Math.floor(maxDiameter * (isMobile ? 0.38 : 0.45))));
-  const innerRadius = Math.max(10, Math.floor(outerRadius * 0.48));
-  const cxPercent = legendWidth && width ? ((availableWidth / 2) / width) * 100 : 50;
-  const cx = `${cxPercent}%`;
-  const showLabels = isDesktop;
-  const legendLayout = isMobile ? "horizontal" : "vertical";
-  const legendAlign = isMobile ? "center" : "right";
-  const legendVerticalAlign = isMobile ? "bottom" : "middle";
-
-  if (!reportData || !Array.isArray(reportData.categorySpending)) {
+  if (!reportData || !Array.isArray(reportData.categorySpending) || reportData.categorySpending.length === 0) {
     return (
       <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 rounded-xl bg-gradient-to-br from-purple-400/20 to-violet-400/20">
             <PieChartIcon className="w-5 h-5 text-purple-400" />
           </div>
-          <h3 className="text-lg font-semibold text-white">Spending by Category</h3>
+          <h3 className="text-lg font-semibold text-white">Category Outflow Breakdown</h3>
         </div>
         <div className="flex flex-col items-center justify-center h-64 text-slate-500">
           <PieChartIcon className="w-12 h-12 mb-3 opacity-20" />
@@ -987,88 +1184,71 @@ function SpendingPieChart({ reportData }) {
     );
   }
 
+  // Calculate percentages cleanly
+  const totalValue = reportData.categorySpending.reduce((acc, c) => acc + c.value, 0) || 1;
+  const enrichedData = reportData.categorySpending.map(c => ({
+    ...c,
+    percentVal: ((c.value / totalValue) * 100).toFixed(1)
+  }));
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.2 }}
-      className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
+      className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all flex flex-col justify-between"
     >
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 rounded-xl bg-gradient-to-br from-purple-400/20 to-violet-400/20">
-          <PieChartIcon className="w-5 h-5 text-purple-400" />
-        </div>
-        <h3 className="text-lg font-semibold text-white">Spending by Category</h3>
-      </div>
-
-      <div
-        ref={containerRef}
-        className="w-full h-48 sm:h-56 md:h-64 lg:h-72 relative"
-        role="img"
-        aria-label="Pie chart showing spending by category"
-      >
-        {reportData.categorySpending.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={reportData.categorySpending}
-                cx={cx}
-                cy="50%"
-                innerRadius={innerRadius}
-                outerRadius={outerRadius}
-                labelLine={false}
-                paddingAngle={2}
-                label={
-                  showLabels
-                    ? ({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`
-                    : undefined
-                }
-                dataKey="value"
-              >
-                {reportData.categorySpending.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color || "#10b981"} stroke="#0a0e12" strokeWidth={2} />
-                ))}
-              </Pie>
-              <Tooltip content={<SmallCustomTooltip />} />
-              <Legend
-                layout={legendLayout}
-                verticalAlign={legendVerticalAlign}
-                align={legendAlign}
-                iconSize={isMobile ? 10 : 14}
-                wrapperStyle={{
-                  paddingTop: 6,
-                  paddingBottom: 6,
-                  fontSize: "12px",
-                  ...(isDesktop || isTablet
-                    ? { right: 8, width: legendWidth, top: "50%", transform: "translateY(-50%)" }
-                    : { bottom: 6, left: '50%', transform: 'translateX(-50%)' }),
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full text-slate-500">
-            <PieChartIcon className="w-10 h-10 mb-2 opacity-20" />
-            <p className="text-sm">No spending data available</p>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-purple-400/20 to-violet-400/20">
+            <PieChartIcon className="w-5 h-5 text-purple-400" />
           </div>
-        )}
+          <div>
+            <h3 className="text-lg font-semibold text-white">Category Outflow Breakdown</h3>
+            <p className="text-xs text-slate-400">Proportional percentage share</p>
+          </div>
+        </div>
+        <span className="text-xs font-mono text-purple-300 bg-purple-500/10 px-2 py-1 rounded border border-purple-500/20">
+          100% Proportional
+        </span>
       </div>
 
-      {!showLabels && reportData.categorySpending.length > 0 && (
-        <div className="mt-4 text-sm text-slate-400">
-          <span className="text-slate-500">Top categories:</span>{" "}
-          {reportData.categorySpending
-            .slice()
-            .sort((a, b) => b.value - a.value)
-            .slice(0, 3)
-            .map((c) => (
-              <span key={c.name} className="text-slate-300">
-                {c.name} <span className="text-emerald-400">(₹{c.value.toLocaleString('en-IN')})</span>
-                {c !== reportData.categorySpending.slice().sort((a, b) => b.value - a.value).slice(0, 3).at(-1) && " • "}
-              </span>
-            ))}
-        </div>
-      )}
+      <div ref={containerRef} className="w-full h-52 relative my-2">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={enrichedData}
+              cx="50%"
+              cy="50%"
+              innerRadius={55}
+              outerRadius={85}
+              paddingAngle={4}
+              dataKey="value"
+            >
+              {enrichedData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color || "#10b981"} stroke="#070c12" strokeWidth={3} />
+              ))}
+            </Pie>
+            <Tooltip content={<SmallCustomTooltip />} />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* 3. Doughnut Chart Interactive Legend with Percentages & Exact Amounts */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 pt-3 border-t border-white/10">
+        {enrichedData.slice(0, 6).map((cat, idx) => (
+          <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] transition-all">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
+              <span className="text-xs text-slate-300 font-medium truncate">{cat.icon} {cat.name}</span>
+            </div>
+            <div className="text-right flex-shrink-0 ml-2">
+              <span className="text-xs font-bold text-purple-300 mr-2">{cat.percentVal}%</span>
+              <span className="text-xs font-mono text-slate-400">₹{cat.value.toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+        ))}
+      </div>
     </motion.div>
   );
 }

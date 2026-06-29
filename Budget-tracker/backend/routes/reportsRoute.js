@@ -83,8 +83,23 @@ async function buildReportData(userId) {
   };
 }
 
+// GET /api/reports
+router.get("/", verifyToken, async (req, res) => {
+  const userId = req.user?.user_id || req.user?.id;
+  if (!userId) return res.status(400).json({ error: "Invalid user" });
+
+  try {
+    const report = await buildReportData(userId);
+    res.json({ success: true, report });
+  } catch (err) {
+    console.error("Fetch report data error:", err);
+    res.status(500).json({ error: "Failed to build report data" });
+  }
+});
+
 // GET /api/reports/export/excel
 router.get("/export/excel", verifyToken, async (req, res) => {
+
   const userId = req.user?.user_id || req.user?.id;
   if (!userId) return res.status(400).json({ error: "Invalid user" });
 
