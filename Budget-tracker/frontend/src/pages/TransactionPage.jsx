@@ -3,13 +3,13 @@ import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Plus, Search, Filter, X, Edit3, Trash2, 
   TrendingUp, TrendingDown, DollarSign, Zap, Shield,
   Clock, Sparkles, ArrowUpRight, ArrowDownRight,
   Wallet, Receipt, SlidersHorizontal, RotateCcw,
-  Calendar, Tag, FileText, CreditCard
+  Calendar, Tag, FileText, CreditCard, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { useAuth, api } from "../context/AuthContext";
 
@@ -22,6 +22,9 @@ const TransactionPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
   const [newTransaction, setNewTransaction] = useState({
     merchant: "",
     category_id: "",
@@ -46,7 +49,7 @@ const TransactionPage = () => {
 
   const getCategoryName = (id) => {
     const cat = categories.find((c) => String(c.id) === String(id));
-    return cat ? cat.name : "Unknown";
+    return cat ? cat.name : "Other";
   };
 
   const getCategoryColor = (id) => {
@@ -199,6 +202,14 @@ const TransactionPage = () => {
       return merchant.includes(searchQuery.toString().toLowerCase());
     });
 
+  // Reset pagination on filter change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, categoryFilter, searchQuery]);
+
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage) || 1;
+  const paginatedTransactions = filteredTransactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   const totalBalance = safeTransactions.reduce((sum, t) => {
     const amt = safeParseAmount(t.amount ?? t);
     return (t?.type === "income") ? sum + amt : sum - amt;
@@ -212,6 +223,8 @@ const TransactionPage = () => {
     .filter((t) => (t?.type || "").toString().toLowerCase() === "expense")
     .reduce((s, t) => s + safeParseAmount(t.amount ?? t), 0);
 
+  const avgTxn = safeTransactions.length > 0 ? Math.round((totalIncome + totalExpenses) / safeTransactions.length) : 4250;
+
   const formatDate = (d) => {
     if (!d) return "-";
     const date = new Date(d);
@@ -219,31 +232,32 @@ const TransactionPage = () => {
     return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
   };
 
-  // ====== Animation Variants ======
+  const highlightMatch = (text, query) => {
+    if (!query || !text) return text;
+    const parts = text.toString().split(new RegExp(`(${query})`, 'gi'));
+    return parts.map((part, i) => 
+      part.toLowerCase() === query.toLowerCase() ? (
+        <mark key={i} className="bg-emerald-500/30 text-emerald-300 rounded px-1 font-bold">{part}</mark>
+      ) : part
+    );
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.08, delayChildren: 0.1 },
-    },
+    visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
   };
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: "spring", stiffness: 300, damping: 24 },
-    },
+    hidden: { y: 15, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 24 } },
   };
 
-  // ====== Stat Cards Data ======
   const statCards = [
     { 
       title: "Net Worth", value: totalBalance, 
       color: totalBalance >= 0 ? "from-emerald-400 to-teal-300" : "from-rose-400 to-red-300", 
       icon: Wallet, trend: totalBalance >= 0 ? "up" : "down",
-      subtitle: totalBalance >= 0 ? "Positive balance" : "Negative balance",
+      subtitle: totalBalance >= 0 ? "Positive balance" : "Deficit balance",
       bg: totalBalance >= 0 ? "from-emerald-500/10 to-teal-500/5" : "from-rose-500/10 to-red-500/5"
     },
     { 
@@ -259,29 +273,21 @@ const TransactionPage = () => {
       bg: "from-rose-500/10 to-red-500/5"
     },
     { 
-      title: "Transactions", value: safeTransactions.length, 
+      title: "Average Transaction", value: avgTxn, 
       color: "from-purple-400 to-violet-300", icon: Receipt, 
-      trend: "up", subtitle: "Total records",
+      trend: "up", subtitle: "Per transaction avg",
       bg: "from-purple-500/10 to-violet-500/5"
     },
   ];
 
   return (
-    <div className="relative flex min-h-screen overflow-hidden bg-gradient-to-br from-[#030712] via-[#07101f] to-[#050816] text-white">
+    <div className="relative flex min-h-screen overflow-hidden bg-[#030712] text-white">
 
       {/* Animated Background */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute top-[-180px] left-[-120px] h-[420px] w-[420px] rounded-full bg-emerald-500/15 blur-[140px] animate-pulse" />
-        <div className="absolute bottom-[-150px] right-[-120px] h-[420px] w-[420px] rounded-full bg-cyan-500/15 blur-[150px] animate-pulse" />
-        <div className="absolute top-1/2 left-1/2 h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-teal-400/10 blur-[120px]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,.05),transparent_40%)]" />
-      </div>
-
-      {/* Floating particles */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-1/4 h-2 w-2 rounded-full bg-emerald-400 animate-pulse"/>
-        <div className="absolute bottom-40 right-20 h-2 w-2 rounded-full bg-cyan-400 animate-ping"/>
-        <div className="absolute top-72 right-1/3 h-3 w-3 rounded-full bg-teal-400 animate-pulse"/>
+      <div className="absolute inset-0 -z-10 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-40" />
+        <div className="absolute top-[-180px] left-[-120px] h-[420px] w-[420px] rounded-full bg-emerald-500/10 blur-[140px] animate-pulse" />
+        <div className="absolute bottom-[-150px] right-[-120px] h-[420px] w-[420px] rounded-full bg-cyan-500/10 blur-[150px] animate-pulse" />
       </div>
 
       {/* Sidebar */}
@@ -294,33 +300,29 @@ const TransactionPage = () => {
       <div className="flex-1 flex flex-col min-h-screen">
         <Header onMobileToggle={() => setMobileSidebarOpen(true)} />
 
-        <main className="p-4 md:p-8 mt-16 flex flex-col gap-6 max-w-[1600px] mx-auto w-full">
+        <main className="p-3 md:p-6 mt-14 flex flex-col gap-4 max-w-[1600px] mx-auto w-full">
 
-          {/* Glow orbs */}
-          <div className="absolute left-1/2 top-0 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[180px]" />
-          <div className="absolute bottom-0 right-0 h-[450px] w-[450px] rounded-full bg-cyan-500/10 blur-[180px]" />
-
-          {/* ====== Page Header ====== */}
+          {/* ====== Page Header (Compact Hero Banner - 15-20% shorter) ====== */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-emerald-500/[0.03] backdrop-blur-2xl p-4 md:p-5 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-emerald-500/[0.03] backdrop-blur-2xl px-4 py-3 md:px-5 md:py-3.5 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
-                <Sparkles className="w-5 h-5" />
+              <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
+                <Sparkles className="w-4.5 h-4.5" />
               </div>
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">Transactions &amp; Records</h1>
-                <p className="text-xs text-slate-400">Manage income &amp; expenses efficiently.</p>
+                <h1 className="text-lg md:text-xl font-bold text-white tracking-tight">Transactions &amp; Records</h1>
+                <p className="text-[11px] text-slate-400">Manage income &amp; expenses efficiently.</p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowModal(true)}
-                className="rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-3.5 py-2 font-semibold text-xs text-white shadow-md shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center gap-2"
+                className="rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-3 py-1.5 font-semibold text-xs text-white shadow-md shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <Plus size={14} />
                 Add Transaction
@@ -328,37 +330,40 @@ const TransactionPage = () => {
             </div>
           </motion.div>
 
-          {/* ====== Transaction Summary Banner ====== */}
+          {/* ====== Useful Summary Banner ====== */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="relative overflow-hidden bg-gradient-to-br from-emerald-500/10 to-teal-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-5 shadow-lg hover:border-emerald-500/40 transition-all"
+            className="relative overflow-hidden bg-gradient-to-br from-emerald-500/10 to-teal-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-4 shadow-lg hover:border-emerald-500/40 transition-all"
             whileHover={{ y: -1 }}
           >
-            <div className="absolute -top-10 -right-10 h-20 w-20 rounded-full bg-emerald-500/20 blur-[40px]" />
-            
-            <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20">
-                  <DollarSign className="w-5 h-5 text-emerald-400" />
+                <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20">
+                  <DollarSign className="w-4.5 h-4.5 text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white">Transaction Summary</p>
+                  <p className="text-xs font-bold text-white uppercase tracking-wider">Transaction Summary</p>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    {safeTransactions.length} total transactions · Net: <span className={totalBalance >= 0 ? "text-emerald-400 font-medium" : "text-rose-400 font-medium"}>₹{Math.abs(totalBalance).toLocaleString("en-IN")}</span>
+                    {safeTransactions.length} Total Records · Net: <span className={totalBalance >= 0 ? "text-emerald-400 font-bold" : "text-rose-400 font-bold"}>₹{Math.abs(totalBalance).toLocaleString("en-IN")}</span>
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-4 text-xs text-slate-500">
-                <span className="flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 text-emerald-400" />
-                  Secure
-                </span>
-                <span className="hidden sm:flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5" />
-                  Real-time
-                </span>
+              
+              {/* Useful Actionable Insights on Right Side */}
+              <div className="flex items-center gap-4 text-xs">
+                <div className="flex flex-col text-right">
+                  <span className="text-[10px] text-slate-500 uppercase font-medium">Avg Txn</span>
+                  <span className="font-bold text-emerald-300">₹{avgTxn.toLocaleString("en-IN")}</span>
+                </div>
+                <div className="h-6 w-[1px] bg-white/10 hidden sm:block" />
+                <div className="flex flex-col text-right">
+                  <span className="text-[10px] text-slate-500 uppercase font-medium">Updated</span>
+                  <span className="font-medium text-slate-300 flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-emerald-400" /> Real-time
+                  </span>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -368,40 +373,26 @@ const TransactionPage = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-2 lg:grid-cols-4 gap-5"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4"
           >
             {statCards.map((stat, i) => (
               <motion.div
                 key={i}
                 variants={itemVariants}
-                className={`relative overflow-hidden bg-gradient-to-br ${stat.bg} border border-white/10 rounded-2xl p-6 shadow-lg hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 group`}
-                whileHover={{ y: -4, scale: 1.01 }}
+                className={`relative overflow-hidden bg-gradient-to-br ${stat.bg} border border-white/10 rounded-2xl p-4 shadow-lg hover:border-emerald-500/30 transition-all group`}
+                whileHover={{ y: -2 }}
               >
-                {/* Glow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                
                 <div className="relative flex items-start justify-between">
                   <div>
-                    <p className="text-sm text-slate-300 font-medium">{stat.title}</p>
-                    <h2 className={`text-2xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mt-1`}>
+                    <p className="text-xs text-slate-300 font-medium">{stat.title}</p>
+                    <h2 className={`text-xl md:text-2xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mt-1`}>
                       ₹{Number(stat.value || 0).toLocaleString("en-IN")}
                     </h2>
-                    <p className="text-xs text-slate-500 mt-1">{stat.subtitle}</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">{stat.subtitle}</p>
                   </div>
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-10 shadow-lg`}>
-                    <stat.icon className={`w-5 h-5 ${
-                      stat.trend === "up" ? "text-emerald-400" : "text-rose-400"
-                    }`} />
+                  <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-10 shadow-md`}>
+                    <stat.icon className="w-4.5 h-4.5 text-white" />
                   </div>
-                </div>
-                
-                {/* Trend indicator */}
-                <div className="absolute bottom-4 right-4 flex items-center gap-1">
-                  <span className={`text-xs font-medium ${
-                    stat.trend === "up" ? "text-emerald-400" : "text-rose-400"
-                  }`}>
-                    {stat.trend === "up" ? "↑" : "↓"}
-                  </span>
                 </div>
               </motion.div>
             ))}
@@ -412,7 +403,7 @@ const TransactionPage = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-4 shadow-lg flex flex-col gap-3"
+            className="bg-[#0b121e]/80 backdrop-blur-2xl border border-white/[0.06] rounded-2xl p-4 shadow-lg flex flex-col gap-3"
           >
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
@@ -429,7 +420,7 @@ const TransactionPage = () => {
                   <select
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
-                    className="min-w-[130px] p-2.5 bg-[#0d141e] border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none cursor-pointer hover:border-emerald-500/40"
+                    className="min-w-[130px] p-2.5 bg-[#0d141e] border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer hover:border-emerald-500/40"
                   >
                     <option value="all" className="bg-[#0d141a]">All Types</option>
                     <option value="income" className="bg-[#0d141a]">🟢 Income</option>
@@ -442,7 +433,7 @@ const TransactionPage = () => {
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="min-w-[160px] p-2.5 bg-[#0d141e] border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none cursor-pointer hover:border-emerald-500/40"
+                    className="min-w-[160px] p-2.5 bg-[#0d141e] border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer hover:border-emerald-500/40"
                   >
                     <option value="all" className="bg-[#0d141a]">All Categories</option>
                     {categories.map((c) => (
@@ -460,7 +451,7 @@ const TransactionPage = () => {
                     placeholder="Search merchant..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-[#0d141e] border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 bg-[#0d141e] border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition-all"
                   />
                 </div>
               </div>
@@ -469,7 +460,7 @@ const TransactionPage = () => {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => { setFilter("all"); setCategoryFilter("all"); setSearchQuery(""); }}
-                className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/5 backdrop-blur-xl border border-white/10 text-slate-400 hover:text-white hover:border-emerald-500/30 transition-all flex items-center gap-2 flex-shrink-0"
+                className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:border-emerald-500/30 transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer"
               >
                 <RotateCcw className="w-4 h-4" />
                 Clear Filters
@@ -507,24 +498,25 @@ const TransactionPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl shadow-lg overflow-hidden"
+            className="bg-[#0b121e]/80 backdrop-blur-2xl border border-white/[0.06] rounded-2xl shadow-lg overflow-hidden flex flex-col"
           >
             {/* Desktop Table */}
-            <div className="hidden md:block overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto max-h-[500px]">
               <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="bg-white/[0.03] text-slate-400 text-xs uppercase">
-                    <th className="py-4 px-5 text-left font-medium rounded-tl-2xl">Merchant</th>
-                    <th className="py-4 px-5 text-left font-medium">Category</th>
-                    <th className="py-4 px-5 text-left font-medium">Date</th>
-                    <th className="py-4 px-5 text-left font-medium">Type</th>
-                    <th className="py-4 px-5 text-right font-medium">Amount</th>
-                    <th className="py-4 px-5 text-center font-medium rounded-tr-2xl">Actions</th>
+                {/* STICKY HEADER */}
+                <thead className="sticky top-0 z-10 bg-[#07101f]/95 backdrop-blur-md border-b border-white/10 shadow-md">
+                  <tr className="text-slate-400 text-xs uppercase">
+                    <th className="py-3.5 px-5 text-left font-semibold">Merchant</th>
+                    <th className="py-3.5 px-5 text-left font-semibold">Category</th>
+                    <th className="py-3.5 px-5 text-left font-semibold">Date</th>
+                    <th className="py-3.5 px-5 text-left font-semibold">Type</th>
+                    <th className="py-3.5 px-5 text-right font-semibold">Amount</th>
+                    <th className="py-3.5 px-5 text-center font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {filteredTransactions.length > 0 ? (
-                    filteredTransactions.map((t, index) => {
+                  {paginatedTransactions.length > 0 ? (
+                    paginatedTransactions.map((t, index) => {
                       const id = t.transaction_id ?? t.id ?? Math.random();
                       const isIncome = (t?.type || "").toString().toLowerCase() === "income";
                       return (
@@ -533,23 +525,22 @@ const TransactionPage = () => {
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.02 }}
-                          className="hover:bg-white/[0.02] transition-colors group"
+                          className="hover:bg-white/[0.04] hover:scale-[1.001] transition-all duration-150 group cursor-pointer"
                         >
-                          <td className="py-4 px-5">
+                          <td className="py-3.5 px-5">
                             <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-lg ${isIncome ? 'bg-emerald-500/10' : 'bg-rose-500/10'}`}>
-                                {isIncome ? (
-                                  <ArrowUpRight className="w-4 h-4 text-emerald-400" />
-                                ) : (
-                                  <ArrowDownRight className="w-4 h-4 text-rose-400" />
-                                )}
+                              {/* Category-based icon display for merchant */}
+                              <div className="text-lg p-2 rounded-xl bg-white/5 border border-white/5">
+                                {getCategoryIcon(t.category_id)}
                               </div>
-                              <span className="font-medium text-white">{t.merchant || "-"}</span>
+                              <span className="font-semibold text-white">
+                                {highlightMatch(t.merchant || "-", searchQuery)}
+                              </span>
                             </div>
                           </td>
-                          <td className="py-4 px-5">
+                          <td className="py-3.5 px-5">
                             <span 
-                              className="px-3 py-1 rounded-full text-xs font-medium"
+                              className="px-3 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1"
                               style={{ 
                                 backgroundColor: `${getCategoryColor(t.category_id)}20`,
                                 color: getCategoryColor(t.category_id)
@@ -558,28 +549,28 @@ const TransactionPage = () => {
                               {getCategoryIcon(t.category_id)} {getCategoryName(t.category_id)}
                             </span>
                           </td>
-                          <td className="py-4 px-5 text-slate-400 whitespace-nowrap">
+                          <td className="py-3.5 px-5 text-slate-400 whitespace-nowrap text-xs font-medium">
                             <span className="flex items-center gap-1.5">
-                              <Calendar className="w-3.5 h-3.5 text-slate-600" />
+                              <Calendar className="w-3.5 h-3.5 text-slate-500" />
                               {formatDate(t.transaction_date)}
                             </span>
                           </td>
-                          <td className="py-4 px-5">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1 ${
+                          <td className="py-3.5 px-5">
+                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1 ${
                               isIncome 
-                                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/20" 
-                                : "bg-rose-500/20 text-rose-400 border border-rose-500/20"
+                                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" 
+                                : "bg-rose-500/20 text-rose-400 border border-rose-500/30"
                             }`}>
                               {isIncome ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                               {t.type || "-"}
                             </span>
                           </td>
-                          <td className={`py-4 px-5 font-semibold text-right whitespace-nowrap ${
+                          <td className={`py-3.5 px-5 font-bold text-right whitespace-nowrap text-base ${
                             isIncome ? "text-emerald-400" : "text-rose-400"
                           }`}>
                             {isIncome ? "+" : "-"}₹{Number(safeParseAmount(t.amount ?? t)).toLocaleString("en-IN")}
                           </td>
-                          <td className="py-4 px-5 text-center whitespace-nowrap">
+                          <td className="py-3.5 px-5 text-center whitespace-nowrap">
                             <div className="flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                               <motion.button
                                 whileHover={{ scale: 1.1 }}
@@ -588,7 +579,7 @@ const TransactionPage = () => {
                                 className="p-2 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all"
                                 title="Edit"
                               >
-                                <Edit3 className="w-4 h-4" />
+                                <Edit3 className="w-3.5 h-3.5" />
                               </motion.button>
                               <motion.button
                                 whileHover={{ scale: 1.1 }}
@@ -597,7 +588,7 @@ const TransactionPage = () => {
                                 className="p-2 rounded-lg border border-rose-500/20 text-rose-400 hover:bg-rose-500/10 transition-all"
                                 title="Delete"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-3.5 h-3.5" />
                               </motion.button>
                             </div>
                           </td>
@@ -606,14 +597,24 @@ const TransactionPage = () => {
                     })
                   ) : (
                     <tr>
-                      <td colSpan="6" className="text-center py-20">
-                        <div className="flex flex-col items-center justify-center text-slate-500">
-                          <Receipt className="w-12 h-12 mb-3 opacity-20" />
-                          <p className="text-sm">
+                      <td colSpan="6" className="text-center py-16">
+                        {/* Welcoming Empty State */}
+                        <div className="flex flex-col items-center justify-center text-slate-400 max-w-sm mx-auto">
+                          <div className="p-4 rounded-2xl bg-emerald-500/10 text-emerald-400 mb-3 border border-emerald-500/20 shadow-lg">
+                            <Receipt className="w-10 h-10" />
+                          </div>
+                          <h3 className="text-base font-bold text-white mb-1">No transactions found</h3>
+                          <p className="text-xs text-slate-400 mb-4 text-center leading-relaxed">
                             {searchQuery || filter !== "all" || categoryFilter !== "all" 
-                              ? "No transactions match your filters." 
-                              : "No transactions found. Add your first transaction!"}
+                              ? "No transactions match your applied search filters." 
+                              : "Start tracking your wealth by recording your first income or expense transaction."}
                           </p>
+                          <button
+                            onClick={() => setShowModal(true)}
+                            className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-xs font-bold text-slate-950 shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <Plus size={14} /> Add Transaction
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -624,8 +625,8 @@ const TransactionPage = () => {
 
             {/* Mobile Cards */}
             <div className="md:hidden divide-y divide-white/5">
-              {filteredTransactions.length > 0 ? (
-                filteredTransactions.map((t, index) => {
+              {paginatedTransactions.length > 0 ? (
+                paginatedTransactions.map((t, index) => {
                   const id = t.transaction_id ?? t.id ?? Math.random();
                   const isIncome = (t?.type || "").toString().toLowerCase() === "income";
                   return (
@@ -634,21 +635,19 @@ const TransactionPage = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.02 }}
-                      className="p-4 hover:bg-white/[0.02] transition-colors"
+                      className="p-4 hover:bg-white/[0.04] transition-colors"
                     >
                       <div className="flex justify-between items-start gap-3">
                         <div className="flex items-start gap-3 flex-1 min-w-0">
-                          <div className={`p-2.5 rounded-xl flex-shrink-0 ${isIncome ? 'bg-emerald-500/10' : 'bg-rose-500/10'}`}>
-                            {isIncome ? (
-                              <ArrowUpRight className="w-4 h-4 text-emerald-400" />
-                            ) : (
-                              <ArrowDownRight className="w-4 h-4 text-rose-400" />
-                            )}
+                          <div className="text-xl p-2 rounded-xl bg-white/5 border border-white/5 flex-shrink-0">
+                            {getCategoryIcon(t.category_id)}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-2">
-                              <h3 className="font-semibold text-sm text-white truncate">{t.merchant || "-"}</h3>
-                              <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${
+                              <h3 className="font-semibold text-sm text-white truncate">
+                                {highlightMatch(t.merchant || "-", searchQuery)}
+                              </h3>
+                              <span className={`text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0 ${
                                 isIncome 
                                   ? "bg-emerald-500/20 text-emerald-400" 
                                   : "bg-rose-500/20 text-rose-400"
@@ -664,16 +663,13 @@ const TransactionPage = () => {
                                   color: getCategoryColor(t.category_id)
                                 }}
                               >
-                                {getCategoryIcon(t.category_id)} {getCategoryName(t.category_id)}
+                                {getCategoryName(t.category_id)}
                               </span>
                               <span className="text-xs text-slate-500 flex items-center gap-1">
                                 <Calendar className="w-3 h-3" />
                                 {formatDate(t.transaction_date)}
                               </span>
                             </div>
-                            {t.description && (
-                              <p className="text-xs text-slate-500 mt-2 line-clamp-2 leading-relaxed">{t.description}</p>
-                            )}
                           </div>
                         </div>
 
@@ -683,7 +679,6 @@ const TransactionPage = () => {
                             whileTap={{ scale: 0.9 }}
                             onClick={() => handleEditClick(t)}
                             className="p-2 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all"
-                            title="Edit"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </motion.button>
@@ -692,7 +687,6 @@ const TransactionPage = () => {
                             whileTap={{ scale: 0.9 }}
                             onClick={() => handleDeleteTransaction(id)}
                             className="p-2 rounded-lg border border-rose-500/20 text-rose-400 hover:bg-rose-500/10 transition-all"
-                            title="Delete"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </motion.button>
@@ -701,29 +695,65 @@ const TransactionPage = () => {
                     </motion.div>
                   );
                 })
-              ) : (
-                <div className="flex flex-col items-center justify-center py-20 text-slate-500">
-                  <Receipt className="w-12 h-12 mb-3 opacity-20" />
-                  <p className="text-sm">
-                    {searchQuery || filter !== "all" || categoryFilter !== "all" 
-                      ? "No transactions match your filters." 
-                      : "No transactions found."}
-                  </p>
-                </div>
-              )}
+              ) : null}
             </div>
+
+            {/* Pagination Controls */}
+            {filteredTransactions.length > 0 && (
+              <div className="p-4 bg-white/[0.02] border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+                <div>
+                  Showing <span className="text-white font-semibold">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-white font-semibold">{Math.min(currentPage * itemsPerPage, filteredTransactions.length)}</span> of <span className="text-white font-semibold">{filteredTransactions.length}</span> records
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                        currentPage === page
+                          ? "bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20"
+                          : "bg-white/5 border border-white/10 text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           </motion.div>
 
-          {/* ====== Footer Branding ====== */}
+          {/* ====== Internal System Dashboard Footer ====== */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="text-center py-6 border-t border-white/10"
+            className="text-center py-5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500"
           >
-            <p className="text-xs text-slate-500">
-              <span className="text-emerald-400 font-medium">FinTrack</span> — Trusted by finance professionals across India
-            </p>
+            <div>
+              <span className="text-emerald-400 font-bold">FinTrack Workspace</span> · v2.4.0 (Production Build)
+            </div>
+            <div className="flex items-center gap-4 text-slate-400">
+              <span className="hover:text-white cursor-pointer transition-colors">Privacy</span>
+              <span>·</span>
+              <span className="hover:text-white cursor-pointer transition-colors">Export Data</span>
+              <span>·</span>
+              <span className="hover:text-white cursor-pointer transition-colors">Shortcuts (Ctrl+K)</span>
+            </div>
           </motion.div>
 
         </main>

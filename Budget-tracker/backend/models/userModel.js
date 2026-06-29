@@ -5,10 +5,14 @@ export const createUser = async ({ username, email, password }) => {
   const result = await pool.query(
     `INSERT INTO users (username, email, password_hash)
      VALUES ($1, $2, $3)
-     RETURNING user_id, username, email, first_name, last_name, phone, currency, language, timezone, role, created_at`,
+     RETURNING *`,
     [username, email, password]
   );
-  return result.rows[0];
+  if (result.rows[0]) {
+    const { password_hash, ...safeUser } = result.rows[0];
+    return safeUser;
+  }
+  return null;
 };
 
 // ✅ Find user by email (for login)
@@ -23,12 +27,14 @@ export const findUserByEmail = async (email) => {
 // ✅ Find user by ID
 export const findUserById = async (user_id) => {
   const result = await pool.query(
-    `SELECT user_id, username, email, first_name, last_name, phone, currency, language, timezone, role, created_at 
-     FROM users 
-     WHERE user_id = $1`,
+    `SELECT * FROM users WHERE user_id = $1`,
     [user_id]
   );
-  return result.rows[0];
+  if (result.rows[0]) {
+    const { password_hash, ...safeUser } = result.rows[0];
+    return safeUser;
+  }
+  return null;
 };
 
 // ✅ Get all users
