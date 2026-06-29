@@ -1,8 +1,10 @@
 // AnalyticsPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
-import { useAuth, api } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
+import { fetchTransactions } from "../store/transactionSlice";
 import {
   PieChart, Pie, Cell, ResponsiveContainer,
   XAxis, YAxis, Tooltip, CartesianGrid, Legend, BarChart, Bar, AreaChart, Area
@@ -16,7 +18,8 @@ import {
 
 const AnalyticsPage = () => {
   const { user, token } = useAuth();
-  const [transactions, setTransactions] = useState([]);
+  const dispatch = useDispatch();
+  const { items: transactions, loading: reduxLoading } = useSelector((state) => state.transactions);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState("all");
@@ -40,23 +43,10 @@ const AnalyticsPage = () => {
     return Number.isFinite(n) ? n : 0;
   };
 
-  const fetchTransactions = async () => {
-    if (!token) return;
-    try {
-      const res = await api.get("/api/transactions");
-      const data = res.data.transactions || res.data || [];
-      setTransactions(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Fetch transactions error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     if (!token) { setLoading(false); return; }
-    fetchTransactions();
-  }, [token]);
+    dispatch(fetchTransactions()).finally(() => setLoading(false));
+  }, [token, dispatch]);
 
   useEffect(() => {
     document.body.style.overflow = mobileSidebarOpen || showAIModal ? "hidden" : "auto";

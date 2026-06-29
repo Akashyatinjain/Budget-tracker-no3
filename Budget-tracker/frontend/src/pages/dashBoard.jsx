@@ -1,10 +1,17 @@
 // FinanceDashboard.jsx
 import React, { useState, useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
 import Papa from "papaparse";
-import { useAuth, api } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
+import {
+  fetchTransactions as fetchTransactionsThunk,
+  addTransaction,
+  importTransactions,
+} from "../store/transactionSlice";
+import apiClient from "../services/apiClient";
 import {
   PieChart, Pie, Cell, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -40,8 +47,12 @@ function ImportButton() {
       complete: async (result) => {
         const rows = result.data;
         try {
-          const response = await api.post("/api/transactions/import", { rows });
+          // ImportButton doesn't have direct dispatch access, so we use apiClient directly here
+          // The parent component will refetch after import via Redux
+          const response = await apiClient.post("/api/transactions/import", { rows });
           toast.success(`Imported ${response.data.inserted ?? response.data.insertedRows ?? 0} rows successfully!`);
+          // Trigger page reload to refresh Redux store
+          window.dispatchEvent(new Event("transactions-imported"));
         } catch (err) {
           console.error("Import failed:", err);
           toast.error("Import failed: " + (err?.response?.data?.message || err?.response?.data?.error || err.message));
@@ -120,7 +131,8 @@ transition-all
 // ====== Main Dashboard Component ======
 const FinanceDashboard = () => {
   const { user, token } = useAuth();
-  const [transactions, setTransactions] = useState([]);
+  const dispatch = useDispatch();
+  const { items: transactions, loading: reduxLoading } = useSelector((state) => state.transactions);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -177,30 +189,7 @@ const FinanceDashboard = () => {
     return cat ? cat.color : "#6b7280";
   };
 
-  // ====== Fetch Transactions ======
-  const fetchTransactions = async () => {
-    if (!token) {
-      setTransactions(getMockTransactions());
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const res = await api.get("/api/transactions");
-      const data = res.data.transactions || res.data || [];
-      if (Array.isArray(data)) {
-        setTransactions(data);
-      } else {
-        setTransactions(getMockTransactions());
-      }
-    } catch (err) {
-      console.error("Error fetching transactions:", err);
-      setTransactions(getMockTransactions());
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // ====== Fetch Transactions via Redux ======
   const getMockTransactions = () => [
     { transaction_id: 1, merchant: "Punjab Grill",        category_id: 1, type: "expense", amount: 2450,  transaction_date: "2026-06-15" },
     { transaction_id: 2, merchant: "Monthly Salary",      category_id: 7, type: "income",  amount: 125000, transaction_date: "2026-06-01" },
@@ -260,7 +249,17 @@ const FinanceDashboard = () => {
       )
     : [];
 
-  useEffect(() => { fetchTransactions(); }, [token]);
+  useEffect(() => {
+    if (token) {
+      dispatch(fetchTransactionsThunk()).finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+    // Listen for import events from ImportButton
+    const handleImport = () => dispatch(fetchTransactionsThunk());
+    window.addEventListener("transactions-imported", handleImport);
+    return () => window.removeEventListener("transactions-imported", handleImport);
+  }, [token, dispatch]);
 
   const getSafeAmount = (transaction) => {
     if (!transaction || transaction.amount === undefined || transaction.amount === null) return 0;
@@ -341,14 +340,14 @@ const FinanceDashboard = () => {
   // ====== Add Transaction ======
   const handleAddTransaction = async () => {
     try {
-      await api.post("/api/transactions", newTransaction);
+      await dispatch(addTransaction(newTransaction)).unwrap();
       toast.success("✨ Transaction Added Successfully!");
       setShowAddModal(false);
       setNewTransaction({ merchant: "", amount: "", category_id: "", type: "", currency: "INR", description: "", transaction_date: "" });
-      fetchTransactions();
+      dispatch(fetchTransactionsThunk());
     } catch (err) {
       console.log(err);
-      toast.error(err?.response?.data?.message || err?.response?.data?.error || "Failed to add transaction.");
+      toast.error(typeof err === "string" ? err : "Failed to add transaction.");
     }
   };
 

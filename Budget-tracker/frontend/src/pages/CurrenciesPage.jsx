@@ -1,9 +1,17 @@
 // CurrenciesPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
-import { useAuth, api } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
+import {
+  fetchCurrencies,
+  addCurrency,
+  setDefaultCurrency,
+  deleteCurrency,
+} from "../store/currencySlice";
+import apiClient from "../services/apiClient";
 import { motion } from "framer-motion";
 import {
   Plus,
@@ -25,6 +33,8 @@ import {
 
 const CurrenciesPage = () => {
   const { user, token } = useAuth();
+  const dispatch = useDispatch();
+  const { items: rawCurrencies, loading: reduxLoading } = useSelector((state) => state.currencies);
   const [currencies, setCurrencies] = useState([]);
   const [userCurrency, setUserCurrency] = useState("INR");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -87,7 +97,7 @@ const CurrenciesPage = () => {
     calculateConversion();
   }, [converter.amount, converter.fromCurrency, converter.toCurrency, currencies]);
 
-  const fetchCurrencies = async () => {
+  const loadCurrenciesData = async () => {
     if (!token) {
       setCurrencies(popularCurrencies.map((c) => ({ ...c, is_default: c.code === "INR" })));
       setUserCurrency("INR");
@@ -97,11 +107,11 @@ const CurrenciesPage = () => {
 
     setLoading(true);
     try {
-      const res = await api.get("/api/currencies");
+      const res = await apiClient.get("/api/currencies");
       const currenciesData = res?.data?.currencies || res?.data || [];
       if (!Array.isArray(currenciesData) || currenciesData.length === 0) {
         await initializeDefaultCurrencies();
-        const refetch = await api.get("/api/currencies");
+        const refetch = await apiClient.get("/api/currencies");
         const redata = refetch?.data?.currencies || refetch?.data || popularCurrencies;
         setCurrencies(redata);
         const def = redata.find((c) => c.is_default);
@@ -120,11 +130,15 @@ const CurrenciesPage = () => {
     }
   };
 
+  useEffect(() => {
+    loadCurrenciesData();
+  }, [token]);
+
   const initializeDefaultCurrencies = async () => {
     if (!token) return;
     try {
       for (const currency of popularCurrencies) {
-        await api.post("/api/currencies", {
+        await apiClient.post("/api/currencies", {
           code: currency.code,
           name: currency.name,
           rate_to_inr: currency.rate_to_inr,
@@ -149,7 +163,7 @@ const CurrenciesPage = () => {
     }
 
     try {
-      await api.post("/api/currencies", {
+      await apiClient.post("/api/currencies", {
         code: newCurrency.code,
         name: newCurrency.name,
         rate_to_inr: rateNum,
@@ -158,7 +172,7 @@ const CurrenciesPage = () => {
       toast.success("✨ Currency added successfully!");
       setShowAddCurrency(false);
       setNewCurrency({ code: "", name: "", rate_to_inr: "", is_default: false });
-      fetchCurrencies();
+      loadCurrenciesData();
     } catch (err) {
       console.error("Add currency error:", err);
       toast.error("Error adding currency. Please try again.");
@@ -167,10 +181,10 @@ const CurrenciesPage = () => {
 
   const handleSetDefault = async (currencyCode) => {
     try {
-      await api.put("/api/currencies/default", { currency_code: currencyCode });
+      await apiClient.put("/api/currencies/default", { currency_code: currencyCode });
       toast.success(`Default currency set to ${currencyCode}`);
       setUserCurrency(currencyCode);
-      fetchCurrencies();
+      loadCurrenciesData();
     } catch (err) {
       console.error("Set default currency error:", err);
       toast.error("Error setting default currency.");
@@ -183,9 +197,9 @@ const CurrenciesPage = () => {
       return;
     }
     try {
-      await api.delete(`/api/currencies/${currencyCode}`);
+      await apiClient.delete(`/api/currencies/${currencyCode}`);
       toast.success("Currency removed.");
-      fetchCurrencies();
+      loadCurrenciesData();
     } catch (err) {
       console.error("Remove currency error:", err);
       toast.error("Error removing currency.");

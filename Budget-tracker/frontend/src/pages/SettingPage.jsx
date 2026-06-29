@@ -1,10 +1,12 @@
 // SettingPage.jsx - FinTrack Unified Enterprise Design System
 import React, { useState, useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
-import { useAuth, api } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
+import { fetchUserProfile, updateUserProfile, uploadAvatar } from "../store/userSlice";
 import { applyTheme } from "../App";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -52,7 +54,9 @@ import {
 
 const SettingsPage = () => {
   const navigate = useNavigate();
-  const { user: authUser, token, fetchUser: refreshAuthUser } = useAuth();
+  const dispatch = useDispatch();
+  const { user: authUser, token, logout, fetchUser: refreshAuthUser } = useAuth();
+  const { profile: reduxUser } = useSelector((state) => state.user);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -135,21 +139,9 @@ const SettingsPage = () => {
   ];
 
   useEffect(() => {
-    fetchUser();
-  }, [token]);
-
-  useEffect(() => {
-    document.body.style.overflow = mobileSidebarOpen ? "hidden" : "auto";
-  }, [mobileSidebarOpen]);
-
-  const fetchUser = async () => {
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const res = await api.get("/api/users/me");
-      const userData = res.data.user || res.data;
+    if (!token) { setLoading(false); return; }
+    setLoading(true);
+    dispatch(fetchUserProfile()).unwrap().then((userData) => {
       if (userData) {
         setProfileData(prev => ({
           ...prev,
@@ -162,18 +154,14 @@ const SettingsPage = () => {
           setAvatarUrl(userData.avatar_url || userData.avatar || userData.profile_picture);
         }
       }
-    } catch (err) {
-      console.error("Fetch user error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    }).finally(() => setLoading(false));
+  }, [token, dispatch]);
 
   const handleProfileUpdate = async (e) => {
     if (e) e.preventDefault();
     setSaving(true);
     try {
-      await api.put("/api/users/profile", profileData);
+      await dispatch(updateUserProfile(profileData)).unwrap();
       toast.success("✨ Profile updated successfully!");
     } catch (err) {
       toast.success("✨ Profile preferences updated!");
@@ -215,10 +203,8 @@ const SettingsPage = () => {
 
     try {
       toast.loading("Uploading profile picture to Cloudinary...", { id: "avatarUpload" });
-      const res = await api.post("/api/users/avatar", data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      const newUrl = res.data.avatar_url || res.data.user?.avatar_url;
+      const res = await dispatch(uploadAvatar(data)).unwrap();
+      const newUrl = res.avatar_url || res.user?.avatar_url;
       if (newUrl) {
         setAvatarUrl(newUrl);
       }
@@ -226,7 +212,7 @@ const SettingsPage = () => {
       if (refreshAuthUser) refreshAuthUser();
     } catch (err) {
       console.error("Avatar upload error:", err);
-      toast.error(err.response?.data?.error || "Failed to upload avatar", { id: "avatarUpload" });
+      toast.error("Failed to upload avatar", { id: "avatarUpload" });
     }
   };
 

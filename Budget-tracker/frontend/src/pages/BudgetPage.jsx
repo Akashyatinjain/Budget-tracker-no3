@@ -1,9 +1,12 @@
 // BudgetPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
-import { useAuth, api } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
+import { fetchTransactions } from "../store/transactionSlice";
+import { fetchBudgets, addBudget, deleteBudget } from "../store/budgetSlice";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip
@@ -26,8 +29,9 @@ const normalizeArrayResponse = (resData) => {
 
 const BudgetPage = () => {
   const { user, token } = useAuth();
-  const [budgets, setBudgets] = useState([]);
-  const [transactions, setTransactions] = useState([]);
+  const dispatch = useDispatch();
+  const { items: budgets } = useSelector((state) => state.budgets);
+  const { items: transactions } = useSelector((state) => state.transactions);
   const [newBudget, setNewBudget] = useState({
     category_id: "",
     amount: "",
@@ -60,48 +64,22 @@ const BudgetPage = () => {
     categories.find((c) => +c.id === +id)?.icon || "📋";
 
   useEffect(() => {
-    fetchAllData();
-  }, [token]);
-
-  const fetchAllData = async () => {
     if (!token) return;
     setLoading(true);
     setError("");
-    await Promise.all([fetchBudgets(), fetchTransactions()]);
-    setLoading(false);
-  };
-
-  const fetchBudgets = async () => {
-    if (!token) return;
-    try {
-      const res = await api.get("/api/budgets");
-      const list = normalizeArrayResponse(res.data);
-      setBudgets(list);
-    } catch (err) {
-      console.error("Fetch budgets error:", err);
-      setBudgets([]);
-    }
-  };
-
-  const fetchTransactions = async () => {
-    if (!token) return;
-    try {
-      const res = await api.get("/api/transactions");
-      const list = normalizeArrayResponse(res.data);
-      setTransactions(list);
-    } catch (err) {
-      console.error("Fetch transactions error:", err);
-      setTransactions([]);
-    }
-  };
+    Promise.all([
+      dispatch(fetchBudgets()),
+      dispatch(fetchTransactions()),
+    ]).finally(() => setLoading(false));
+  }, [token, dispatch]);
 
   const handleAddBudget = async (e) => {
     e.preventDefault();
     setError("");
     try {
-      await api.post("/api/budgets", newBudget);
+      await dispatch(addBudget(newBudget)).unwrap();
       toast.success("✨ Budget limit set successfully!");
-      await fetchBudgets();
+      dispatch(fetchBudgets());
       setShowModal(false);
       setNewBudget({
         category_id: "",
@@ -110,8 +88,8 @@ const BudgetPage = () => {
         description: "",
       });
     } catch (err) {
-      console.error("Add budget error:", err.response?.data || err.message);
-      const msg = err.response?.data?.error || "Failed to set budget.";
+      console.error("Add budget error:", err);
+      const msg = typeof err === "string" ? err : "Failed to set budget.";
       setError(msg);
       toast.error(msg);
     }
@@ -133,9 +111,8 @@ const BudgetPage = () => {
     if (!Number.isFinite(numericId)) return;
 
     try {
-      await api.delete(`/api/budgets/${numericId}`);
+      await dispatch(deleteBudget(numericId)).unwrap();
       toast.success("Budget removed!");
-      await fetchBudgets();
     } catch (err) {
       console.error("Delete budget error:", err);
       toast.error("Failed to delete budget.");

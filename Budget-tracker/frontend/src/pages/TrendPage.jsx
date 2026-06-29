@@ -1,9 +1,12 @@
 // TrendsPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
-import { useAuth, api } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
+import { fetchTransactions } from "../store/transactionSlice";
+import apiClient from "../services/apiClient";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar,
@@ -18,7 +21,8 @@ import {
 
 const TrendsPage = () => {
   const { user, token } = useAuth();
-  const [transactions, setTransactions] = useState([]);
+  const dispatch = useDispatch();
+  const { items: transactions, loading: reduxLoading } = useSelector((state) => state.transactions);
   const [timeRange, setTimeRange] = useState("month");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -36,31 +40,17 @@ const TrendsPage = () => {
   ];
 
   useEffect(() => {
-    fetchTransactions();
-  }, [token]);
+    if (token) {
+      dispatch(fetchTransactions()).finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, [token, dispatch]);
 
   useEffect(() => {
     document.body.style.overflow = mobileSidebarOpen || showForecastModal ? "hidden" : "auto";
     return () => { document.body.style.overflow = "auto"; };
   }, [mobileSidebarOpen, showForecastModal]);
-
-  const fetchTransactions = async () => {
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await api.get("/api/transactions");
-      const data = res.data.transactions || res.data;
-      setTransactions(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Fetch transactions error:", err);
-      setTransactions([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Process chart data dynamically from backend transactions
   const processChartData = () => {
@@ -250,7 +240,7 @@ const TrendsPage = () => {
   const exportExcel = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/api/reports/export/excel", { responseType: "arraybuffer" });
+      const res = await apiClient.get("/api/reports/export/excel", { responseType: "arraybuffer" });
       const filename = `trends-report-${new Date().toISOString().replace(/[:.]/g, "-")}.xlsx`;
       downloadBlob(res.data, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
       toast.success("📊 Excel report downloaded!");
@@ -265,7 +255,7 @@ const TrendsPage = () => {
   const exportPDF = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/api/reports/export/pdf", { responseType: "arraybuffer" });
+      const res = await apiClient.get("/api/reports/export/pdf", { responseType: "arraybuffer" });
       const filename = `trends-report-${new Date().toISOString().replace(/[:.]/g, "-")}.pdf`;
       downloadBlob(res.data, "application/pdf", filename);
       toast.success("📄 PDF report downloaded!");

@@ -1,16 +1,23 @@
 // NotificationsPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  markAsRead,
-  markAllRead,
-  deleteNotification,
-} from "../lib/notificationsApi.js";
+  fetchNotifications,
+  markNotificationAsRead,
+  markAllNotificationsRead,
+  removeNotification,
+  fetchNotificationSettings,
+  updateNotificationSettings as updateNotificationSettingsThunk,
+  setNotificationItems,
+  optimisticMarkRead,
+  optimisticMarkAllRead,
+  optimisticRemoveNotification
+} from "../store/notificationSlice";
 import {
   Zap,
   Shield,
@@ -56,7 +63,8 @@ import {
 
 const NotificationsPage = () => {
   const { user: authUser, token: authToken } = useAuth();
-  const [notifications, setNotifications] = useState([]);
+  const dispatch = useDispatch();
+  const { items: notifications, settings: notificationSettings, loading: reduxLoading } = useSelector((state) => state.notifications);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -66,15 +74,6 @@ const NotificationsPage = () => {
   const [expandedIds, setExpandedIds] = useState([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
-  const [notificationSettings, setNotificationSettings] = useState({
-    email_notifications: true,
-    push_notifications: true,
-    billing_reminders: true,
-    subscription_alerts: true,
-    budget_alerts: true
-  });
-
-  const VITE_BASE_URL = import.meta.env.VITE_BASE_URL;
 
   // 1. Contextual Notification Types & Colors mapping
   const notificationTypes = {
@@ -158,109 +157,68 @@ const NotificationsPage = () => {
   ];
 
   useEffect(() => {
-    if (token) {
-      fetchUser();
-      fetchNotifications();
-      fetchNotificationSettings();
+    if (authToken) {
+      setLoading(true);
+      Promise.all([
+        dispatch(fetchNotifications()),
+        dispatch(fetchNotificationSettings())
+      ]).then(([notifResult]) => {
+        if (notifResult?.payload && Array.isArray(notifResult.payload) && notifResult.payload.length === 0) {
+          dispatch(setNotificationItems(generateSampleNotifications()));
+        }
+      }).catch(() => {
+        dispatch(setNotificationItems(generateSampleNotifications()));
+      }).finally(() => setLoading(false));
     } else {
-      setNotifications(generateSampleNotifications());
+      dispatch(setNotificationItems(generateSampleNotifications()));
       setLoading(false);
     }
-  }, [token]);
+  }, [authToken, dispatch]);
 
   useEffect(() => {
     document.body.style.overflow = mobileSidebarOpen || showSettings ? "hidden" : "auto";
     return () => { document.body.style.overflow = "auto"; };
   }, [mobileSidebarOpen, showSettings]);
 
-  const fetchUser = async () => {
-    if (!token) return;
-    try {
-      const res = await axios.get(`${VITE_BASE_URL}/api/users/me`, axiosConfig);
-      setUser(res.data.user);
-    } catch (err) {
-      console.error("Fetch user error:", err);
-    }
-  };
-
-  const fetchNotifications = async () => {
-    if (!token) return;
-    setLoading(true);
-    try {
-      const res = await axios.get(`${VITE_BASE_URL}/api/notifications`, {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true
-      });
-      const backendNotifications = res.data.notifications || res.data;
-      const notifArray = Array.isArray(backendNotifications) ? backendNotifications : [];
-      
-      if (notifArray.length > 0) {
-        setNotifications(notifArray);
-      } else {
-        setNotifications(generateSampleNotifications());
-      }
-    } catch (err) {
-      console.error("Fetch notifications error:", err);
-      setNotifications(generateSampleNotifications());
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchNotificationSettings = async () => {
-    if (!token) return;
-    try {
-      const res = await axios.get(`${VITE_BASE_URL}/api/notifications/settings`, axiosConfig);
-      setNotificationSettings(res.data.settings || notificationSettings);
-    } catch (err) {
-      console.error("Fetch notification settings error:", err);
-    }
-  };
-
   const updateNotificationSettings = async (newSettings) => {
     try {
-      await axios.put(`${VITE_BASE_URL}/api/notifications/settings`, newSettings, axiosConfig);
-      setNotificationSettings(newSettings);
+      await dispatch(updateNotificationSettingsThunk(newSettings)).unwrap();
       setShowSettings(false);
       toast.success("Notification preferences updated!");
     } catch (err) {
-      setNotificationSettings(newSettings);
       setShowSettings(false);
       toast.success("Preferences saved locally!");
     }
   };
 
   const markAsReadHandler = async (notificationId) => {
+    dispatch(optimisticMarkRead(notificationId));
     try {
-      await markAsRead(notificationId);
+      await dispatch(markNotificationAsRead(notificationId)).unwrap();
     } catch (err) {
       console.error("Mark read error:", err);
-    } finally {
-      setNotifications(prev => 
-        prev.map(notif => notif.id === notificationId ? { ...notif, is_read: true } : notif)
-      );
     }
   };
 
   const markAllAsReadHandler = async () => {
+    dispatch(optimisticMarkAllRead());
     try {
-      await markAllRead();
+      await dispatch(markAllNotificationsRead()).unwrap();
     } catch (err) {
       console.error("Mark all read error:", err);
     } finally {
-      setNotifications(prev => prev.map(notif => ({ ...notif, is_read: true })));
       setSelectedIds([]);
       toast.success("All notifications marked as read!");
     }
   };
 
   const deleteNotificationHandler = async (notificationId) => {
+    dispatch(optimisticRemoveNotification(notificationId));
     try {
-      await deleteNotification(notificationId);
+      await dispatch(removeNotification(notificationId)).unwrap();
     } catch (err) {
       console.error("Delete error:", err);
     } finally {
-      setNotifications(prev => prev.filter(notif => notif.id !== notificationId));
       setSelectedIds(prev => prev.filter(id => id !== notificationId));
       toast.success("Notification dismissed");
     }

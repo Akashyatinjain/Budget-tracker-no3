@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { FaUser, FaBell, FaShieldAlt, FaPalette, FaDownload, FaArrowLeft, FaCamera } from 'react-icons/fa';
 import { MdCurrencyExchange } from 'react-icons/md';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -7,12 +8,15 @@ import Header from '../components/Header';
 import AdvancedSidebar from '../components/Sidebar';
 import { motion } from 'framer-motion';
 import { FiZap, FiShield, FiClock, FiTrendingUp } from 'react-icons/fi';
-import { useAuth, api } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { fetchUserProfile, updateUserProfile, uploadAvatar } from '../store/userSlice';
 
 const AccountHolderPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
   const { user: authUser, token } = useAuth();
+  const { profile: reduxUser } = useSelector((state) => state.user);
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -31,18 +35,9 @@ const AccountHolderPage = () => {
   });
 
   useEffect(() => {
-    fetchUser();
-  }, [token]);
-
-  const fetchUser = async () => {
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-    try {
-      setLoading(true);
-      const res = await api.get("/api/users/me");
-      const userData = res.data.user || res.data;
+    if (!token) { setLoading(false); return; }
+    setLoading(true);
+    dispatch(fetchUserProfile()).unwrap().then((userData) => {
       setUser(userData);
       setFormData({
         first_name: userData.first_name || "",
@@ -53,13 +48,9 @@ const AccountHolderPage = () => {
         language: userData.language || "en",
         timezone: userData.timezone || "Asia/Kolkata"
       });
-    } catch (err) {
-      console.error("Fetch user error:", err.response?.data || err.message);
-      toast.error("Failed to load user data");
-    } finally {
-      setLoading(false);
-    }
-  };
+    }).catch(() => toast.error("Failed to load user data"))
+    .finally(() => setLoading(false));
+  }, [token, dispatch]);
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
@@ -71,14 +62,13 @@ const AccountHolderPage = () => {
     try {
       setUploadingAvatar(true);
       toast.loading("Uploading profile picture to Cloudinary...", { id: "avatarUpload" });
-      await api.post("/api/users/avatar", data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await dispatch(uploadAvatar(data)).unwrap();
       toast.success("Profile picture updated successfully!", { id: "avatarUpload" });
-      fetchUser();
+      const updated = await dispatch(fetchUserProfile()).unwrap();
+      setUser(updated);
     } catch (error) {
       console.error("Avatar upload error:", error);
-      toast.error(error.response?.data?.error || "Failed to upload profile picture", { id: "avatarUpload" });
+      toast.error("Failed to upload profile picture", { id: "avatarUpload" });
     } finally {
       setUploadingAvatar(false);
     }
@@ -91,10 +81,10 @@ const AccountHolderPage = () => {
   const handleSave = async () => {
     try {
       setLoading(true);
-      await api.put("/api/users/profile", formData);
+      const updated = await dispatch(updateUserProfile(formData)).unwrap();
       toast.success("Profile updated successfully");
       setIsEditing(false);
-      fetchUser();
+      setUser(updated);
     } catch (error) {
       console.error("Update profile error:", error);
       toast.error("Failed to update profile");

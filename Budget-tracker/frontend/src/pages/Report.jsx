@@ -1,10 +1,14 @@
 // ReportsPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth, api } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
+import { fetchTransactions } from "../store/transactionSlice";
+import { fetchSubscriptions } from "../store/subscriptionSlice";
+import { fetchReports } from "../store/reportSlice";
 import {
   BarChart,
   Bar,
@@ -67,8 +71,10 @@ const safeAmount = (val) => {
 
 const ReportsPage = () => {
   const { user, token } = useAuth();
-  const [transactions, setTransactions] = useState([]);
-  const [subscriptions, setSubscriptions] = useState([]);
+  const dispatch = useDispatch();
+  const { items: transactions } = useSelector((state) => state.transactions);
+  const { items: subscriptions } = useSelector((state) => state.subscriptions);
+  const { items: backendReports } = useSelector((state) => state.reports);
   const [reportType, setReportType] = useState("spending");
   const [timeRange, setTimeRange] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -146,60 +152,21 @@ const ReportsPage = () => {
 
   const [backendReport, setBackendReport] = useState(null);
 
+  useEffect(() => {
+    if (!token) return;
+    setLoading(true);
+    Promise.all([
+      dispatch(fetchTransactions()),
+      dispatch(fetchSubscriptions()),
+      dispatch(fetchReports()),
+    ]).finally(() => setLoading(false));
+  }, [token, dispatch]);
 
   useEffect(() => {
-    fetchTransactions();
-    fetchSubscriptions();
-    fetchBackendReport();
-  }, [token]);
-
-  useEffect(() => {
-    document.body.style.overflow = mobileSidebarOpen ? "hidden" : "auto";
-    return () => { document.body.style.overflow = "auto"; };
-  }, [mobileSidebarOpen]);
-
-  const fetchTransactions = async () => {
-    if (!token) {
-      setTransactions([]);
-      setLoading(false);
-      return;
+    if (backendReports && backendReports.length > 0) {
+      setBackendReport(backendReports[0]);
     }
-    try {
-      const res = await api.get("/api/transactions");
-      const raw = res.data.transactions || res.data;
-      const normalized = normalizeTransactionsResponse(raw);
-      setTransactions(normalized);
-    } catch (err) {
-      console.error("Fetch transactions error:", err);
-      setTransactions([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchSubscriptions = async () => {
-    if (!token) return;
-    try {
-      const res = await api.get("/api/subscriptions");
-      const data = res.data.subscriptions || res.data;
-      setSubscriptions(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Fetch subscriptions error:", err);
-      setSubscriptions([]);
-    }
-  };
-
-  const fetchBackendReport = async () => {
-    if (!token) return;
-    try {
-      const res = await api.get("/api/reports");
-      if (res.data && res.data.report) {
-        setBackendReport(res.data.report);
-      }
-    } catch (err) {
-      console.error("Fetch backend report error:", err);
-    }
-  };
+  }, [backendReports]);
 
   const processReportData = () => {
     const now = new Date();

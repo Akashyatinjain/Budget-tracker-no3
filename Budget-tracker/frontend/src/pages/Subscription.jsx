@@ -1,6 +1,6 @@
 // SubscriptionsPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
@@ -16,9 +16,19 @@ import {
   Dumbbell, Music, Cloud, GraduationCap, Package, Brain,
   PiggyBank, CheckCircle2, AlertTriangle, ArrowUpRight
 } from "lucide-react";
+import {
+  fetchSubscriptions,
+  addSubscription,
+  updateSubscription,
+  deleteSubscription,
+  optimisticUpdateStatus,
+  optimisticRemove,
+} from "../store/subscriptionSlice";
+import { fetchTransactions } from "../store/transactionSlice";
 
 const SubscriptionsPage = () => {
-  const [subscriptions, setSubscriptions] = useState([]);
+  const dispatch = useDispatch();
+  const { items: subscriptions, loading: reduxLoading } = useSelector((state) => state.subscriptions);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -37,7 +47,6 @@ const SubscriptionsPage = () => {
     description: ""
   });
 
-  const VITE_BASE_URL = import.meta.env.VITE_BASE_URL;
   const token = localStorage.getItem("token");
 
   const categories = [
@@ -59,7 +68,7 @@ const SubscriptionsPage = () => {
     { value: "trial",     label: "Trial",     color: "text-amber-400",  bgColor: "bg-amber-500/20 border border-amber-500/30",   icon: Clock }
   ];
 
-  const axiosConfig = { headers: { Authorization: `Bearer ${token}` } };
+
 
   // Realistic Demo Subscriptions if user database is empty
   const getSampleSubscriptions = () => [
@@ -85,43 +94,17 @@ const SubscriptionsPage = () => {
     return [];
   };
 
-  useEffect(() => { fetchUser(); fetchSubscriptions(); }, []);
+  useEffect(() => {
+    if (token) {
+      dispatch(fetchSubscriptions()).finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, [token, dispatch]);
   useEffect(() => { 
     document.body.style.overflow = mobileSidebarOpen || showAddModal ? "hidden" : "auto"; 
     return () => { document.body.style.overflow = "auto"; };
   }, [mobileSidebarOpen, showAddModal]);
-
-  const fetchUser = async () => {
-    if (!token) return;
-    try {
-      const res = await axios.get(`${VITE_BASE_URL}/api/users/me`, axiosConfig);
-      setUser(res.data?.user || res.data || null);
-    } catch (err) { console.error("Fetch user error:", err); setUser(null); }
-  };
-
-  const fetchSubscriptions = async () => {
-    if (!token) { setSubscriptions([]); setLoading(false); return; }
-    setLoading(true);
-    try {
-      const res = await axios.get(`${VITE_BASE_URL}/api/subscriptions`, axiosConfig);
-      const list = normalizeSubscriptionsResponse(res.data);
-      const cleaned = list.map((s, i) => ({
-        id: s.id ?? s.subscription_id ?? Date.now() + i,
-        name: s.name ?? "Unknown",
-        amount: safeNumber(s.amount),
-        currency: s.currency ?? "INR",
-        billing_cycle: s.billing_cycle ?? "monthly",
-        category: s.category ?? "other",
-        next_billing_date: s.next_billing_date ?? null,
-        status: s.status ?? "active",
-        description: s.description ?? ""
-      }));
-      setSubscriptions(cleaned);
-    } catch (err) {
-      console.error("Fetch subscriptions error:", err);
-      setSubscriptions([]);
-    } finally { setLoading(false); }
-  };
 
   const resetNewSubscription = () => setNewSubscription({
     name: "", amount: "", currency: "INR", billing_cycle: "monthly",
@@ -132,39 +115,38 @@ const SubscriptionsPage = () => {
     e.preventDefault();
     const payload = { ...newSubscription, amount: safeNumber(newSubscription.amount) };
     try {
-      await axios.post(`${VITE_BASE_URL}/api/subscriptions`, payload, axiosConfig);
+      await dispatch(addSubscription(payload)).unwrap();
       toast.success("✨ Subscription added!");
-      await fetchSubscriptions();
+      dispatch(fetchSubscriptions());
       setShowAddModal(false);
       resetNewSubscription();
     } catch (err) {
       console.error("Add subscription error:", err);
-      setSubscriptions(prev => [...prev, { id: Date.now(), ...payload }]);
       setShowAddModal(false);
       resetNewSubscription();
     }
   };
 
   const handleUpdateStatus = async (subscriptionId, newStatus) => {
+    dispatch(optimisticUpdateStatus({ id: subscriptionId, status: newStatus }));
     try {
-      await axios.put(`${VITE_BASE_URL}/api/subscriptions/${subscriptionId}`, { status: newStatus }, axiosConfig);
-      setSubscriptions(prev => prev.map(s => s.id === subscriptionId ? { ...s, status: newStatus } : s));
+      await dispatch(updateSubscription({ id: subscriptionId, data: { status: newStatus } })).unwrap();
       toast.success(`Subscription ${newStatus}!`);
-      fetchSubscriptions();
+      dispatch(fetchSubscriptions());
     } catch (err) {
       console.error("Update subscription error:", err);
-      setSubscriptions(prev => prev.map(s => s.id === subscriptionId ? { ...s, status: newStatus } : s));
+      dispatch(fetchSubscriptions());
     }
   };
 
   const handleDeleteSubscription = async (subscriptionId) => {
+    dispatch(optimisticRemove(subscriptionId));
     try {
-      await axios.delete(`${VITE_BASE_URL}/api/subscriptions/${subscriptionId}`, axiosConfig);
-      setSubscriptions(prev => prev.filter(s => s.id !== subscriptionId));
+      await dispatch(deleteSubscription(subscriptionId)).unwrap();
       toast.success("Subscription deleted!");
     } catch (err) {
       console.error("Delete subscription error:", err);
-      setSubscriptions(prev => prev.filter(s => s.id !== subscriptionId));
+      dispatch(fetchSubscriptions());
     }
   };
 

@@ -1,5 +1,6 @@
 // TransactionPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
@@ -11,11 +12,18 @@ import {
   Wallet, Receipt, SlidersHorizontal, RotateCcw,
   Calendar, Tag, FileText, CreditCard, ChevronLeft, ChevronRight
 } from "lucide-react";
-import { useAuth, api } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
+import {
+  fetchTransactions,
+  addTransaction,
+  updateTransaction,
+  deleteTransaction,
+} from "../store/transactionSlice";
 
 const TransactionPage = () => {
   const { user, token } = useAuth();
-  const [transactions, setTransactions] = useState([]);
+  const dispatch = useDispatch();
+  const { items: transactions, loading: reduxLoading } = useSelector((state) => state.transactions);
   const [filter, setFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -78,8 +86,8 @@ const TransactionPage = () => {
   };
 
   useEffect(() => {
-    fetchTransactions();
-  }, [token]);
+    if (token) dispatch(fetchTransactions());
+  }, [token, dispatch]);
 
   useEffect(() => {
     document.body.style.overflow =
@@ -87,24 +95,12 @@ const TransactionPage = () => {
     return () => { document.body.style.overflow = "auto"; };
   }, [mobileSidebarOpen, showModal, showEditModal]);
 
-  const fetchTransactions = async () => {
-    if (!token) return;
-    try {
-      const res = await api.get("/api/transactions");
-      const list = normalizeTransactionsResponse(res.data);
-      setTransactions(list);
-    } catch (err) {
-      console.error("Fetch transactions error:", err);
-      setTransactions([]);
-    }
-  };
-
   const handleAddTransaction = async (e) => {
     e.preventDefault();
     try {
-      await api.post("/api/transactions", newTransaction);
+      await dispatch(addTransaction(newTransaction)).unwrap();
       toast.success("✨ Transaction added successfully!");
-      await fetchTransactions();
+      dispatch(fetchTransactions());
       setShowModal(false);
       setNewTransaction({
         merchant: "",
@@ -117,7 +113,7 @@ const TransactionPage = () => {
       });
     } catch (err) {
       console.error("Add transaction error:", err);
-      toast.error(err?.response?.data?.message || err?.response?.data?.error || "Failed to add transaction.");
+      toast.error(typeof err === "string" ? err : "Failed to add transaction.");
     }
   };
 
@@ -158,9 +154,9 @@ const TransactionPage = () => {
     };
 
     try {
-      await api.put(`/api/transactions/${id}`, payload);
+      await dispatch(updateTransaction({ id, data: payload })).unwrap();
       toast.success("Transaction updated!");
-      await fetchTransactions();
+      dispatch(fetchTransactions());
       setShowEditModal(false);
       setEditTransaction(null);
     } catch (err) {
@@ -174,10 +170,8 @@ const TransactionPage = () => {
     if (!Number.isFinite(numericId)) return;
 
     try {
-      await api.delete(`/api/transactions/${numericId}`);
+      await dispatch(deleteTransaction(numericId)).unwrap();
       toast.success("Transaction deleted!");
-      setTransactions((prev) => prev.filter((t) => (t.transaction_id ?? t.id) !== numericId));
-      await fetchTransactions();
     } catch (err) {
       console.error("Delete transaction error:", err);
       toast.error("Failed to delete transaction.");
