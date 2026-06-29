@@ -128,37 +128,59 @@ const AnalyticsPage = () => {
   const highestExpenseCat = categoryData[0] || { name: "N/A", value: 0, icon: "💳" };
 
   const incomeTxns = filteredTransactions.filter((t) => String(t.type || "").toLowerCase() === "income");
-  const largestIncomeTxn = incomeTxns.sort((a, b) => safeAmount(b) - safeAmount(a))[0] || { merchant: "Salary", amount: totalIncome || 0 };
+  const largestIncomeTxn = incomeTxns.length > 0 
+    ? [...incomeTxns].sort((a, b) => safeAmount(b) - safeAmount(a))[0] 
+    : null;
 
   // Quick Statistics: Highest Spending Day & Most Frequent Category
   const dailyExpenses = {};
   const catFrequency = {};
   filteredTransactions.forEach((t) => {
     if (String(t.type || "").toLowerCase() === "expense") {
-      if (t.transaction_date) {
-        const dayName = new Date(t.transaction_date).toLocaleDateString("en-US", { weekday: "long" });
-        dailyExpenses[dayName] = (dailyExpenses[dayName] || 0) + safeAmount(t);
+      const tDate = t.transaction_date || t.date || t.created_at;
+      if (tDate) {
+        const d = new Date(tDate);
+        if (!isNaN(d)) {
+          const dayName = d.toLocaleDateString("en-US", { weekday: "long" });
+          dailyExpenses[dayName] = (dailyExpenses[dayName] || 0) + safeAmount(t);
+        }
       }
       const catName = t.category_name || t.category || categories.find(c => String(c.id) === String(t.category_id))?.name || "Other";
       catFrequency[catName] = (catFrequency[catName] || 0) + 1;
     }
   });
 
-  const highestDay = Object.entries(dailyExpenses).sort((a, b) => b[1] - a[1])[0] || ["Friday", 3850];
-  const mostFrequentCat = Object.entries(catFrequency).sort((a, b) => b[1] - a[1])[0] || ["Food & Dining", 14];
+  const highestDayEntry = Object.entries(dailyExpenses).sort((a, b) => b[1] - a[1])[0];
+  const highestDay = highestDayEntry ? [highestDayEntry[0], Math.round(highestDayEntry[1])] : ["No Expense Data", 0];
 
-  // Realistic Health Score (e.g. 84, 91, 76)
+  const mostFrequentEntry = Object.entries(catFrequency).sort((a, b) => b[1] - a[1])[0];
+  const mostFrequentCat = mostFrequentEntry ? [mostFrequentEntry[0], mostFrequentEntry[1]] : ["None", 0];
+
+  // Realistic Health Score based on actual user transactions
   const calcHealthScore = () => {
-    let base = 75;
-    if (savingsRate >= 30) base = 91;
-    else if (savingsRate >= 20) base = 84;
-    else if (savingsRate >= 10) base = 76;
-    else if (savingsRate >= 0) base = 68;
-    else base = 52;
+    const hasData = filteredTransactions.length > 0;
+    if (!hasData) {
+      return {
+        score: 0,
+        label: "No Data",
+        color: "from-slate-400 to-slate-500",
+        desc: "Add transactions to calculate your liquidity index and financial health score."
+      };
+    }
+    let base = 70;
+    if (savingsRate >= 40) base = 95;
+    else if (savingsRate >= 30) base = 88;
+    else if (savingsRate >= 20) base = 80;
+    else if (savingsRate >= 10) base = 72;
+    else if (savingsRate >= 0) base = 64;
+    else base = 45;
     
     const label = base >= 90 ? "Outstanding" : base >= 80 ? "Excellent" : base >= 70 ? "Healthy" : "Needs Attention";
     const color = base >= 85 ? "from-purple-400 to-indigo-400" : base >= 70 ? "from-indigo-400 to-cyan-400" : "from-amber-400 to-rose-400";
-    return { score: base, label, color };
+    const desc = base >= 70
+      ? "Your liquidity index and cash retention rate place you in a strong, healthy financial standing."
+      : "Your cash retention rate is low. Review category spending limits to improve your financial health.";
+    return { score: base, label, color, desc };
   };
 
   const health = calcHealthScore();
@@ -331,7 +353,7 @@ const AnalyticsPage = () => {
                       {health.label} Standing
                     </div>
                     <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
-                      Your liquidity index and cash retention rate place you in the top tier of active planners.
+                      {health.desc}
                     </p>
                   </div>
                 </div>
@@ -351,7 +373,9 @@ const AnalyticsPage = () => {
                 </div>
                 <div>
                   <h4 className="text-lg font-bold text-white">{highestDay[0]}</h4>
-                  <p className="text-xs text-purple-300 font-medium mt-0.5">₹{Number(highestDay[1]).toLocaleString("en-IN")} avg</p>
+                  <p className="text-xs text-purple-300 font-medium mt-0.5">
+                    {highestDay[1] > 0 ? `₹${Number(highestDay[1]).toLocaleString("en-IN")} total` : "No activity"}
+                  </p>
                 </div>
               </motion.div>
 
@@ -381,11 +405,15 @@ const AnalyticsPage = () => {
                   </div>
                   <div>
                     <span className="text-xs text-slate-400 font-medium">Largest Income Source</span>
-                    <h4 className="text-base font-bold text-white mt-0.5">{largestIncomeTxn.merchant || "Salary Source"}</h4>
+                    <h4 className="text-base font-bold text-white mt-0.5">
+                      {largestIncomeTxn ? (largestIncomeTxn.merchant || largestIncomeTxn.category_name || largestIncomeTxn.description || "Income Record") : "No Income Recorded"}
+                    </h4>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-base font-black text-emerald-400">₹{safeAmount(largestIncomeTxn).toLocaleString("en-IN")}</span>
+                  <span className="text-base font-black text-emerald-400">
+                    ₹{largestIncomeTxn ? safeAmount(largestIncomeTxn).toLocaleString("en-IN") : 0}
+                  </span>
                   <p className="text-[10px] text-slate-500">Recorded</p>
                 </div>
               </motion.div>
@@ -442,7 +470,7 @@ const AnalyticsPage = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 mt-2.5 text-xs text-slate-300">
                     <div className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
-                      <span>Spending adjusted by <strong className="text-purple-300">12%</strong> compared to previous baseline.</span>
+                      <span>Total recorded transactions standing at <strong className="text-purple-300">{filteredTransactions.length}</strong> records.</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-pink-400"></span>
@@ -454,7 +482,7 @@ const AnalyticsPage = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-                      <span>Potential to save <strong className="text-cyan-300">₹3,500/mo</strong> by reviewing recurring subscriptions.</span>
+                      <span>Savings retention rate currently at <strong className="text-cyan-300">{savingsRate.toFixed(0)}%</strong>.</span>
                     </div>
                   </div>
                 </div>

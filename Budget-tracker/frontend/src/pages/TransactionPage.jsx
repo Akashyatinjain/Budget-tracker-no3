@@ -223,7 +223,7 @@ const TransactionPage = () => {
     .filter((t) => (t?.type || "").toString().toLowerCase() === "expense")
     .reduce((s, t) => s + safeParseAmount(t.amount ?? t), 0);
 
-  const avgTxn = safeTransactions.length > 0 ? Math.round((totalIncome + totalExpenses) / safeTransactions.length) : 4250;
+  const avgTxn = safeTransactions.length > 0 ? Math.round((totalIncome + totalExpenses) / safeTransactions.length) : 0;
 
   const formatDate = (d) => {
     if (!d) return "-";

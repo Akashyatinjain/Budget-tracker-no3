@@ -77,13 +77,13 @@ const TrendsPage = () => {
       });
     }
 
-    return months.map(({ month, timestamp, idx }) => {
+    return months.map(({ month, timestamp }) => {
       const monthStart = new Date(timestamp);
-      const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+      const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0, 23, 59, 59);
       
       const monthTransactions = hasUserData ? transactions.filter(t => {
-        if (!t.transaction_date) return false;
-        const transactionDate = new Date(t.transaction_date);
+        if (!t.transaction_date && !t.date && !t.created_at) return false;
+        const transactionDate = new Date(t.transaction_date || t.date || t.created_at);
         return transactionDate >= monthStart && transactionDate <= monthEnd;
       }) : [];
 
@@ -95,12 +95,6 @@ const TrendsPage = () => {
         .filter(t => String(t.type || "").toLowerCase() === "expense")
         .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
 
-      // Realistic Demo Fallback ONLY if user has 0 transactions in system
-      if (!hasUserData) {
-        income = 115000 + (5 - idx) * 2000;
-        expenses = 78000 + (5 - idx) * 900;
-      }
-
       const savings = Math.max(0, income - expenses);
 
       const categoryExpenses = {};
@@ -109,7 +103,7 @@ const TrendsPage = () => {
           .filter(t => (String(t.category_id) === String(cat.id) || String(t.category || t.category_name).toLowerCase() === cat.name.toLowerCase()) && String(t.type || "").toLowerCase() === "expense")
           .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
         
-        categoryExpenses[cat.name] = hasUserData ? catSum : Math.round(expenses * (cat.id === 1 ? 0.35 : cat.id === 2 ? 0.25 : cat.id === 5 ? 0.20 : 0.08));
+        categoryExpenses[cat.name] = catSum;
       });
 
       return {
@@ -126,10 +120,11 @@ const TrendsPage = () => {
 
   const calculateInsights = () => {
     const hasUserData = Array.isArray(transactions) && transactions.length > 0;
-    const current = chartData[chartData.length - 1] || { income: 125000, expenses: 82500, savings: 42500 };
-    const previous = chartData[chartData.length - 2] || { income: 118000, expenses: 84000, savings: 34000 };
+    const current = chartData[chartData.length - 1] || { income: 0, expenses: 0, savings: 0 };
+    const previous = chartData[chartData.length - 2] || { income: 0, expenses: 0, savings: 0 };
 
-    let mostSpentCategory = { name: "Food & Dining 🍕", amount: Math.round(current.expenses * 0.35), percentage: 35 };
+    let mostSpentCategory = { name: "No Data", amount: 0, percentage: 0 };
+    let topGrowingCategory = { name: "None", growth: 0 };
     
     if (hasUserData) {
       const totalExp = transactions
@@ -151,13 +146,31 @@ const TrendsPage = () => {
           };
         }
       });
-    }
 
-    const topGrowingCategory = { name: "Entertainment 🎬", growth: 18 };
+      // Calculate top growing category between previous month & current month
+      if (chartData.length >= 2) {
+        let maxGrowth = -Infinity;
+        categories.forEach(cat => {
+          const currVal = current[cat.name] || 0;
+          const prevVal = previous[cat.name] || 0;
+          if (prevVal > 0 && currVal > prevVal) {
+            const growthPct = Math.round(((currVal - prevVal) / prevVal) * 100);
+            if (growthPct > maxGrowth) {
+              maxGrowth = growthPct;
+              topGrowingCategory = { name: `${cat.name} ${cat.icon}`, growth: growthPct };
+            }
+          }
+        });
+        if (maxGrowth === -Infinity && mostSpentCategory.name !== "No Data") {
+          topGrowingCategory = { name: mostSpentCategory.name, growth: 0 };
+        }
+      }
+    }
 
     const incomeGrowth = previous.income > 0 ? Math.round(((current.income - previous.income) / previous.income) * 100) : 0;
     const expenseGrowth = previous.expenses > 0 ? Math.round(((current.expenses - previous.expenses) / previous.expenses) * 100) : 0;
     const savingsGrowth = previous.savings > 0 ? Math.round(((current.savings - previous.savings) / previous.savings) * 100) : 0;
+    const retentionRate = current.income > 0 ? Math.round((current.savings / current.income) * 100) : 0;
 
     return {
       topGrowingCategory,
@@ -165,6 +178,7 @@ const TrendsPage = () => {
       incomeGrowth,
       expenseGrowth,
       savingsGrowth,
+      retentionRate,
       currentSavings: current.savings,
       currentIncome: current.income,
       currentExpenses: current.expenses
@@ -177,12 +191,8 @@ const TrendsPage = () => {
   const getCategoryDistribution = () => {
     const hasUserData = Array.isArray(transactions) && transactions.length > 0;
     if (!hasUserData) {
-      const exp = insights.currentExpenses || 82500;
       return [
-        { name: "Food & Dining 🍕", amount: Math.round(exp * 0.35), percentage: 35, color: "#8b5cf6" },
-        { name: "Shopping 🛍️", amount: Math.round(exp * 0.25), percentage: 25, color: "#ec4899" },
-        { name: "Bills & Utilities 💡", amount: Math.round(exp * 0.20), percentage: 20, color: "#6366f1" },
-        { name: "Transportation 🚗", amount: Math.round(exp * 0.12), percentage: 12, color: "#06b6d4" },
+        { name: "No Outflow Records", amount: 0, percentage: 0, color: "#8b5cf6" }
       ];
     }
 
@@ -344,12 +354,12 @@ const TrendsPage = () => {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-slate-400 font-medium">Monthly Income</span>
                 <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                  +{insights.incomeGrowth}% vs last mo
+                  {insights.incomeGrowth >= 0 ? `+${insights.incomeGrowth}` : insights.incomeGrowth}% vs last mo
                 </span>
               </div>
               <div>
                 <h3 className="text-2xl font-black text-white">₹{insights.currentIncome.toLocaleString("en-IN")}</h3>
-                <p className="text-[11px] text-slate-400 mt-1">Believable salary &amp; active inflow</p>
+                <p className="text-[11px] text-slate-400 mt-1">Total monthly inflow</p>
               </div>
             </motion.div>
 
@@ -360,13 +370,13 @@ const TrendsPage = () => {
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-slate-400 font-medium">Monthly Expenses</span>
-                <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                  -6% vs last mo
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${insights.expenseGrowth <= 0 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-rose-400 bg-rose-500/10 border-rose-500/20'}`}>
+                  {insights.expenseGrowth >= 0 ? `+${insights.expenseGrowth}` : insights.expenseGrowth}% vs last mo
                 </span>
               </div>
               <div>
                 <h3 className="text-2xl font-black text-white">₹{insights.currentExpenses.toLocaleString("en-IN")}</h3>
-                <p className="text-[11px] text-slate-400 mt-1">Controlled monthly outflow</p>
+                <p className="text-[11px] text-slate-400 mt-1">Total monthly outflow</p>
               </div>
             </motion.div>
 
@@ -378,12 +388,12 @@ const TrendsPage = () => {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-slate-400 font-medium">Net Savings</span>
                 <span className="text-xs font-bold text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/20">
-                  +{insights.savingsGrowth}% vs last mo
+                  {insights.savingsGrowth >= 0 ? `+${insights.savingsGrowth}` : insights.savingsGrowth}% vs last mo
                 </span>
               </div>
               <div>
                 <h3 className="text-2xl font-black text-purple-300">₹{insights.currentSavings.toLocaleString("en-IN")}</h3>
-                <p className="text-[11px] text-slate-400 mt-1">Realistic 34% retention rate</p>
+                <p className="text-[11px] text-slate-400 mt-1">{insights.retentionRate}% savings retention rate</p>
               </div>
             </motion.div>
 

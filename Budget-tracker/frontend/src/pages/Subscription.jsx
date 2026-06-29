@@ -179,6 +179,18 @@ const SubscriptionsPage = () => {
     const totalYearly = totalMonthly * 12;
     const activeSubs = subscriptions.filter(s => s.status === "active").length;
     
+    // Calculate potential annual savings dynamically based on paused/cancelled or 15% optimization
+    const pausedOrCancelledYearly = subscriptions
+      .filter(s => s.status === "paused" || s.status === "cancelled" || s.status === "trial")
+      .reduce((sum, s) => {
+        const amt = safeNumber(s.amount);
+        const cycle = (s.billing_cycle || "").toLowerCase();
+        const map = { daily: amt * 365, weekly: amt * 52, monthly: amt * 12, quarterly: amt * 4, yearly: amt, lifetime: 0 };
+        return sum + (map[cycle] ?? amt * 12);
+      }, 0);
+
+    const potentialSavings = pausedOrCancelledYearly > 0 ? pausedOrCancelledYearly : Math.round(totalYearly * 0.15);
+    
     // Next renewal detail
     const sortedActive = [...subscriptions]
       .filter(s => s.status === "active" && s.next_billing_date)
@@ -186,7 +198,7 @@ const SubscriptionsPage = () => {
     
     const nextRenewalSub = sortedActive[0] || { name: "None", amount: 0, next_billing_date: null };
 
-    return { totalMonthly: Math.round(totalMonthly), totalYearly: Math.round(totalYearly), activeSubs, nextRenewalSub };
+    return { totalMonthly: Math.round(totalMonthly), totalYearly: Math.round(totalYearly), potentialSavings: Math.round(potentialSavings), activeSubs, nextRenewalSub };
   };
 
   const stats = calculateStats();
@@ -250,7 +262,7 @@ const SubscriptionsPage = () => {
       bg: "from-amber-500/10 to-orange-500/5"
     },
     { 
-      title: "Potential Savings", value: "₹9,600/yr", 
+      title: "Potential Savings", value: `₹${stats.potentialSavings.toLocaleString('en-IN')}/yr`, 
       color: "from-purple-400 to-pink-300", icon: PiggyBank, 
       subtitle: "Annual optimization target 💡",
       bg: "from-purple-500/10 to-pink-500/5"

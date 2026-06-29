@@ -94,7 +94,10 @@ html.theme-light div[class*="bg-[#070c14]"],
 html.theme-light div[class*="bg-[#090e17]"],
 html.theme-light div[class*="bg-[#0d1827]"],
 html.theme-light div[class*="bg-[#09101d]"],
-html.theme-light div[class*="bg-[#0d1424]"] {
+html.theme-light div[class*="bg-[#0d1424]"],
+html.theme-light div[class*="bg-[#0A0F1C]"],
+html.theme-light section[class*="bg-[#0A0F1C]"],
+html.theme-light .bg-\[\#0A0F1C\] {
   background-color: #f8fafc !important;
   background-image: none !important;
   color: #0f172a !important;
@@ -119,12 +122,21 @@ html.theme-light aside nav button:hover {
 }
 
 /* 3. Header Navbar Light Mode Styling */
-html.theme-light header {
-  background-color: rgba(255, 255, 255, 0.95) !important;
+html.theme-light header,
+html.theme-light nav[class*="bg-[#0A0F1C]"],
+html.theme-light nav {
+  background-color: rgba(255, 255, 255, 0.92) !important;
   background-image: none !important;
   border-bottom: 1px solid #e2e8f0 !important;
   color: #0f172a !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
+}
+
+html.theme-light nav a {
+  color: #475569 !important;
+}
+html.theme-light nav a:hover {
+  color: #0f172a !important;
 }
 
 /* 4. Cards, Hero Modules & Analytics Banners */
@@ -145,6 +157,14 @@ html.theme-light .bg-\[\#0d1827\],
 html.theme-light .bg-\[\#09101d\],
 html.theme-light .bg-\[\#0d1424\],
 html.theme-light .bg-\[\#131b2a\],
+html.theme-light .bg-\[\#111827\],
+html.theme-light .bg-\[\#0F172A\],
+html.theme-light .bg-\[\#1F2937\],
+html.theme-light .bg-\[\#1F2937\]\/90,
+html.theme-light .bg-\[\#1F2937\]\/80,
+html.theme-light .bg-black\/40,
+html.theme-light footer.bg-black,
+html.theme-light footer,
 html.theme-light div[class*="shadow-lg"],
 html.theme-light div[class*="shadow-xl"],
 html.theme-light div[class*="shadow-2xl"],
@@ -153,9 +173,14 @@ html.theme-light div[class*="p-6"],
 html.theme-light div[class*="p-8"] {
   background-color: #ffffff !important;
   background-image: none !important;
-  border: 1px solid #e2e8f0 !important;
+  border-color: #e2e8f0 !important;
   color: #0f172a !important;
   box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02) !important;
+}
+
+html.theme-light footer {
+  background-color: #f1f5f9 !important;
+  border-top: 1px solid #e2e8f0 !important;
 }
 
 /* 5. Icon Badges & Micro Squares Reset (Preventing double card borders on internal icons) */
@@ -266,17 +291,28 @@ html.theme-light .text-white {
 html.theme-light .text-slate-100 {
   color: #1e293b !important;
 }
-html.theme-light .text-slate-200 {
+html.theme-light .text-slate-200,
+html.theme-light .text-gray-200 {
   color: #334155 !important;
 }
-html.theme-light .text-slate-300 {
+html.theme-light .text-slate-300,
+html.theme-light .text-gray-300 {
   color: #475569 !important;
 }
-html.theme-light .text-slate-400 {
+html.theme-light .text-slate-400,
+html.theme-light .text-gray-400 {
   color: #64748b !important;
 }
 html.theme-light .text-slate-500 {
   color: #94a3b8 !important;
+}
+
+/* Maintain crisp white text on emerald buttons & badges in Light Mode */
+html.theme-light .bg-emerald-600,
+html.theme-light .bg-emerald-500,
+html.theme-light button[class*="bg-emerald"],
+html.theme-light a[class*="bg-emerald"] {
+  color: #ffffff !important;
 }
 
 /* 10. Borders & Separators Overrides */
@@ -285,7 +321,9 @@ html.theme-light .border-white\/5,
 html.theme-light .border-white\/15,
 html.theme-light .border-white\/20,
 html.theme-light .border-white\/\[0\.06\],
-html.theme-light .border-[#213b21]\/60 {
+html.theme-light .border-[#213b21]\/60,
+html.theme-light .border-gray-700,
+html.theme-light .border-gray-800 {
   border-color: #e2e8f0 !important;
 }
 
