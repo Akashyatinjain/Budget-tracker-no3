@@ -926,10 +926,10 @@ const ReportsPage = () => {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold text-white">🧠 AI Executive Summary</h3>
-                    <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30 font-semibold uppercase">Smart Insights</span>
+                    <h3 className="text-lg font-bold text-white">📊 Financial Summary</h3>
+                    <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30 font-semibold uppercase">Executive Insights</span>
                   </div>
-                  <p className="text-xs text-purple-300/80">Automated financial intelligence synthesis</p>
+                  <p className="text-xs text-purple-300/80">Structured financial synthesis</p>
                 </div>
               </div>
 

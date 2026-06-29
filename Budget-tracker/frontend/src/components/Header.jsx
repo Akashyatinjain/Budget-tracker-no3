@@ -145,12 +145,6 @@ const Header = ({ onMobileToggle, onLogout }) => {
           )}
         </button>
 
-        {/* Live AI Engine Badge */}
-        <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-sm">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">AI Active</span>
-        </div>
-
         {/* 🔔 Notifications Button with Live Numeric Badge */}
         <div className="relative" ref={notificationsRef}>
           <button
@@ -203,9 +197,17 @@ const Header = ({ onMobileToggle, onLogout }) => {
               className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-white/10 transition-all group border border-white/5"
               aria-label="Profile menu"
             >
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md font-bold text-white text-xs">
-                {userInitial}
-              </div>
+              {(user?.avatar_url || user?.avatar || user?.profile_picture) ? (
+                <img 
+                  src={user?.avatar_url || user?.avatar || user?.profile_picture} 
+                  alt={username}
+                  className="w-8 h-8 rounded-xl object-cover shadow-md ring-1 ring-emerald-500/40"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md font-bold text-white text-xs">
+                  {userInitial}
+                </div>
+              )}
               <div className="hidden md:block text-left pr-1">
                 <div className="text-xs font-bold text-white leading-tight">{username}</div>
                 <div className="text-[10px] text-emerald-400 font-medium">Verified Pro</div>
@@ -219,9 +221,17 @@ const Header = ({ onMobileToggle, onLogout }) => {
                 {/* Header Info */}
                 <div className="p-4 border-b border-white/10 bg-white/[0.03]">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center font-bold text-white text-sm shadow-md">
-                      {userInitial}
-                    </div>
+                    {(user?.avatar_url || user?.avatar || user?.profile_picture) ? (
+                      <img 
+                        src={user?.avatar_url || user?.avatar || user?.profile_picture} 
+                        alt={username}
+                        className="w-10 h-10 rounded-xl object-cover shadow-md ring-2 ring-emerald-500/40"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center font-bold text-white text-sm shadow-md">
+                        {userInitial}
+                      </div>
+                    )}
                     <div className="min-w-0">
                       <div className="text-sm font-bold text-white truncate">{username}</div>
                       <div className="text-[11px] text-slate-400 truncate mt-0.5">{email}</div>

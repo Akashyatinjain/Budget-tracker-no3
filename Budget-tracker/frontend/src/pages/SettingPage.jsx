@@ -52,12 +52,12 @@ import {
 
 const SettingsPage = () => {
   const navigate = useNavigate();
-  const { user: authUser, token } = useAuth();
+  const { user: authUser, token, fetchUser: refreshAuthUser } = useAuth();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
-  const [avatarUrl, setAvatarUrl] = useState("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const fileInputRef = useRef(null);
 
   const [profileData, setProfileData] = useState({
@@ -158,6 +158,9 @@ const SettingsPage = () => {
           email: userData.email || "akash.jain@fintrack.io",
           phone: userData.phone || "+91 98765 43210"
         }));
+        if (userData.avatar_url || userData.avatar || userData.profile_picture) {
+          setAvatarUrl(userData.avatar_url || userData.avatar || userData.profile_picture);
+        }
       }
     } catch (err) {
       console.error("Fetch user error:", err);
@@ -203,12 +206,27 @@ const SettingsPage = () => {
     }
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setAvatarUrl(url);
-      toast.success("📸 Avatar updated successfully!");
+    if (!file) return;
+
+    const data = new FormData();
+    data.append("avatar", file);
+
+    try {
+      toast.loading("Uploading profile picture to Cloudinary...", { id: "avatarUpload" });
+      const res = await api.post("/api/users/avatar", data, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const newUrl = res.data.avatar_url || res.data.user?.avatar_url;
+      if (newUrl) {
+        setAvatarUrl(newUrl);
+      }
+      toast.success("📸 Profile picture uploaded to Cloudinary & saved!", { id: "avatarUpload" });
+      if (refreshAuthUser) refreshAuthUser();
+    } catch (err) {
+      console.error("Avatar upload error:", err);
+      toast.error(err.response?.data?.error || "Failed to upload avatar", { id: "avatarUpload" });
     }
   };
 
@@ -339,7 +357,7 @@ const SettingsPage = () => {
             </div>
           </motion.div>
 
-          {/* ====== 4. 🧠 Meaningful AI Insights & Recommendations ====== */}
+          {/* ====== 4. Meaningful Security Recommendations ====== */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -348,10 +366,10 @@ const SettingsPage = () => {
           >
             <div className="p-4 rounded-xl bg-gradient-to-r from-purple-950/40 to-slate-900/60 border border-purple-500/30 backdrop-blur-xl flex items-start gap-3 shadow-lg">
               <div className="p-2 rounded-lg bg-purple-500/20 text-purple-300 flex-shrink-0 mt-0.5">
-                <Brain size={18} className="animate-pulse" />
+                <Shield size={18} />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider">AI Security Recommendation</h4>
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider">Security Recommendation</h4>
                 <p className="text-xs text-slate-300 mt-1">Enable Two-Factor Authentication (2FA) to increase account security by 40%.</p>
               </div>
             </div>

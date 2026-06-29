@@ -140,7 +140,7 @@ export default function SignUp() {
 
           {/* Description */}
           <p className="text-gray-400 text-base leading-relaxed max-w-md">
-            Join thousands of finance professionals who trust FinTrack for precision tracking, AI-powered insights, and actionable intelligence.
+            Join thousands of finance professionals who trust FinTrack for precision tracking, smart insights, and actionable intelligence.
           </p>
 
           {/* Stats/Features - Dashboard Overview Style */}
@@ -177,7 +177,7 @@ export default function SignUp() {
             </div>
             <div className="flex items-center gap-2">
               <Zap className="w-4 h-4 text-emerald-400" />
-              <span className="text-xs text-gray-400">AI-powered insights</span>
+              <span className="text-xs text-gray-400">Smart insights</span>
             </div>
             <div className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-emerald-400" />
@@ -368,7 +368,7 @@ export default function SignUp() {
               </div>
               <div className="flex items-center gap-1.5">
                 <Zap className="w-3 h-3 text-emerald-400" />
-                <span className="text-[10px] text-gray-500">AI Insights</span>
+                <span className="text-[10px] text-gray-500">Analytics</span>
               </div>
             </div>
           </div>

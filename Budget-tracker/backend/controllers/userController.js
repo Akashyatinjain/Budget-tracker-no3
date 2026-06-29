@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { uploadOnCloudinary } from "../services/cloudinary.js";
 import {
   createUser,
   findUserByEmail,
@@ -117,6 +118,42 @@ export const updateProfile = async (req, res) => {
   } catch (err) {
     console.error("Update profile controller error:", err);
     res.status(500).json({ error: err.message });
+  }
+};
+
+// ✅ Upload Profile Avatar (Protected)
+export const uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "Please provide an image file" });
+    }
+    const userId = req.user?.user_id ?? req.user?.id ?? req.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "User ID missing from authentication token" });
+    }
+
+    const localFilePath = req.file.path;
+    const result = await uploadOnCloudinary(localFilePath);
+
+    if (!result || !result.secure_url) {
+      return res.status(500).json({ error: "Cloudinary upload failed" });
+    }
+
+    const avatarUrl = result.secure_url;
+    const updatedUser = await updateUser(userId, {
+      avatar_url: avatarUrl,
+      avatar: avatarUrl,
+      profile_picture: avatarUrl,
+    });
+
+    res.json({
+      msg: "Avatar uploaded successfully",
+      avatar_url: avatarUrl,
+      user: updatedUser,
+    });
+  } catch (err) {
+    console.error("Upload avatar error:", err);
+    res.status(500).json({ error: err.message || "Upload avatar failed" });
   }
 };
 

@@ -23,7 +23,7 @@ const features = [
   {
     icon: <FaChartPie className="text-4xl" />,
     title: "Powerful Analytics",
-    description: "Deep financial insights, forecasting, and AI-driven recommendations.",
+    description: "Deep financial insights, forecasting, and automated recommendations.",
     color: "emerald"
   },
   {
@@ -200,7 +200,7 @@ export default function HomePage() {
 
             {/* Floating Professional Badge */}
             <div className="absolute -top-4 -right-4 bg-[#111827] border border-emerald-500/30 text-emerald-400 text-xs px-5 py-2.5 rounded-2xl shadow-xl flex items-center gap-2">
-              <FaChartLine /> AI Insights Active
+              <FaChartLine /> Real-time Analytics
             </div>
           </motion.div>
         </div>

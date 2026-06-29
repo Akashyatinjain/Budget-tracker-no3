@@ -121,8 +121,8 @@ const BudgetPage = () => {
     toast.promise(
       new Promise((resolve) => setTimeout(resolve, 1200)),
       {
-        loading: '🤖 AI is analyzing cashflow patterns & generating optimal targets...',
-        success: '✨ AI Smart Budgets generated & rebalanced!',
+        loading: '⚡ Analyzing cashflow patterns & generating optimal targets...',
+        success: '✨ Smart Budgets generated & rebalanced!',
         error: 'Failed to auto-generate budgets.',
       }
     );
@@ -273,13 +273,6 @@ const BudgetPage = () => {
 
             <div className="flex flex-wrap items-center gap-2">
               <button
-                onClick={handleAutoGenerateAIBudget}
-                className="rounded-xl bg-white/5 border border-white/10 px-3 py-1.5 font-semibold text-xs text-purple-300 hover:text-white hover:border-purple-500/40 transition-all flex items-center gap-1.5 cursor-pointer"
-              >
-                <Wand2 size={14} className="text-purple-400" />
-                AI Auto-Budget
-              </button>
-              <button
                 onClick={() => setShowModal(true)}
                 className="rounded-xl bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-400 px-3.5 py-1.5 font-semibold text-xs text-white shadow-md shadow-purple-500/25 hover:shadow-purple-500/40 transition-all flex items-center gap-1.5 cursor-pointer"
               >
@@ -314,13 +307,6 @@ const BudgetPage = () => {
                 <div className="flex flex-col text-right">
                   <span className="text-[10px] text-slate-500 uppercase font-medium">Safe Buffer</span>
                   <span className="font-bold text-emerald-400">{formatCurrency(remainingBudget)}</span>
-                </div>
-                <div className="h-6 w-[1px] bg-white/10 hidden sm:block" />
-                <div className="flex flex-col text-right">
-                  <span className="text-[10px] text-slate-500 uppercase font-medium">AI Status</span>
-                  <span className="font-medium text-purple-300 flex items-center gap-1">
-                    <Brain className="w-3.5 h-3.5 text-purple-400" /> Co-Pilot Active
-                  </span>
                 </div>
               </div>
             </div>
@@ -358,7 +344,7 @@ const BudgetPage = () => {
             ))}
           </motion.div>
 
-          {/* ====== AI Advisory Financial Alert Container ====== */}
+          {/* ====== Advisory Financial Alert Container ====== */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -367,11 +353,11 @@ const BudgetPage = () => {
           >
             <div className="flex items-start gap-3">
               <div className="p-2.5 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30 flex-shrink-0 mt-0.5 md:mt-0">
-                <Brain className="w-5 h-5" />
+                <Target className="w-5 h-5 text-purple-300" />
               </div>
               <div>
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  AI Financial Co-Pilot Insights
+                  Budget Velocity Insights
                   <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30">REAL-TIME</span>
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 mt-2 text-xs text-slate-300">
@@ -574,7 +560,7 @@ const BudgetPage = () => {
                 <div>
                   <h3 className="text-sm font-bold text-white">Create Custom Category Caps</h3>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    The targets shown above are demo previews. Set custom monthly limits to trigger real-time AI spending velocity alerts.
+                    The targets shown above are demo previews. Set custom monthly limits to trigger real-time spending velocity alerts.
                   </p>
                 </div>
               </div>

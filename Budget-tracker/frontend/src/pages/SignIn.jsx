@@ -159,7 +159,7 @@ export default function SignIn() {
             </div>
             <div className="flex items-center gap-2">
               <Zap className="w-4 h-4 text-emerald-400" />
-              <span className="text-xs text-gray-400">AI-powered insights</span>
+              <span className="text-xs text-gray-400">Smart insights</span>
             </div>
             <div className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-emerald-400" />
@@ -182,7 +182,7 @@ export default function SignIn() {
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-4">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-[10px] font-medium text-emerald-400 uppercase tracking-wider">
-                  AI Insights Active
+                  Secure Portal Active
                 </span>
               </div>
               <h2 className="text-2xl font-bold text-white tracking-tight">
@@ -299,7 +299,7 @@ export default function SignIn() {
               </div>
               <div className="flex items-center gap-1.5">
                 <Zap className="w-3 h-3 text-emerald-400" />
-                <span className="text-[10px] text-gray-500">AI Insights</span>
+                <span className="text-[10px] text-gray-500">Analytics</span>
               </div>
             </div>
           </div>

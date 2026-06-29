@@ -252,7 +252,7 @@ const SubscriptionsPage = () => {
     { 
       title: "Potential Savings", value: "₹9,600/yr", 
       color: "from-purple-400 to-pink-300", icon: PiggyBank, 
-      subtitle: "AI Optimization target 💡",
+      subtitle: "Annual optimization target 💡",
       bg: "from-purple-500/10 to-pink-500/5"
     },
   ];
@@ -269,7 +269,7 @@ const SubscriptionsPage = () => {
 
       {/* Sidebar */}
       <AdvancedSidebar 
-        user={user} 
+        user={user || { username: "Guest" }} 
         mobileOpen={mobileSidebarOpen} 
         onMobileClose={() => setMobileSidebarOpen(false)} 
       />
@@ -284,24 +284,24 @@ const SubscriptionsPage = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-950/40 via-blue-950/20 to-[#09101d] backdrop-blur-2xl px-4 py-3.5 md:px-5 md:py-4 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+            className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-purple-900/20 via-slate-900/60 to-indigo-900/20 backdrop-blur-2xl p-4 md:p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300">
-                <Sparkles className="w-5 h-5" />
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/30 text-purple-400 shadow-inner">
+                <Repeat className="w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-lg md:text-xl font-bold text-white tracking-tight">Subscription Command Center</h1>
-                <p className="text-[11px] text-slate-400">Track recurring billing cycles, eliminate duplicate charges &amp; save money.</p>
+                <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">Subscription Command Center</h1>
+                <p className="text-xs md:text-sm text-slate-400 mt-0.5">Recurring payment management, renewals & audit hub</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <button
                 onClick={() => setShowAddModal(true)}
-                className="rounded-xl bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-400 px-3.5 py-1.5 font-semibold text-xs text-slate-950 shadow-md shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all flex items-center gap-1.5 cursor-pointer"
+                className="rounded-xl bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-400 px-4 py-2.5 font-semibold text-xs text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all flex items-center justify-center gap-2"
               >
-                <Plus size={14} />
+                <Plus size={15} />
                 Add Subscription
               </button>
             </div>
@@ -312,32 +312,19 @@ const SubscriptionsPage = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="relative overflow-hidden bg-gradient-to-br from-cyan-500/10 to-teal-500/5 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-4 shadow-lg hover:border-cyan-500/40 transition-all"
+            className="relative overflow-hidden bg-gradient-to-br from-purple-500/10 to-indigo-500/5 backdrop-blur-xl border border-purple-500/20 rounded-2xl p-4 shadow-lg hover:border-purple-500/40 transition-all"
             whileHover={{ y: -1 }}
           >
             <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-400/20 to-teal-400/20">
-                  <Repeat className="w-5 h-5 text-cyan-400" />
+                <div className="p-2 rounded-xl bg-gradient-to-br from-purple-400/20 to-indigo-400/20">
+                  <CreditCard className="w-5 h-5 text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-white uppercase tracking-wider">Recurring Outflow Summary</p>
+                  <p className="text-xs font-bold text-white uppercase tracking-wider">Recurring Outflow Monitor</p>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    <span className="text-cyan-300 font-bold">₹{stats.totalMonthly.toLocaleString('en-IN')}</span>/month · {stats.activeSubs} Active Plans
+                    {stats.activeSubs} Active Services · Monthly Commit: <span className="text-purple-300 font-bold">₹{stats.totalMonthly.toLocaleString('en-IN')}</span> (~₹{stats.totalYearly.toLocaleString('en-IN')}/yr)
                   </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 text-xs">
-                <div className="flex flex-col text-right">
-                  <span className="text-[10px] text-slate-500 uppercase font-medium">Annualized</span>
-                  <span className="font-bold text-emerald-400">₹{stats.totalYearly.toLocaleString('en-IN')}</span>
-                </div>
-                <div className="h-6 w-[1px] bg-white/10 hidden sm:block" />
-                <div className="flex flex-col text-right">
-                  <span className="text-[10px] text-slate-500 uppercase font-medium">Audit Status</span>
-                  <span className="font-medium text-cyan-300 flex items-center gap-1">
-                    <Shield className="w-3.5 h-3.5 text-cyan-400" /> Auto-Audited
-                  </span>
                 </div>
               </div>
             </div>
@@ -354,26 +341,26 @@ const SubscriptionsPage = () => {
               <motion.div
                 key={i}
                 variants={itemVariants}
-                className={`relative overflow-hidden bg-gradient-to-br ${stat.bg} border border-white/10 rounded-2xl p-4 shadow-lg hover:border-cyan-500/30 transition-all group`}
+                className={`relative overflow-hidden bg-gradient-to-br ${stat.bg} border border-white/10 rounded-2xl p-4 shadow-lg hover:border-purple-500/30 transition-all group`}
                 whileHover={{ y: -2 }}
               >
                 <div className="relative flex items-start justify-between">
                   <div>
                     <p className="text-xs text-slate-300 font-medium">{stat.title}</p>
-                    <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent mt-1">
+                    <h2 className={`text-xl md:text-2xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mt-1`}>
                       {stat.value}
                     </h2>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{stat.subtitle}</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">{stat.subtitle}</p>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-white/10 shadow-md">
-                    <stat.icon className="w-4.5 h-4.5 text-cyan-300" />
+                  <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-10 shadow-md`}>
+                    <stat.icon className="w-4.5 h-4.5 text-white" />
                   </div>
                 </div>
               </motion.div>
             ))}
           </motion.div>
 
-          {/* ====== AI Subscription Optimizer Banner ====== */}
+          {/* ====== Subscription Optimizer Banner ====== */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -382,11 +369,11 @@ const SubscriptionsPage = () => {
           >
             <div className="flex items-start gap-3">
               <div className="p-2.5 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex-shrink-0 mt-0.5 md:mt-0">
-                <Brain className="w-5 h-5" />
+                <Zap className="w-5 h-5 text-cyan-300" />
               </div>
               <div>
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  AI Subscription Cost Optimizer
+                  Subscription Cost Optimizer
                   <span className="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full border border-cyan-500/30">INSIGHTS AVAILABLE</span>
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 mt-2 text-xs text-slate-300">

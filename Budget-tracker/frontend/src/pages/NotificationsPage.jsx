@@ -506,40 +506,6 @@ const NotificationsPage = () => {
             </div>
           </motion.div>
 
-          {/* ====== 8. AI Daily Executive Summary Banner ====== */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="relative overflow-hidden bg-gradient-to-r from-purple-950/40 via-indigo-950/30 to-slate-900/60 backdrop-blur-2xl border border-purple-500/30 rounded-2xl p-4 sm:p-5 shadow-xl"
-          >
-            <div className="absolute top-0 right-0 h-28 w-28 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-            
-            <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-start gap-3.5">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/30 to-indigo-500/30 border border-purple-400/40 text-purple-300 shadow-inner flex-shrink-0 mt-0.5">
-                  <Brain className="w-6 h-6 animate-pulse" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-sm font-bold text-white">🧠 AI Daily Assistant Digest</h3>
-                    <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30 font-semibold uppercase">Smart Summary</span>
-                  </div>
-                  <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
-                    • <span className="text-emerald-400 font-semibold">1 salary income</span> verified • <span className="text-amber-300 font-semibold">Food budget</span> reached 88% threshold • <span className="text-purple-300 font-semibold">Netflix renewal</span> upcoming in 3 days • <span className="text-cyan-300 font-semibold">Security audit</span> completed with zero threats.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 text-xs text-purple-300 font-medium flex-shrink-0">
-                <span className="px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 text-emerald-400" />
-                  Optimal Health
-                </span>
-              </div>
-            </div>
-          </motion.div>
-
           {/* ====== Stat Cards ====== */}
           <motion.div
             variants={containerVariants}

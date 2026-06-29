@@ -529,7 +529,7 @@ const TrendsPage = () => {
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-purple-400" /> Executive Financial Reports &amp; Actions
               </h3>
-              <p className="text-xs text-slate-400 mt-1">Download verified statements or trigger AI predictive forecasting.</p>
+              <p className="text-xs text-slate-400 mt-1">Download verified statements or trigger predictive forecasting.</p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -549,7 +549,7 @@ const TrendsPage = () => {
                 onClick={() => setShowForecastModal(true)}
                 className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-xs font-bold text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all flex items-center gap-2"
               >
-                <Brain className="w-4 h-4 text-white" /> View Forecast
+                <Target className="w-4 h-4 text-white" /> View Forecast
               </button>
             </div>
           </motion.div>
@@ -595,7 +595,7 @@ const TrendsPage = () => {
 
               <div className="flex items-center gap-3 mb-5">
                 <div className="p-3 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                  <Brain className="w-6 h-6" />
+                  <Target className="w-6 h-6" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-white">Financial Forecast Model</h2>

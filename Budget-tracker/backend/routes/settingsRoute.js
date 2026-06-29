@@ -17,7 +17,17 @@ router.get('/me', verifyToken, async (req, res) => {
       SELECT 
         user_id,
         username,
-        email
+        email,
+        first_name,
+        last_name,
+        phone,
+        currency,
+        language,
+        timezone,
+        role,
+        avatar_url,
+        avatar,
+        profile_picture
       FROM users 
       WHERE user_id = $1
     `, [userId]);
@@ -26,7 +36,10 @@ router.get('/me', verifyToken, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json({ user: result.rows[0] });
+    const user = result.rows[0];
+    user.avatar_url = user.avatar_url || user.avatar || user.profile_picture || null;
+
+    res.json({ user });
   } catch (error) {
     console.error('Get user error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -37,7 +50,7 @@ router.get('/me', verifyToken, async (req, res) => {
 router.put('/profile', verifyToken, async (req, res) => {
   try {
     const userId = req.user.user_id;
-    const { first_name, last_name, phone, currency, language, timezone } = req.body;
+    const { first_name, last_name, phone, currency, language, timezone, avatar_url, avatar, profile_picture } = req.body;
 
     const result = await pool.query(`
       UPDATE users 
@@ -48,12 +61,20 @@ router.put('/profile', verifyToken, async (req, res) => {
         currency = COALESCE($4, currency),
         language = COALESCE($5, language),
         timezone = COALESCE($6, timezone),
+        avatar_url = COALESCE($7, avatar_url),
+        avatar = COALESCE($8, avatar),
+        profile_picture = COALESCE($9, profile_picture),
         updated_at = NOW()
-      WHERE user_id = $7
-      RETURNING user_id, email, first_name, last_name, phone, currency, language, timezone
-    `, [first_name, last_name, phone, currency, language, timezone, userId]);
+      WHERE user_id = $10
+      RETURNING user_id, email, username, first_name, last_name, phone, currency, language, timezone, role, avatar_url, avatar, profile_picture
+    `, [first_name, last_name, phone, currency, language, timezone, avatar_url || avatar || profile_picture, avatar || avatar_url, profile_picture || avatar_url, userId]);
 
-    res.json({ user: result.rows[0] });
+    const updatedUser = result.rows[0];
+    if (updatedUser) {
+      updatedUser.avatar_url = updatedUser.avatar_url || updatedUser.avatar || updatedUser.profile_picture || null;
+    }
+
+    res.json({ user: updatedUser });
   } catch (error) {
     console.error('Update profile error:', error);
     res.status(500).json({ error: 'Internal server error' });

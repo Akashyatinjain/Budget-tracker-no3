@@ -239,12 +239,6 @@ const AnalyticsPage = () => {
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">Financial Analytics Hub</h1>
-                  <button
-                    onClick={() => setShowAIModal(true)}
-                    className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 hover:bg-indigo-500/30 transition-all cursor-pointer"
-                  >
-                    <Sparkles className="w-3 h-3 text-indigo-400" /> AI ACTIVE
-                  </button>
                 </div>
                 <p className="text-xs text-slate-400 mt-0.5">Deep intelligence &amp; behavioral insights into your cash flow.</p>
               </div>
@@ -442,7 +436,7 @@ const AnalyticsPage = () => {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-white">AI Financial Intelligence Insights</h3>
+                    <h3 className="text-sm font-bold text-white">Financial Intelligence Insights</h3>
                     <span className="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 text-[10px] font-semibold">Automated Analysis</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 mt-2.5 text-xs text-slate-300">
@@ -689,8 +683,8 @@ const AnalyticsPage = () => {
                   <Brain className="w-6 h-6" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-white">AI Smart Financial Report</h2>
-                  <p className="text-xs text-purple-300">Automated intelligent forecast</p>
+                  <h2 className="text-lg font-bold text-white">Smart Financial Report</h2>
+                  <p className="text-xs text-purple-300">Automated financial forecast</p>
                 </div>
               </div>
 

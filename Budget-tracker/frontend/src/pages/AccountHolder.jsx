@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaUser, FaBell, FaShieldAlt, FaPalette, FaDownload, FaArrowLeft } from 'react-icons/fa';
+import { FaUser, FaBell, FaShieldAlt, FaPalette, FaDownload, FaArrowLeft, FaCamera } from 'react-icons/fa';
 import { MdCurrencyExchange } from 'react-icons/md';
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -16,6 +16,7 @@ const AccountHolderPage = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [user, setUser] = useState(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -57,6 +58,29 @@ const AccountHolderPage = () => {
       toast.error("Failed to load user data");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const data = new FormData();
+    data.append("avatar", file);
+
+    try {
+      setUploadingAvatar(true);
+      toast.loading("Uploading profile picture to Cloudinary...", { id: "avatarUpload" });
+      await api.post("/api/users/avatar", data, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      toast.success("Profile picture updated successfully!", { id: "avatarUpload" });
+      fetchUser();
+    } catch (error) {
+      console.error("Avatar upload error:", error);
+      toast.error(error.response?.data?.error || "Failed to upload profile picture", { id: "avatarUpload" });
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -130,10 +154,6 @@ const AccountHolderPage = () => {
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl md:text-3xl font-bold text-white">My Profile</h1>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-medium text-emerald-400 uppercase tracking-wider">
-                  <FiZap className="w-3 h-3" />
-                  AI Insights Active
-                </span>
               </div>
               <p className="text-gray-400 text-sm">Manage your account information and preferences</p>
             </div>
@@ -218,6 +238,54 @@ const AccountHolderPage = () => {
                           </button>
                         </div>
                       )}
+                    </div>
+
+                    {/* Avatar Upload Section */}
+                    <div className="flex items-center gap-5 p-4 rounded-2xl bg-white/[0.03] border border-white/10">
+                      <div className="relative group flex-shrink-0">
+                        {(currentUser?.avatar_url || currentUser?.avatar || currentUser?.profile_picture) ? (
+                          <img
+                            src={currentUser?.avatar_url || currentUser?.avatar || currentUser?.profile_picture}
+                            alt="Profile Avatar"
+                            className="w-20 h-20 rounded-2xl object-cover ring-2 ring-emerald-500/50 shadow-xl"
+                          />
+                        ) : (
+                          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white font-black text-2xl shadow-xl ring-2 ring-emerald-500/50">
+                            {(currentUser?.username || currentUser?.email || 'U').charAt(0).toUpperCase()}
+                          </div>
+                        )}
+
+                        <label className="absolute inset-0 bg-black/60 backdrop-blur-[2px] rounded-2xl opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-xs font-semibold cursor-pointer transition-all duration-200 shadow-inner">
+                          <FaCamera size={18} className="mb-1 text-emerald-400" />
+                          <span>Change</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleAvatarChange}
+                            disabled={uploadingAvatar}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+
+                      <div>
+                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                          Profile Photo
+                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30">Cloudinary Sync</span>
+                        </h3>
+                        <p className="text-xs text-gray-400 mt-1">Upload a custom profile avatar. Supported formats: JPG, PNG, WEBP (Max 10MB).</p>
+                        <label className="inline-flex items-center gap-1.5 px-3 py-1.5 mt-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/25 transition-all cursor-pointer">
+                          <FaCamera size={12} />
+                          <span>{uploadingAvatar ? "Uploading..." : "Upload New Photo"}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleAvatarChange}
+                            disabled={uploadingAvatar}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-6">
@@ -359,10 +427,6 @@ const AccountHolderPage = () => {
                           <span className="text-xs text-gray-400">Last updated: {new Date().toLocaleDateString()}</span>
                         </div>
                       </div>
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-medium text-emerald-400">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        Active
-                      </span>
                     </div>
                   </div>
                 )}
@@ -379,10 +443,6 @@ const AccountHolderPage = () => {
                       <div className="p-4 bg-white/5 rounded-xl border border-white/5">
                         <h3 className="text-sm font-medium text-white mb-2">Notification Settings</h3>
                         <p className="text-sm text-gray-400">Manage how you receive notifications from FinTrack.</p>
-                      </div>
-                      <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-                        <h3 className="text-sm font-medium text-white mb-2">AI Insights</h3>
-                        <p className="text-sm text-gray-400">AI-powered insights are currently active. Get smart financial recommendations.</p>
                       </div>
                     </div>
                   </div>
