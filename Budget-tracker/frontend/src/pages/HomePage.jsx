@@ -6,7 +6,7 @@ import {
   FaExchangeAlt, FaFileAlt, FaCheckCircle, FaLock, FaChevronDown,
   FaCalculator, FaRegStar, FaCreditCard, FaSlidersH
 } from "react-icons/fa";
-import { FiSun, FiMoon, FiCheck } from "react-icons/fi";
+import { FiSun, FiMoon, FiCheck, FiMenu, FiX } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import Particles from "../components/Particles.jsx";
 import { applyTheme } from "../App.jsx";
@@ -125,6 +125,7 @@ export default function HomePage() {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [activeDemoTab, setActiveDemoTab] = useState("overview");
   const [openFaq, setOpenFaq] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Interactive Calculator State
   const [monthlySavings, setMonthlySavings] = useState(25000);
@@ -172,8 +173,8 @@ export default function HomePage() {
       </div>
 
       {/* Professional Sticky Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0A0F1C]/90 backdrop-blur-xl border-b border-white/5 transition-all duration-300">
-        <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 py-5 flex items-center justify-between">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0A0F1C]/95 backdrop-blur-xl border-b border-white/5 transition-all duration-300">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3.5 cursor-pointer" onClick={() => navigate("/")}>
             <div className="w-10 h-10 bg-gradient-to-tr from-emerald-600 to-teal-400 rounded-2xl flex items-center justify-center text-2xl font-black text-white shadow-lg shadow-emerald-500/20">
               ₹
@@ -189,27 +190,27 @@ export default function HomePage() {
             <a href="#faq" className="hover:text-emerald-400 transition-colors">FAQ</a>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             {/* Theme Toggle Button */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleToggleTheme}
-              className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white transition-all flex items-center justify-center shadow-sm"
+              className="p-2.5 sm:p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white transition-all flex items-center justify-center shadow-sm"
               title={currentTheme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
               aria-label="Toggle Theme"
             >
               {currentTheme === "dark" ? (
-                <FiSun className="text-xl text-amber-400 animate-spin-slow" />
+                <FiSun className="text-lg sm:text-xl text-amber-400" />
               ) : (
-                <FiMoon className="text-xl text-indigo-400" />
+                <FiMoon className="text-lg sm:text-xl text-indigo-400" />
               )}
             </motion.button>
 
             <motion.button
               whileHover={{ scale: 1.03 }}
               onClick={() => navigate("/sign-in")}
-              className="hidden sm:block px-6 py-2.5 text-sm font-medium rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
+              className="hidden sm:block px-5 py-2.5 text-sm font-medium rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
             >
               Log in
             </motion.button>
@@ -217,12 +218,55 @@ export default function HomePage() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate("/sign-up")}
-              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold rounded-2xl transition-all duration-200 text-white shadow-lg shadow-emerald-600/25"
+              className="px-4 sm:px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-xs sm:text-sm font-semibold rounded-2xl transition-all duration-200 text-white shadow-lg shadow-emerald-600/25"
             >
               Get Started
             </motion.button>
+
+            {/* Mobile Hamburger Toggle Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2.5 rounded-2xl bg-white/5 border border-white/10 text-gray-300 hover:text-white transition-colors"
+              aria-label="Toggle Mobile Menu"
+            >
+              {mobileMenuOpen ? <FiX className="text-xl" /> : <FiMenu className="text-xl" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Dropdown Navigation Menu */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="lg:hidden bg-[#0D1322] border-b border-white/10 px-6 py-6 space-y-4 shadow-2xl"
+            >
+              <div className="flex flex-col space-y-3.5 font-medium text-gray-300 text-base">
+                <a href="#features" onClick={() => setMobileMenuOpen(false)} className="hover:text-emerald-400 transition-colors py-1">Features</a>
+                <a href="#demo" onClick={() => setMobileMenuOpen(false)} className="hover:text-emerald-400 transition-colors py-1">Live Demo</a>
+                <a href="#calculator" onClick={() => setMobileMenuOpen(false)} className="hover:text-emerald-400 transition-colors py-1">Wealth Calculator</a>
+                <a href="#security" onClick={() => setMobileMenuOpen(false)} className="hover:text-emerald-400 transition-colors py-1">Security</a>
+                <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="hover:text-emerald-400 transition-colors py-1">FAQ</a>
+              </div>
+              <div className="pt-4 border-t border-white/10 flex flex-col gap-3">
+                <button
+                  onClick={() => { setMobileMenuOpen(false); navigate("/sign-in"); }}
+                  className="w-full py-3 text-center text-sm font-medium rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                >
+                  Log in
+                </button>
+                <button
+                  onClick={() => { setMobileMenuOpen(false); navigate("/sign-up"); }}
+                  className="w-full py-3 text-center text-sm font-semibold rounded-2xl bg-emerald-600 hover:bg-emerald-500 transition-all text-white shadow-lg shadow-emerald-600/25"
+                >
+                  Create Free Account
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       {/* 🚀 Hero Section */}
@@ -261,10 +305,10 @@ export default function HomePage() {
               </button>
             </div>
 
-            <div className="pt-6 border-t border-white/10 flex items-center gap-8 text-xs sm:text-sm text-gray-400">
-              <div className="flex items-center gap-2"><FaCheckCircle className="text-emerald-400" /> No credit card required</div>
-              <div className="flex items-center gap-2"><FaCheckCircle className="text-emerald-400" /> 14-day full access</div>
-              <div className="flex items-center gap-2"><FaCheckCircle className="text-emerald-400" /> Instant Setup</div>
+            <div className="pt-6 border-t border-white/10 flex flex-wrap items-center gap-4 sm:gap-8 text-xs sm:text-sm text-gray-400">
+              <div className="flex items-center gap-2"><FaCheckCircle className="text-emerald-400 flex-shrink-0" /> No credit card required</div>
+              <div className="flex items-center gap-2"><FaCheckCircle className="text-emerald-400 flex-shrink-0" /> 14-day full access</div>
+              <div className="flex items-center gap-2"><FaCheckCircle className="text-emerald-400 flex-shrink-0" /> Instant Setup</div>
             </div>
           </div>
 
