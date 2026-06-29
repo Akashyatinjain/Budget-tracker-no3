@@ -445,10 +445,10 @@ const NotificationsPage = () => {
         onMobileClose={() => setMobileSidebarOpen(false)}
       />
 
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen min-w-0 w-full">
         <Header onMobileToggle={() => setMobileSidebarOpen(true)} />
 
-        <main className="p-4 md:p-8 mt-16 flex flex-col gap-6 max-w-[1600px] mx-auto w-full">
+        <main className="p-3 sm:p-6 md:p-8 mt-16 flex flex-col gap-3.5 sm:gap-6 max-w-[1600px] mx-auto w-full min-w-0">
 
           {/* Glow Orbs */}
           <div className="absolute left-1/2 top-0 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[180px]" />
@@ -459,49 +459,49 @@ const NotificationsPage = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-emerald-500/[0.03] backdrop-blur-2xl p-4 md:p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-emerald-500/[0.03] backdrop-blur-2xl p-3.5 sm:p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
           >
-            <div className="flex items-center gap-3.5">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-400 shadow-inner">
-                <Sparkles className="w-6 h-6 animate-pulse" />
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2.5 sm:p-3 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-400 shadow-inner flex-shrink-0">
+                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
               </div>
-              <div>
-                <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight flex items-center gap-2 truncate">
                   Notification Command Center
                 </h1>
-                <p className="text-xs md:text-sm text-slate-400 mt-0.5">Real-time intelligent financial alerts & automated audits</p>
+                <p className="text-[11px] sm:text-sm text-slate-400 mt-0.5 truncate">Real-time financial alerts & automated audits</p>
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
-                className={`flex-1 sm:flex-initial p-2.5 rounded-xl border transition-all flex items-center justify-center gap-2 text-xs font-semibold ${
+                className={`flex-1 sm:flex-initial p-2 sm:p-2.5 rounded-xl border transition-all flex items-center justify-center gap-1.5 text-xs font-semibold ${
                   soundEnabled 
                     ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
                     : "bg-white/5 border-white/10 text-slate-400 hover:text-white"
                 }`}
                 title="Toggle Alert Sounds"
               >
-                {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                {soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
                 <span>{soundEnabled ? "Sound On" : "Muted"}</span>
               </button>
 
               <button
                 onClick={() => setShowSettings(true)}
-                className="flex-1 sm:flex-initial rounded-xl bg-white/5 border border-white/10 px-3.5 py-2.5 font-semibold text-xs text-slate-300 hover:text-white hover:border-emerald-500/30 transition-all flex items-center justify-center gap-2 hover:bg-white/10 shadow-sm"
+                className="flex-1 sm:flex-initial rounded-xl bg-white/5 border border-white/10 p-2 sm:px-3.5 sm:py-2.5 font-semibold text-xs text-slate-300 hover:text-white hover:border-emerald-500/30 transition-all flex items-center justify-center gap-1.5 hover:bg-white/10 shadow-sm"
               >
                 <Settings size={15} />
-                Preferences
+                <span className="truncate">Preferences</span>
               </button>
               
               <button
                 onClick={markAllAsReadHandler}
                 disabled={notificationStats.unread === 0}
-                className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 px-4 py-2.5 font-semibold text-xs text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 p-2 sm:px-4 sm:py-2.5 font-semibold text-xs text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
               >
-                <CheckCircle size={15} />
-                Mark All Read
+                <CheckCircle size={15} className="flex-shrink-0" />
+                <span>Mark All Read</span>
               </button>
             </div>
           </motion.div>
@@ -545,25 +545,25 @@ const NotificationsPage = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 w-full min-w-0"
           >
             {statCards.map((stat, i) => (
               <motion.div
                 key={i}
                 variants={itemVariants}
-                className={`relative overflow-hidden bg-gradient-to-br ${stat.bg} border border-white/10 rounded-2xl p-5 md:p-6 shadow-lg hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 group`}
+                className={`relative overflow-hidden bg-gradient-to-br ${stat.bg} border border-white/10 rounded-2xl p-3 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 group flex flex-col justify-between min-h-[90px] sm:min-h-0 min-w-0`}
                 whileHover={{ y: -2 }}
               >
-                <div className="relative flex items-center justify-between">
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{stat.title}</p>
-                    <h2 className={`text-xl sm:text-2xl font-black bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mt-1 truncate`}>
+                <div className="relative flex items-start justify-between gap-1 min-w-0">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider truncate">{stat.title}</p>
+                    <h2 className={`text-base sm:text-2xl font-black bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mt-0.5 sm:mt-1 truncate`}>
                       {stat.value}
                     </h2>
-                    <p className="text-xs text-slate-400 mt-1 truncate">{stat.subtitle}</p>
+                    <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1 truncate">{stat.subtitle}</p>
                   </div>
-                  <div className={`p-3 rounded-2xl bg-white/5 border border-white/10 shadow-md flex-shrink-0 ml-2`}>
-                    <stat.icon className={`w-5 h-5 ${
+                  <div className={`p-1.5 sm:p-3 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 shadow-md flex-shrink-0 ml-1`}>
+                    <stat.icon className={`w-3.5 h-3.5 sm:w-5 sm:h-5 ${
                       String(stat.value).includes("✓") || stat.color.includes("emerald") ? "text-emerald-400" :
                       stat.color.includes("rose") ? "text-rose-400" :
                       stat.color.includes("yellow") ? "text-amber-400" : "text-cyan-400"
@@ -579,22 +579,22 @@ const NotificationsPage = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-4 sm:p-5 shadow-lg space-y-4"
+            className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-3.5 sm:p-5 shadow-lg space-y-3 sm:space-y-4"
           >
             {/* Top Bar: Search Input */}
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search notifications..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-10 py-3 bg-[#0a1017] border border-white/15 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-slate-500 shadow-inner"
+                className="w-full pl-10 pr-9 py-2.5 sm:py-3 bg-[#0a1017] border border-white/15 rounded-xl text-white text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-slate-500 shadow-inner"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
                 >
                   <X size={16} />
                 </button>
@@ -602,14 +602,14 @@ const NotificationsPage = () => {
             </div>
 
             {/* Bottom Bar: Type Filter Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar">
-              <span className="text-xs text-slate-400 mr-1 flex items-center gap-1.5 font-semibold uppercase tracking-wider flex-shrink-0">
-                <Filter className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 pt-0.5 custom-scrollbar touch-pan-x">
+              <span className="text-[11px] sm:text-xs text-slate-400 mr-0.5 flex items-center gap-1 font-semibold uppercase tracking-wider flex-shrink-0">
+                <Filter className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400" />
                 Filter:
               </span>
               <button
                 onClick={() => setFilter("all")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex-shrink-0 ${
+                className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold transition-all flex-shrink-0 ${
                   filter === "all" 
                     ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/25" 
                     : "bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10"
@@ -619,13 +619,13 @@ const NotificationsPage = () => {
               </button>
               <button
                 onClick={() => setFilter("unread")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 flex-shrink-0 ${
+                className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 flex-shrink-0 ${
                   filter === "unread" 
                     ? "bg-gradient-to-r from-rose-500 to-red-400 text-white shadow-md shadow-rose-500/25" 
                     : "bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10"
                 }`}
               >
-                <EyeOff className="w-3.5 h-3.5" />
+                <EyeOff className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 Unread
               </button>
 
@@ -633,7 +633,7 @@ const NotificationsPage = () => {
                 <button
                   key={key}
                   onClick={() => setFilter(key)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
+                  className={`px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 border flex-shrink-0 ${
                     filter === key 
                       ? "bg-white/15 border-white/30 text-white shadow-md" 
                       : "bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10"
@@ -649,47 +649,47 @@ const NotificationsPage = () => {
 
           {/* ====== 6. Bulk Actions Controls Bar ====== */}
           {filteredNotifications.length > 0 && (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/[0.03] border border-white/10 rounded-xl p-3.5 px-4 sm:px-5">
-              <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white/[0.03] border border-white/10 rounded-xl p-3 sm:p-3.5 px-3.5 sm:px-5">
+              <div className="flex items-center gap-3 justify-between sm:justify-start w-full sm:w-auto">
                 <button
                   onClick={toggleSelectAll}
                   className="flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
                 >
                   {selectedIds.length === filteredNotifications.length ? (
-                    <CheckSquare size={16} className="text-emerald-400" />
+                    <CheckSquare size={16} className="text-emerald-400 flex-shrink-0" />
                   ) : (
-                    <Square size={16} className="text-slate-500" />
+                    <Square size={16} className="text-slate-500 flex-shrink-0" />
                   )}
                   <span>Select All ({selectedIds.length} / {filteredNotifications.length})</span>
                 </button>
               </div>
 
               {selectedIds.length > 0 ? (
-                <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+                <div className="grid grid-cols-3 sm:flex items-center gap-2 w-full sm:w-auto">
                   <button
                     onClick={handleBulkMarkRead}
-                    className="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/25 transition-all flex items-center justify-center gap-1.5"
+                    className="px-2.5 py-1.5 sm:px-3 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[11px] sm:text-xs font-semibold hover:bg-emerald-500/25 transition-all flex items-center justify-center gap-1"
                   >
-                    <Check size={14} />
-                    Mark Read
+                    <Check size={13} />
+                    <span className="truncate">Mark Read</span>
                   </button>
                   <button
                     onClick={handleBulkDelete}
-                    className="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs font-semibold hover:bg-rose-500/25 transition-all flex items-center justify-center gap-1.5"
+                    className="px-2.5 py-1.5 sm:px-3 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-400 text-[11px] sm:text-xs font-semibold hover:bg-rose-500/25 transition-all flex items-center justify-center gap-1"
                   >
-                    <Trash2 size={14} />
-                    Delete Selected
+                    <Trash2 size={13} />
+                    <span className="truncate">Delete</span>
                   </button>
                   <button
                     onClick={exportNotificationsCSV}
-                    className="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 text-xs font-semibold hover:bg-white/10 transition-all flex items-center justify-center gap-1.5"
+                    className="px-2.5 py-1.5 sm:px-3 rounded-lg bg-white/5 border border-white/10 text-slate-300 text-[11px] sm:text-xs font-semibold hover:bg-white/10 transition-all flex items-center justify-center gap-1"
                   >
-                    <Download size={14} />
-                    Export CSV
+                    <Download size={13} />
+                    <span className="truncate">Export</span>
                   </button>
                 </div>
               ) : (
-                <div className="text-xs text-slate-500">
+                <div className="text-[11px] sm:text-xs text-slate-500 hidden sm:block">
                   Select items for batch actions
                 </div>
               )}
@@ -745,7 +745,7 @@ const NotificationsPage = () => {
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.02 }}
-                            className={`p-4 sm:p-5 transition-all group ${
+                            className={`p-3.5 sm:p-5 transition-all group ${
                               typeConfig.border
                             } border-l-4 ${
                               !notification.is_read 
@@ -754,50 +754,59 @@ const NotificationsPage = () => {
                             } ${isSelected ? 'bg-emerald-500/10' : 'hover:bg-white/[0.03]'}`}
                           >
                             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
-                              <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+                              <div className="flex items-start gap-2.5 sm:gap-4 flex-1 min-w-0">
                                 {/* Selection Checkbox */}
                                 <button
                                   onClick={() => toggleSelect(notification.id)}
-                                  className="mt-1 text-slate-500 hover:text-emerald-400 transition-colors flex-shrink-0"
+                                  className="mt-0.5 sm:mt-1 text-slate-500 hover:text-emerald-400 transition-colors flex-shrink-0"
                                 >
                                   {isSelected ? (
-                                    <CheckSquare size={18} className="text-emerald-400" />
+                                    <CheckSquare size={17} className="text-emerald-400" />
                                   ) : (
-                                    <Square size={18} />
+                                    <Square size={17} />
                                   )}
                                 </button>
 
                                 {/* 1. Contextual Type Icon & Emoji Pill */}
                                 <div 
-                                  className="p-2.5 rounded-xl flex-shrink-0 shadow-inner border border-white/10 flex items-center justify-center text-lg sm:text-xl relative"
+                                  className="p-2 sm:p-2.5 rounded-xl flex-shrink-0 shadow-inner border border-white/10 flex items-center justify-center text-base sm:text-xl relative"
                                   style={{ backgroundColor: typeConfig.color + '20' }}
                                 >
                                   <span>{typeConfig.emoji}</span>
                                 </div>
                                 
                                 <div className="flex-1 min-w-0 cursor-pointer" onClick={() => toggleExpand(notification.id)}>
-                                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                  <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 flex-wrap">
                                     <h4 className={`font-semibold text-xs sm:text-sm ${!notification.is_read ? 'text-white font-bold' : 'text-slate-300'}`}>
                                       {notification.title}
                                     </h4>
 
                                     {/* Priority Badge */}
-                                    <span className={`px-2 py-0.5 text-[10px] rounded-md font-semibold flex items-center gap-1 border ${priorityConfig.bgColor} ${priorityConfig.color}`}>
-                                      <priorityConfig.icon className="w-3 h-3" />
+                                    <span className={`px-1.5 py-0.5 text-[9px] sm:text-[10px] rounded-md font-semibold flex items-center gap-1 border ${priorityConfig.bgColor} ${priorityConfig.color}`}>
+                                      <priorityConfig.icon className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                                       {priorityConfig.label}
                                     </span>
 
                                     {/* 9. Pulsing Unread Indicator Badge */}
                                     {!notification.is_read && (
-                                      <span className="relative flex h-2.5 w-2.5 ml-1">
+                                      <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5 ml-0.5">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-emerald-500"></span>
                                       </span>
                                     )}
                                   </div>
                                   
                                   {/* Message Preview */}
-                                  <p className={`text-slate-300 text-xs sm:text-sm leading-relaxed ${!isExpanded ? 'line-clamp-2' : ''}`}>
+                                  <p 
+                                    className="text-slate-300 text-xs sm:text-sm leading-relaxed"
+                                    style={!isExpanded ? {
+                                      display: '-webkit-box',
+                                      WebkitLineClamp: 2,
+                                      WebkitBoxOrient: 'vertical',
+                                      overflow: 'hidden',
+                                      wordBreak: 'break-word'
+                                    } : { wordBreak: 'break-word' }}
+                                  >
                                     {notification.message}
                                   </p>
                                   
@@ -806,13 +815,13 @@ const NotificationsPage = () => {
                                     <motion.div 
                                       initial={{ opacity: 0, height: 0 }}
                                       animate={{ opacity: 1, height: "auto" }}
-                                      className="mt-3 p-3.5 rounded-xl bg-white/[0.03] border border-white/10 text-xs space-y-2 text-slate-300"
+                                      className="mt-3 p-3 sm:p-3.5 rounded-xl bg-white/[0.03] border border-white/10 text-xs space-y-2 text-slate-300"
                                     >
-                                      <div className="flex justify-between border-b border-white/5 pb-2">
+                                      <div className="flex justify-between border-b border-white/5 pb-1.5 sm:pb-2">
                                         <span className="text-slate-400">Notification ID:</span>
                                         <span className="font-mono font-semibold">NOTIF-00{notification.id}</span>
                                       </div>
-                                      <div className="flex justify-between border-b border-white/5 pb-2">
+                                      <div className="flex justify-between border-b border-white/5 pb-1.5 sm:pb-2">
                                         <span className="text-slate-400">Timestamp:</span>
                                         <span>{new Date(notification.created_at || Date.now()).toLocaleString('en-IN')}</span>
                                       </div>
@@ -823,8 +832,8 @@ const NotificationsPage = () => {
                                     </motion.div>
                                   )}
 
-                                  <div className="flex items-center gap-3 flex-wrap text-xs text-slate-500 mt-2.5">
-                                    <span className="flex items-center gap-1.5 font-medium">
+                                  <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap text-[11px] sm:text-xs text-slate-500 mt-2">
+                                    <span className="flex items-center gap-1 font-medium">
                                       <Clock className="w-3 h-3 text-slate-400" />
                                       {getTimeAgo(notification.created_at)}
                                     </span>
@@ -852,23 +861,23 @@ const NotificationsPage = () => {
                               </div>
                               
                               {/* Actions */}
-                              <div className="flex items-center gap-1.5 flex-shrink-0 self-end sm:self-start pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5 w-full sm:w-auto justify-end">
+                              <div className="flex items-center gap-1.5 flex-shrink-0 self-end sm:self-start pt-1.5 sm:pt-0 border-t sm:border-t-0 border-white/5 w-full sm:w-auto justify-end">
                                 {!notification.is_read && (
                                   <button
                                     onClick={() => markAsReadHandler(notification.id)}
-                                    className="p-2 text-emerald-400 hover:bg-emerald-500/20 rounded-xl transition-all flex items-center gap-1 text-xs font-medium"
+                                    className="px-2.5 py-1 sm:p-2 text-emerald-400 hover:bg-emerald-500/20 bg-emerald-500/10 sm:bg-transparent rounded-lg sm:rounded-xl transition-all flex items-center gap-1 text-[11px] sm:text-xs font-semibold"
                                     title="Mark as read"
                                   >
-                                    <Eye className="w-4 h-4" />
-                                    <span className="sm:hidden">Read</span>
+                                    <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                    <span className="sm:hidden">Mark Read</span>
                                   </button>
                                 )}
                                 <button
                                   onClick={() => deleteNotificationHandler(notification.id)}
-                                  className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all flex items-center gap-1 text-xs font-medium"
+                                  className="px-2.5 py-1 sm:p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 bg-white/5 sm:bg-transparent rounded-lg sm:rounded-xl transition-all flex items-center gap-1 text-[11px] sm:text-xs font-semibold"
                                   title="Delete notification"
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                   <span className="sm:hidden">Delete</span>
                                 </button>
                               </div>
