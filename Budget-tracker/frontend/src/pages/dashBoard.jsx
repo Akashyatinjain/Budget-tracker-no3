@@ -151,15 +151,29 @@ const FinanceDashboard = () => {
     { id: 8, name: "Investment",       color: "#3b82f6", icon: Gem },
   ];
 
+  const getCategoryObj = (catVal) => {
+    if (catVal == null) return null;
+    const sVal = String(catVal).trim().toLowerCase();
+    let found = categories.find(c => String(c.id) === sVal);
+    if (found) return found;
+    found = categories.find(c => c.name.toLowerCase() === sVal);
+    if (found) return found;
+    found = categories.find(c => {
+      const cName = c.name.toLowerCase();
+      return cName.includes(sVal) || sVal.includes(cName) || (sVal.length > 2 && cName.startsWith(sVal.slice(0, 4)));
+    });
+    return found || null;
+  };
+
   const getCategoryName = (id) => {
     if (!id) return "Unknown";
-    const cat = categories.find((c) => parseInt(c.id) === parseInt(id));
-    return cat ? cat.name : "Unknown";
+    const cat = getCategoryObj(id);
+    return cat ? cat.name : (typeof id === "string" ? id : "Unknown");
   };
 
   const getCategoryColor = (id) => {
     if (!id) return "#6b7280";
-    const cat = categories.find((c) => parseInt(c.id) === parseInt(id));
+    const cat = getCategoryObj(id);
     return cat ? cat.color : "#6b7280";
   };
 
@@ -343,7 +357,7 @@ const FinanceDashboard = () => {
     ? categories.map((cat) => ({
         name: cat.name,
         value: transactions
-          .filter((t) => t?.type === "expense" && parseInt(t.category_id) === cat.id)
+          .filter((t) => String(t?.type || "").toLowerCase() === "expense" && getCategoryObj(t?.category_id || t?.category || t?.category_name)?.id === cat.id)
           .reduce((sum, t) => sum + getSafeAmount(t), 0),
         color: cat.color,
       })).filter((c) => c.value > 0)

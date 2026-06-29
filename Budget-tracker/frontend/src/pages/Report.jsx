@@ -64,7 +64,7 @@ const ReportsPage = () => {
   const [transactions, setTransactions] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
   const [reportType, setReportType] = useState("spending");
-  const [timeRange, setTimeRange] = useState("month");
+  const [timeRange, setTimeRange] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -81,6 +81,37 @@ const ReportsPage = () => {
     { id: 8, name: "Investment",       color: "#3b82f6", icon: "📈" },
   ];
 
+  const getCategoryObj = (catVal) => {
+    if (catVal == null) return null;
+    const sVal = String(catVal).trim().toLowerCase();
+    let found = categories.find(c => String(c.id) === sVal);
+    if (found) return found;
+    found = categories.find(c => c.name.toLowerCase() === sVal);
+    if (found) return found;
+    found = categories.find(c => {
+      const cName = c.name.toLowerCase();
+      return cName.includes(sVal) || sVal.includes(cName) || (sVal.length > 2 && cName.startsWith(sVal.slice(0, 4)));
+    });
+    return found || null;
+  };
+
+  const getCategoryName = (t) => {
+    const val = typeof t === "object" && t !== null ? (t.category_id ?? t.category ?? t.category_name) : t;
+    const cat = getCategoryObj(val);
+    return cat ? cat.name : (typeof val === "string" ? val : (t?.category_name || t?.category || "Unknown"));
+  };
+
+  const matchTransactionToCategory = (t, targetCatIdOrObj) => {
+    if (!t) return false;
+    const targetId = typeof targetCatIdOrObj === "object" ? targetCatIdOrObj.id : targetCatIdOrObj;
+    const tVal = t.category_id ?? t.category ?? t.category_name;
+    const matchedObj = getCategoryObj(tVal);
+    if (matchedObj) {
+      return String(matchedObj.id) === String(targetId);
+    }
+    return String(tVal) === String(targetId);
+  };
+
   const reportTypes = [
     { value: "spending", label: "Spending Analysis", description: "Category-wise spending breakdown", icon: PieChartIcon },
     { value: "income", label: "Income Report", description: "Income sources and trends", icon: TrendingUp },
@@ -90,6 +121,7 @@ const ReportsPage = () => {
   ];
 
   const timeRanges = [
+    { value: "all", label: "All Time" },
     { value: "week", label: "Last 7 Days" },
     { value: "month", label: "Last Month" },
     { value: "quarter", label: "Last 3 Months" },
@@ -157,6 +189,7 @@ const ReportsPage = () => {
 
   const processReportData = () => {
     const now = new Date();
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
     let startDate = new Date();
 
     switch (timeRange) {
@@ -172,25 +205,30 @@ const ReportsPage = () => {
       case "year":
         startDate.setFullYear(now.getFullYear() - 1);
         break;
+      case "all":
+        startDate = new Date(0);
+        break;
       default:
-        startDate.setMonth(now.getMonth() - 1);
+        startDate = new Date(0);
     }
 
     const filteredTransactions = transactions.filter(t => {
-      const dateOk =
-        new Date(t.transaction_date) >= startDate &&
-        new Date(t.transaction_date) <= now;
+      let dateOk = true;
+      if (t.transaction_date) {
+        const tDate = new Date(t.transaction_date);
+        dateOk = !isNaN(tDate.getTime()) && (timeRange === "all" || (tDate >= startDate && tDate <= endOfDay));
+      }
 
       const categoryOk =
         categoryFilter === "all" ||
-        String(t.category_id) === String(categoryFilter);
+        matchTransactionToCategory(t, categoryFilter);
 
       return dateOk && categoryOk;
     });
 
     const categorySpending = categories.map(category => {
       const categoryTransactions = filteredTransactions.filter(
-        t => parseInt(t.category_id) === category.id && t.type === "expense"
+        t => matchTransactionToCategory(t, category.id) && String(t.type || "").toLowerCase() === "expense"
       );
       const total = categoryTransactions.reduce((sum, t) => sum + safeAmount(t.amount), 0);
       return {
@@ -207,17 +245,18 @@ const ReportsPage = () => {
       const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
       
       const monthTransactions = filteredTransactions.filter(t => {
+        if (!t.transaction_date) return false;
         const transactionDate = new Date(t.transaction_date);
         return transactionDate.getMonth() === date.getMonth() && 
                transactionDate.getFullYear() === date.getFullYear();
       });
 
       const income = monthTransactions
-        .filter(t => t.type === "income")
+        .filter(t => String(t.type || "").toLowerCase() === "income")
         .reduce((sum, t) => sum + safeAmount(t.amount), 0);
 
       const expenses = monthTransactions
-        .filter(t => t.type === "expense")
+        .filter(t => String(t.type || "").toLowerCase() === "expense")
         .reduce((sum, t) => sum + safeAmount(t.amount), 0);
 
       monthlyData.push({
@@ -229,19 +268,19 @@ const ReportsPage = () => {
     }
 
     const topExpenses = filteredTransactions
-      .filter(t => t.type === "expense")
+      .filter(t => String(t.type || "").toLowerCase() === "expense")
       .sort((a, b) => safeAmount(b.amount) - safeAmount(a.amount))
       .slice(0, 10)
       .map(t => ({
-        name: t.merchant,
+        name: t.merchant || t.description || 'Expense',
         amount: safeAmount(t.amount),
-        category: categories.find(c => parseInt(c.id) === parseInt(t.category_id))?.name || 'Unknown',
-        date: new Date(t.transaction_date).toLocaleDateString()
+        category: getCategoryName(t),
+        date: t.transaction_date ? new Date(t.transaction_date).toLocaleDateString() : 'N/A'
       }));
 
     const activeSubscriptions = subscriptions.filter(sub => sub.status === "active");
     const subscriptionCost = activeSubscriptions.reduce((sum, sub) => {
-      let monthlyCost = parseFloat(sub.amount);
+      let monthlyCost = parseFloat(sub.amount || 0);
       switch (sub.billing_cycle) {
         case 'yearly': monthlyCost = monthlyCost / 12; break;
         case 'quarterly': monthlyCost = monthlyCost / 3; break;
@@ -252,6 +291,14 @@ const ReportsPage = () => {
       return sum + monthlyCost;
     }, 0);
 
+    const totalInc = filteredTransactions
+      .filter(t => String(t.type || "").toLowerCase() === "income")
+      .reduce((sum, t) => sum + safeAmount(t.amount), 0);
+
+    const totalExp = filteredTransactions
+      .filter(t => String(t.type || "").toLowerCase() === "expense")
+      .reduce((sum, t) => sum + safeAmount(t.amount), 0);
+
     return {
       categorySpending,
       monthlyData,
@@ -259,10 +306,9 @@ const ReportsPage = () => {
       subscriptionCost: Math.round(subscriptionCost),
       activeSubscriptions: activeSubscriptions.length,
       totalTransactions: filteredTransactions.length,
-      totalIncome: Math.round(filteredTransactions.filter(t => t.type === "income").reduce((sum, t) => sum + safeAmount(t.amount), 0)),
-      totalExpenses: Math.round(filteredTransactions.filter(t => t.type === "expense").reduce((sum, t) => sum + safeAmount(t.amount), 0)),
-      netSavings: Math.round(filteredTransactions.filter(t => t.type === "income").reduce((sum, t) => sum + safeAmount(t.amount), 0) - 
-                    filteredTransactions.filter(t => t.type === "expense").reduce((sum, t) => sum + safeAmount(t.amount), 0))
+      totalIncome: Math.round(totalInc),
+      totalExpenses: Math.round(totalExp),
+      netSavings: Math.round(totalInc - totalExp)
     };
   };
 
