@@ -1,7 +1,7 @@
 // src/lib/api.js
 import axios from "axios";
 
-const RAW_API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const RAW_API_BASE = import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL || "http://localhost:5000";
 export const API_BASE = RAW_API_BASE.replace(/\/$/, "");
 
 const api = axios.create({

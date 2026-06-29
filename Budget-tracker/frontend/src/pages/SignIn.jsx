@@ -6,7 +6,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, TrendingUp, Shield, Zap, BarChart3
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
 
-const API_BASE = (import.meta.env.VITE_BASE_URL || "http://localhost:5000").replace(/\/$/, "");
+const API_BASE = (import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/$/, "");
 
 export default function SignIn() {
   const [form, setForm] = useState({ emailOrName: "", password: "" });

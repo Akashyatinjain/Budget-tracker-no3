@@ -312,7 +312,7 @@ app.get(
   (req, res) => {
     if (!req.user) return res.redirect(`${FRONTEND_URL}/sign-in`);
     const token = createAndSetToken(res, req.user);
-    res.redirect(`${FRONTEND_URL}/DashBoard?token=${token}`);
+    res.redirect(`${FRONTEND_URL}/dashboard?token=${token}`);
   }
 );
 

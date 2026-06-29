@@ -9,6 +9,15 @@ export const api = apiClient;
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlToken = params.get("token");
+      if (urlToken && !isTokenExpired(urlToken)) {
+        localStorage.setItem("token", urlToken);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return urlToken;
+      }
+    } catch (e) {}
     const saved = localStorage.getItem("token");
     if (saved && isTokenExpired(saved)) {
       localStorage.removeItem("token");
