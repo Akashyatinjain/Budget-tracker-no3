@@ -405,64 +405,17 @@ const FinanceDashboard = () => {
     },
   };
 
-  // ====== Summary Cards Data ======
-  const summaryCards = [
-    { 
-      title: "Net Worth", 
-      value: totalBalance, 
-      subtitle: `${savingsRate.toFixed(1)}% savings rate`,
-      color: "from-emerald-400 to-teal-300", 
-      icon: Wallet, 
-      trend: totalBalance >= 0 ? "up" : "down",
-      bg: "from-emerald-500/10 to-teal-500/5"
-    },
-    { 
-      title: "Income", 
-      value: totalIncome, 
-      subtitle: "This month",
-      color: "from-green-400 to-emerald-300", 
-      icon: TrendingUp, 
-      trend: "up",
-      bg: "from-green-500/10 to-emerald-500/5"
-    },
-    { 
-      title: "Expenses", 
-      value: totalExpenses, 
-      subtitle: "This month",
-      color: "from-rose-400 to-red-300", 
-      icon: TrendingDown, 
-      trend: "down",
-      bg: "from-rose-500/10 to-red-500/5"
-    },
-    { 
-      title: "Savings Goal", 
-      value: goalProgress, 
-      subtitle: `${savingsGoal.toLocaleString('en-IN')} target`,
-      color: "from-purple-400 to-violet-300", 
-      icon: Target, 
-      isProgress: true,
-      bg: "from-purple-500/10 to-violet-500/5"
-    },
-  ];
+
 
   return (
-    <div className="relative flex min-h-screen overflow-hidden bg-gradient-to-br
-from-[#030712]
-via-[#07101f]
-to-[#050816] text-white">
-
-  {/* Animated Background */}
-  <div className="absolute inset-0 -z-10">
-
-    <div className="absolute top-[-180px] left-[-120px] h-[420px] w-[420px] rounded-full bg-emerald-500/15 blur-[140px] animate-pulse" />
-
-    <div className="absolute bottom-[-150px] right-[-120px] h-[420px] w-[420px] rounded-full bg-cyan-500/15 blur-[150px] animate-pulse" />
-
-    <div className="absolute top-1/2 left-1/2 h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-teal-400/10 blur-[120px]" />
-
-    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,.05),transparent_40%)]" />
-
-  </div>
+    <div className="relative flex min-h-screen overflow-hidden bg-[#030712] text-white">
+      {/* Animated Background */}
+      <div className="absolute inset-0 -z-10 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-40" />
+        <div className="absolute top-[-180px] left-[-120px] h-[420px] w-[420px] rounded-full bg-emerald-500/10 blur-[140px] animate-pulse" />
+        <div className="absolute bottom-[-150px] right-[-120px] h-[420px] w-[420px] rounded-full bg-cyan-500/10 blur-[150px] animate-pulse" />
+        <div className="absolute top-1/2 left-1/2 h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-teal-400/5 blur-[120px]" />
+      </div>
       {/* Sidebar */}
       <AdvancedSidebar
         user={user || { username: "Guest" }}
@@ -472,214 +425,177 @@ to-[#050816] text-white">
 
       <div className="flex-1 flex flex-col min-h-screen">
         <Header onMobileToggle={() => setMobileSidebarOpen(true)} />
-          <div className="pointer-events-none absolute inset-0 overflow-hidden">
-
-<div className="absolute top-20 left-1/4 h-2 w-2 rounded-full bg-emerald-400 animate-pulse"/>
-
-<div className="absolute bottom-40 right-20 h-2 w-2 rounded-full bg-cyan-400 animate-ping"/>
-
-<div className="absolute top-72 right-1/3 h-3 w-3 rounded-full bg-teal-400 animate-pulse"/>
-
-</div>
-        <main className="p-4 md:p-8 mt-16 flex flex-col gap-6 max-w-[1600px] mx-auto w-full">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute top-20 left-1/4 h-1.5 w-1.5 rounded-full bg-emerald-400/60 animate-pulse"/>
+          <div className="absolute bottom-40 right-20 h-1.5 w-1.5 rounded-full bg-cyan-400/60 animate-ping"/>
+          <div className="absolute top-72 right-1/3 h-2 w-2 rounded-full bg-teal-400/60 animate-pulse"/>
+        </div>
+        <main className="p-3 md:p-6 mt-14 flex flex-col gap-4 max-w-[1600px] mx-auto w-full">
           <div className="absolute left-1/2 top-0 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[180px]" />
-
-<div className="absolute bottom-0 right-0 h-[450px] w-[450px] rounded-full bg-cyan-500/10 blur-[180px]" />
+          <div className="absolute bottom-0 right-0 h-[450px] w-[450px] rounded-full bg-cyan-500/10 blur-[180px]" />
           
-          {/* ====== Page Header with Gradient ====== */}
+          {/* ====== Page Header ====== */}
           <motion.div
-initial={{opacity:0,y:20}}
-animate={{opacity:1,y:0}}
-transition={{duration:.5}}
-className="relative overflow-hidden rounded-[32px]
-border border-white/10
-bg-gradient-to-br
-from-white/[0.08]
-via-white/[0.04]
-to-emerald-500/[0.03]
-backdrop-blur-2xl
-shadow-[0_20px_80px_rgba(0,0,0,.45)]
-p-8"
->
+            initial={{opacity:0,y:10}}
+            animate={{opacity:1,y:0}}
+            transition={{duration:.3}}
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-1"
+          >
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">
+                Welcome back, {user?.username || "User"} 👋
+              </h1>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Here is your real-time financial overview and recent activity.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="self-start sm:self-auto px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-semibold text-xs shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all flex items-center gap-1.5"
+            >
+              <PlusCircle className="w-4 h-4" />
+              Add Transaction
+            </button>
+          </motion.div>
 
-<div className="absolute -top-28 -right-20 h-80 w-80 rounded-full bg-emerald-500/15 blur-[120px]" />
-
-<div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-cyan-500/15 blur-[120px]" />
-
-<div className="relative flex flex-col lg:flex-row justify-between gap-8">
-
-<div>
-
-<div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-emerald-300 text-sm font-semibold">
-
-<Sparkles className="w-4 h-4"/>
-
-AI Powered Finance Dashboard
-
-</div>
-
-<h1 className="mt-6 text-5xl font-black leading-tight">
-
-<span className="bg-gradient-to-r from-white via-emerald-200 to-cyan-300 bg-clip-text text-transparent">
-
-Master Your
-
-</span>
-
-<br/>
-
-<span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-
-Financial Future
-
-</span>
-
-</h1>
-
-<p className="mt-5 max-w-xl text-slate-400 leading-8">
-
-Track every rupee.
-
-Analyze your spending.
-
-Reach your goals faster.
-
-Everything in one beautiful dashboard.
-
-</p>
-
-</div>
-
-<div className="grid grid-cols-2 gap-5">
-
-<div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
-
-<p className="text-slate-400 text-sm">
-
-Portfolio
-
-</p>
-
-<h2 className="mt-2 text-4xl font-black text-emerald-400">
-
-₹{totalBalance.toLocaleString("en-IN")}
-
-</h2>
-
-<p className="mt-2 text-green-400">
-
-+12.8%
-
-</p>
-
-</div>
-
-<div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
-
-<p className="text-slate-400 text-sm">
-
-Transactions
-
-</p>
-
-<h2 className="mt-2 text-4xl font-black text-cyan-400">
-
-{transactions.length}
-
-</h2>
-
-<p className="mt-2 text-cyan-300">
-
-This Month
-
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-</motion.div>
-
-
-          {/* ====== Summary Cards ====== */}
+          {/* ====== Summary Cards Grid with Net Worth HERO ====== */}
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+            className="grid grid-cols-1 md:grid-cols-12 gap-4"
           >
-            {summaryCards.map((card, i) => (
+            {/* HERO CARD: Net Worth (Spans 5 cols on desktop) */}
+            <motion.div
+              variants={itemVariants}
+              className="md:col-span-6 lg:col-span-5 relative overflow-hidden bg-gradient-to-br from-emerald-950/40 via-[#0d1827] to-[#09101d] border-2 border-emerald-500/40 rounded-2xl p-5 md:p-6 shadow-2xl shadow-emerald-500/10 flex flex-col justify-between group"
+              whileHover={{ y: -3, scale: 1.005 }}
+            >
+              <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-emerald-500/15 blur-[50px] pointer-events-none" />
+              <div className="relative flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                    Total Net Worth
+                  </span>
+                  <span className="text-[10px] font-semibold text-emerald-300 bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20 animate-pulse">
+                    Highest Ever ✨
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/30">
+                  <Wallet className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="relative">
+                <p className="text-xs text-slate-400 font-medium">Current Balance</p>
+                <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight mt-1">
+                  ₹{totalBalance.toLocaleString("en-IN")}
+                </h2>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-xs font-semibold text-emerald-400 flex items-center gap-0.5 bg-emerald-500/10 px-2 py-0.5 rounded-md">
+                    ↑ +12.8%
+                  </span>
+                  <span className="text-xs text-slate-400">vs last month ({savingsRate.toFixed(1)}% saved)</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* SECONDARY CARDS: Income, Expenses, Savings Goal (Story-telling micro-insights) */}
+            <div className="md:col-span-6 lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+              {/* Income */}
               <motion.div
-                key={i}
                 variants={itemVariants}
-                className={`relative overflow-hidden bg-gradient-to-br ${card.bg} border border-white/10/60 rounded-2xl p-6 shadow-lg hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 group`}
-                whileHover={{ y: -4, scale: 1.01 }}
+                whileHover={{ y: -2 }}
+                className="bg-[#0b121e]/80 border border-white/[0.06] rounded-2xl p-4 shadow-sm hover:border-emerald-500/30 transition-all flex flex-col justify-between"
               >
-                {/* Glow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                
-                <div className="relative flex items-start justify-between">
-                  <div>
-                    <p className="text-sm text-slate-300 font-medium">{card.title}</p>
-                    <h2 className={`text-2xl font-bold bg-gradient-to-r ${card.color} bg-clip-text text-transparent mt-1`}>
-                      {card.isProgress
-                        ? `${card.value.toFixed(1)}%`
-                        : `₹${card.value.toLocaleString("en-IN")}`}
-                    </h2>
-                    <p className="text-xs text-slate-500 mt-1">{card.subtitle}</p>
-                  </div>
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${card.color} bg-opacity-10 shadow-lg`}>
-                    <card.icon className={`w-5 h-5 text-${card.trend === "up" ? "emerald" : card.trend === "down" ? "rose" : "purple"}-400`} />
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs text-slate-400 font-medium">🟢 Income</span>
+                  <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+                    <TrendingUp className="w-4 h-4" />
                   </div>
                 </div>
-                
-                {card.isProgress && (
-                  <div className="relative mt-4">
-                    <div className="w-full bg-[#1a2228] rounded-full h-2.5 overflow-hidden">
-                      <motion.div
-                        className={`h-full bg-gradient-to-r ${card.color} rounded-full`}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${card.value}%` }}
-                        transition={{ duration: 1, ease: "easeOut" }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Trend indicator */}
-                {!card.isProgress && (
-                  <div className="absolute bottom-4 right-4 flex items-center gap-1">
-                    <span className={`text-xs font-medium ${card.trend === "up" ? "text-emerald-400" : "text-rose-400"}`}>
-                      {card.trend === "up" ? "↑" : "↓"}
-                    </span>
-                  </div>
-                )}
+                <div>
+                  <h3 className="text-xl font-bold text-slate-100">
+                    ₹{totalIncome.toLocaleString("en-IN")}
+                  </h3>
+                  <p className="text-[11px] text-emerald-400 font-medium mt-1 flex items-center gap-1">
+                    <span>↑ +18%</span>
+                    <span className="text-slate-500 font-normal">vs last month</span>
+                  </p>
+                </div>
               </motion.div>
-            ))}
+
+              {/* Expenses */}
+              <motion.div
+                variants={itemVariants}
+                whileHover={{ y: -2 }}
+                className="bg-[#0b121e]/80 border border-white/[0.06] rounded-2xl p-4 shadow-sm hover:border-rose-500/30 transition-all flex flex-col justify-between"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs text-slate-400 font-medium">🔴 Expenses</span>
+                  <div className="p-2 rounded-lg bg-rose-500/10 text-rose-400">
+                    <TrendingDown className="w-4 h-4" />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-100">
+                    ₹{totalExpenses.toLocaleString("en-IN")}
+                  </h3>
+                  <p className="text-[11px] text-emerald-400 font-medium mt-1 flex items-center gap-1">
+                    <span>↓ 8%</span>
+                    <span className="text-emerald-300 font-normal">Good job! 🎉</span>
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Savings Goal */}
+              <motion.div
+                variants={itemVariants}
+                whileHover={{ y: -2 }}
+                className="bg-[#0b121e]/80 border border-white/[0.06] rounded-2xl p-4 shadow-sm hover:border-purple-500/30 transition-all flex flex-col justify-between"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-slate-400 font-medium">🟣 Goal Target</span>
+                  <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
+                    <Target className="w-4 h-4" />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-baseline justify-between">
+                    <h3 className="text-xl font-bold text-slate-100">
+                      {goalProgress.toFixed(0)}%
+                    </h3>
+                    <span className="text-[10px] text-purple-300 font-medium">On track 🎯</span>
+                  </div>
+                  <div className="w-full bg-[#17202e] rounded-full h-1.5 overflow-hidden mt-2">
+                    <motion.div
+                      className="h-full bg-purple-500 rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${goalProgress}%` }}
+                      transition={{ duration: 1 }}
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            </div>
           </motion.div>
 
           {/* ====== Charts Row ====== */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             {/* Monthly Trends */}
             <motion.div
-              className="bg-white/[0.04]
-backdrop-blur-2xl
-border
-border-white/10 border border-white/10/60 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
+              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-4.5 md:p-5 shadow-lg hover:border-emerald-500/20 transition-all"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20">
                   <TrendingUp className="w-5 h-5 text-emerald-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-white">Monthly Trends</h3>
-                <span className="ml-auto text-xs text-slate-500 bg-[#1a2228] px-3 py-1 rounded-full">Last 6 months</span>
+                <h3 className="text-base md:text-lg font-semibold text-white">Monthly Trends</h3>
+                <span className="ml-auto text-xs text-slate-500 bg-[#1a2228] px-2.5 py-1 rounded-full">Last 6 months</span>
               </div>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={240}>
                 <AreaChart data={getMonthlyData()}>
                   <defs>
                     <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
@@ -699,12 +615,12 @@ border-white/10 border border-white/10/60 rounded-2xl p-6 shadow-lg hover:border
                       backgroundColor: "#0d141a",
                       border: "1px solid #2a333d",
                       borderRadius: "12px",
-                      padding: "12px",
+                      padding: "10px",
                     }}
                     formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, '']}
                   />
-                  <Area type="monotone" dataKey="income" stroke="#22c55e" strokeWidth={3} fillOpacity={1} fill="url(#colorIncome)" />
-                  <Area type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorExpenses)" />
+                  <Area type="monotone" dataKey="income" stroke="#22c55e" strokeWidth={2.5} fillOpacity={1} fill="url(#colorIncome)" />
+                  <Area type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={2.5} fillOpacity={1} fill="url(#colorExpenses)" />
                   <Legend />
                 </AreaChart>
               </ResponsiveContainer>
@@ -712,22 +628,19 @@ border-white/10 border border-white/10/60 rounded-2xl p-6 shadow-lg hover:border
 
             {/* Weekly Spending */}
             <motion.div
-              className="bg-white/[0.04]
-backdrop-blur-2xl
-border
-border-white/10 border border-white/10/60 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
+              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-4.5 md:p-5 shadow-lg hover:border-emerald-500/20 transition-all"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-400/20 to-blue-400/20">
                   <Calendar className="w-5 h-5 text-cyan-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-white">Weekly Spending</h3>
-                <span className="ml-auto text-xs text-slate-500 bg-[#1a2228] px-3 py-1 rounded-full">This week</span>
+                <h3 className="text-base md:text-lg font-semibold text-white">Weekly Spending</h3>
+                <span className="ml-auto text-xs text-slate-500 bg-[#1a2228] px-2.5 py-1 rounded-full">This week</span>
               </div>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={getWeeklySpending()}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1a252f" vertical={false} />
                   <XAxis dataKey="day" stroke="#4a5a6a" fontSize={11} />
@@ -737,11 +650,11 @@ border-white/10 border border-white/10/60 rounded-2xl p-6 shadow-lg hover:border
                       backgroundColor: "#0d141a",
                       border: "1px solid #2a333d",
                       borderRadius: "12px",
-                      padding: "12px",
+                      padding: "10px",
                     }}
                     formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, '']}
                   />
-                  <Bar dataKey="amount" radius={[8, 8, 0, 0]}>
+                  <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
                     {getWeeklySpending().map((entry, index) => (
                       <Cell 
                         key={`cell-${index}`} 
@@ -756,27 +669,24 @@ border-white/10 border border-white/10/60 rounded-2xl p-6 shadow-lg hover:border
           </div>
 
           {/* ====== Bottom Section ====== */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Expense Distribution */}
             <motion.div
-              className="lg:col-span-1 bg-white/[0.04]
-backdrop-blur-2xl
-border
-border-white/10 border border-white/10/60 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
+              className="lg:col-span-1 bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-4.5 md:p-5 shadow-lg hover:border-emerald-500/20 transition-all"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 rounded-xl bg-gradient-to-br from-purple-400/20 to-violet-400/20">
                   <PieChartIcon className="w-5 h-5 text-purple-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-white">Expense Distribution</h3>
+                <h3 className="text-base md:text-lg font-semibold text-white">Expense Distribution</h3>
               </div>
 
               {expenseByCategory.length > 0 ? (
                 <>
-                  <div className="w-full h-56 sm:h-64">
+                  <div className="w-full h-48 sm:h-52">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
@@ -797,7 +707,7 @@ border-white/10 border border-white/10/60 rounded-2xl p-6 shadow-lg hover:border
                             backgroundColor: "#0d141a",
                             border: "1px solid #2a333d",
                             borderRadius: "12px",
-                            padding: "12px",
+                            padding: "10px",
                           }}
                           formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, 'Amount']}
                         />
@@ -805,14 +715,14 @@ border-white/10 border border-white/10/60 rounded-2xl p-6 shadow-lg hover:border
                     </ResponsiveContainer>
                   </div>
 
-                  <div className="mt-4 space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-emerald-500/20">
+                  <div className="mt-3 space-y-1.5 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-emerald-500/20">
                     {expenseByCategory.map((category, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 rounded-lg hover:bg-[#1a2228] transition-colors">
+                      <div key={index} className="flex items-center justify-between p-1.5 px-2 rounded-lg hover:bg-[#1a2228] transition-colors">
                         <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: category.color }} />
-                          <span className="text-sm text-gray-300">{category.name}</span>
+                          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: category.color }} />
+                          <span className="text-xs text-gray-300">{category.name}</span>
                         </div>
-                        <span className="text-sm text-emerald-300 font-medium">
+                        <span className="text-xs text-emerald-300 font-medium">
                           ₹{category.value.toLocaleString("en-IN")}
                         </span>
                       </div>
@@ -820,41 +730,38 @@ border-white/10 border border-white/10/60 rounded-2xl p-6 shadow-lg hover:border
                   </div>
                 </>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-slate-500">
-                  <PieChartIcon className="w-12 h-12 mb-3 opacity-20" />
-                  <p className="text-sm">No expense data available</p>
+                <div className="flex flex-col items-center justify-center py-8 text-slate-500">
+                  <PieChartIcon className="w-10 h-10 mb-2 opacity-20" />
+                  <p className="text-xs">No expense data available</p>
                 </div>
               )}
             </motion.div>
 
             {/* Recent Transactions */}
             <motion.div
-              className="lg:col-span-2 bg-white/[0.04]
-backdrop-blur-2xl
-border
-border-white/10 border border-white/10/60 rounded-2xl p-6 shadow-lg hover:border-emerald-500/20 transition-all"
+              className="lg:col-span-2 bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-4.5 md:p-5 shadow-lg hover:border-emerald-500/20 transition-all"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
             >
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-xl bg-gradient-to-br from-blue-400/20 to-indigo-400/20">
                     <BarChart3 className="w-5 h-5 text-blue-400" />
                   </div>
-                  <h3 className="text-lg font-semibold text-white">Recent Transactions</h3>
+                  <h3 className="text-base md:text-lg font-semibold text-white">Recent Transactions</h3>
                 </div>
-                <span className="text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                <span className="text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
                   {filteredTransactions.length} transactions
                 </span>
               </div>
 
               {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-emerald-500 border-t-transparent" />
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-7 w-7 border-2 border-emerald-500 border-t-transparent" />
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {recentTransactions.length > 0 ? (
                     recentTransactions.map((t, idx) => (
                       <motion.div
@@ -862,13 +769,12 @@ border-white/10 border border-white/10/60 rounded-2xl p-6 shadow-lg hover:border
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.05 }}
-                        className="flex items-center justify-between p-4 bg-white/[0.03]
-backdrop-blur-xl rounded-xl border border-white/10/40 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5 transition-all group"
-                        whileHover={{ scale: 1.01 }}
+                        className="flex items-center justify-between p-3 bg-white/[0.03] backdrop-blur-xl rounded-xl border border-white/10/40 hover:border-emerald-500/30 hover:shadow-lg transition-all group"
+                        whileHover={{ scale: 1.005 }}
                       >
-                        <div className="flex items-center gap-4 min-w-0">
+                        <div className="flex items-center gap-3 min-w-0">
                           <div
-                            className="p-2.5 rounded-xl flex-shrink-0"
+                            className="p-2 rounded-xl flex-shrink-0"
                             style={{ backgroundColor: `${getCategoryColor(t.category_id)}20` }}
                           >
                             {t.type === "income" ? (
@@ -878,24 +784,24 @@ backdrop-blur-xl rounded-xl border border-white/10/40 hover:border-emerald-500/3
                             )}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-medium text-white truncate">{t.merchant || "Unknown Merchant"}</p>
+                            <p className="font-medium text-white text-sm truncate">{t.merchant || "Unknown Merchant"}</p>
                             <p className="text-xs text-slate-500">{getCategoryName(t.category_id)}</p>
                           </div>
                         </div>
-                        <div className="text-right flex-shrink-0 ml-4">
-                          <p className={`font-semibold ${t.type === "income" ? "text-green-400" : "text-rose-400"}`}>
+                        <div className="text-right flex-shrink-0 ml-3">
+                          <p className={`font-semibold text-sm ${t.type === "income" ? "text-green-400" : "text-rose-400"}`}>
                             {t.type === "income" ? "+" : "-"}₹{getSafeAmount(t).toLocaleString("en-IN")}
                           </p>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-[11px] text-slate-500">
                             {t.transaction_date ? new Date(t.transaction_date).toLocaleDateString() : "Unknown"}
                           </p>
                         </div>
                       </motion.div>
                     ))
                   ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-slate-500">
-                      <Search className="w-12 h-12 mb-3 opacity-20" />
-                      <p className="text-sm">
+                    <div className="flex flex-col items-center justify-center py-8 text-slate-500">
+                      <Search className="w-10 h-10 mb-2 opacity-20" />
+                      <p className="text-xs">
                         {searchTerm ? "No transactions match your search." : "No transactions found."}
                       </p>
                     </div>

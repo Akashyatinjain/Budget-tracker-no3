@@ -412,29 +412,37 @@ const TransactionPage = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-4 shadow-lg"
+            className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-4 shadow-lg flex flex-col gap-3"
           >
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
+                {/* Active Filter Count Badge */}
+                {((filter !== "all" ? 1 : 0) + (categoryFilter !== "all" ? 1 : 0) + (searchQuery ? 1 : 0)) > 0 && (
+                  <span className="self-start sm:self-auto px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-bold flex items-center gap-1">
+                    <Filter className="w-3 h-3" />
+                    {(filter !== "all" ? 1 : 0) + (categoryFilter !== "all" ? 1 : 0) + (searchQuery ? 1 : 0)} Active
+                  </span>
+                )}
+
                 <div className="flex items-center gap-2">
-                  <SlidersHorizontal className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                  <SlidersHorizontal className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                   <select
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
-                    className="min-w-[130px] p-2.5 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none"
+                    className="min-w-[130px] p-2.5 bg-[#0d141e] border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none cursor-pointer hover:border-emerald-500/40"
                   >
                     <option value="all" className="bg-[#0d141a]">All Types</option>
-                    <option value="income" className="bg-[#0d141a]">💰 Income</option>
-                    <option value="expense" className="bg-[#0d141a]">💳 Expense</option>
+                    <option value="income" className="bg-[#0d141a]">🟢 Income</option>
+                    <option value="expense" className="bg-[#0d141a]">🔴 Expense</option>
                   </select>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Tag className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                  <Tag className="w-4 h-4 text-purple-400 flex-shrink-0" />
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="min-w-[160px] p-2.5 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none"
+                    className="min-w-[160px] p-2.5 bg-[#0d141e] border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none cursor-pointer hover:border-emerald-500/40"
                   >
                     <option value="all" className="bg-[#0d141a]">All Categories</option>
                     {categories.map((c) => (
@@ -446,13 +454,13 @@ const TransactionPage = () => {
                 </div>
 
                 <div className="relative flex-1 max-w-xs">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <input
                     type="text"
                     placeholder="Search merchant..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 bg-[#0d141e] border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
                   />
                 </div>
               </div>
@@ -467,6 +475,31 @@ const TransactionPage = () => {
                 Clear Filters
               </motion.button>
             </div>
+
+            {/* Filter Chips Display */}
+            {((filter !== "all") || (categoryFilter !== "all") || searchQuery) && (
+              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/5">
+                <span className="text-xs text-slate-500">Active filters:</span>
+                {filter !== "all" && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-medium">
+                    Type: {filter}
+                    <X className="w-3 h-3 cursor-pointer hover:text-white" onClick={() => setFilter("all")} />
+                  </span>
+                )}
+                {categoryFilter !== "all" && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-medium">
+                    Category: {categories.find(c => String(c.id) === String(categoryFilter))?.name || categoryFilter}
+                    <X className="w-3 h-3 cursor-pointer hover:text-white" onClick={() => setCategoryFilter("all")} />
+                  </span>
+                )}
+                {searchQuery && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-medium">
+                    Search: "{searchQuery}"
+                    <X className="w-3 h-3 cursor-pointer hover:text-white" onClick={() => setSearchQuery("")} />
+                  </span>
+                )}
+              </div>
+            )}
           </motion.div>
 
           {/* ====== Transactions Table/List ====== */}

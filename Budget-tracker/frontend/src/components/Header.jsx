@@ -93,6 +93,16 @@ const Header = ({ onMobileToggle, onLogout }) => {
         </div>
       </div>
 
+      {/* Middle / Quick Bar */}
+      <div className="hidden lg:flex items-center gap-3">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/10 text-xs text-slate-400">
+          <span>📅</span>
+          <span className="font-medium text-slate-200">
+            {new Date().toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+          </span>
+        </div>
+      </div>
+
       {/* Right Section */}
       <div className="flex items-center gap-3">
         {/* AI Status Indicator */}
