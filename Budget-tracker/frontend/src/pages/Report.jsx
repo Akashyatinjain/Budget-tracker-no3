@@ -624,18 +624,18 @@ const ReportsPage = () => {
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
-                <div className="relative flex items-start justify-between">
+                <div className="relative flex items-center justify-between py-1">
                   <div>
-                    <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">{stat.title}</p>
-                    <h2 className={`text-2xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mt-1`}>
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{stat.title}</p>
+                    <h2 className={`text-2xl font-black bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mt-1`}>
                       ₹{stat.value.toLocaleString('en-IN')}
                     </h2>
-                    <p className="text-xs text-slate-400 mt-1.5 flex items-center gap-1">
+                    <p className="text-xs text-slate-400 font-medium mt-1.5 flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
                       {stat.subtitle}
                     </p>
                   </div>
-                  <div className={`p-3 rounded-xl bg-white/5 border border-white/10 shadow-md`}>
+                  <div className={`p-3 rounded-2xl bg-white/5 border border-white/10 shadow-md flex-shrink-0`}>
                     <stat.icon className={`w-5 h-5 ${
                       stat.trend === "up" ? "text-emerald-400" : "text-rose-400"
                     }`} />

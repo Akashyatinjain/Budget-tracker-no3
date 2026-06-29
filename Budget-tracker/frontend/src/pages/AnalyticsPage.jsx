@@ -409,19 +409,19 @@ const AnalyticsPage = () => {
               <motion.div
                 key={i}
                 variants={itemVariants}
-                className={`relative overflow-hidden bg-gradient-to-br ${stat.bg} border border-white/10 rounded-2xl p-4.5 shadow-lg hover:border-purple-500/30 transition-all group`}
+                className={`relative overflow-hidden bg-gradient-to-br ${stat.bg} border border-white/10 rounded-2xl p-5 md:p-6 shadow-lg hover:border-purple-500/30 transition-all group`}
                 whileHover={{ y: -2 }}
               >
-                <div className="relative flex items-start justify-between">
+                <div className="relative flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-slate-300 font-medium">{stat.title}</p>
-                    <h2 className={`text-xl md:text-2xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mt-1`}>
+                    <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">{stat.title}</p>
+                    <h2 className={`text-xl md:text-2xl font-black bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mt-1.5`}>
                       ₹{stat.value.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
                     </h2>
-                    <p className="text-[11px] text-slate-400 mt-1">{stat.subtitle}</p>
+                    <p className="text-[11px] text-slate-400 font-medium mt-1.5">{stat.subtitle}</p>
                   </div>
-                  <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-10 shadow-md`}>
-                    <stat.icon className="w-4.5 h-4.5 text-white" />
+                  <div className={`p-3 rounded-2xl bg-gradient-to-br ${stat.color} bg-opacity-15 shadow-md flex-shrink-0 ml-2`}>
+                    <stat.icon className="w-5 h-5 text-white" />
                   </div>
                 </div>
               </motion.div>
