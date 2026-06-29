@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaSignOutAlt, FaBell, FaUserCircle, FaCog, FaUser, FaCreditCard } from "react-icons/fa";
-import { FiMenu, FiChevronDown, FiTrendingUp, FiZap, FiShield, FiSearch, FiChevronRight, FiCommand } from "react-icons/fi";
+import { FiMenu, FiChevronDown, FiTrendingUp, FiZap, FiShield, FiSearch, FiChevronRight, FiCommand, FiSun, FiMoon } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
+import { applyTheme } from "../App";
+import toast from "react-hot-toast";
 
 const Header = ({ onMobileToggle, onLogout }) => {
   const location = useLocation();
@@ -12,6 +14,7 @@ const Header = ({ onMobileToggle, onLogout }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [globalSearch, setGlobalSearch] = useState("");
+  const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem("fintrack_theme") || "dark");
   const profileMenuRef = useRef(null);
   const notificationsRef = useRef(null);
 
@@ -25,6 +28,13 @@ const Header = ({ onMobileToggle, onLogout }) => {
     }
     logout();
     navigate("/sign-in");
+  };
+
+  const handleToggleTheme = () => {
+    const nextTheme = currentTheme === "light" ? "dark" : "light";
+    setCurrentTheme(nextTheme);
+    applyTheme(nextTheme);
+    toast.success(`✨ Switched to ${nextTheme === "light" ? "Light Mode" : "Dark Mode"}`);
   };
 
   // Enterprise Breadcrumbs Hierarchy
@@ -118,20 +128,79 @@ const Header = ({ onMobileToggle, onLogout }) => {
         </div>
       </div>
 
-      {/* Right Section: AI Indicator, Notifications & Profile */}
-      <div className="flex items-center gap-3">
+      {/* Right Section: Theme Toggle, AI Indicator, Notifications & Profile */}
+      <div className="flex items-center gap-2.5">
         
+        {/* ☀️ / 🌙 Header Theme Toggle Button */}
+        <button
+          onClick={handleToggleTheme}
+          className="p-2.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-all flex items-center justify-center border border-white/5"
+          title={`Switch to ${currentTheme === "light" ? "Dark Mode" : "Light Mode"}`}
+          aria-label="Toggle theme"
+        >
+          {currentTheme === "light" ? (
+            <FiMoon className="text-indigo-500 text-base" />
+          ) : (
+            <FiSun className="text-amber-400 text-base" />
+          )}
+        </button>
+
         {/* Live AI Engine Badge */}
-  
+        <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-sm">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">AI Active</span>
+        </div>
 
         {/* 🔔 Notifications Button with Live Numeric Badge */}
-        
-        {/* 👤 Rich Notion/GitHub Style Profile Menu */}
+        <div className="relative" ref={notificationsRef}>
+          <button
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="relative p-2.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-all border border-white/5"
+            aria-label="Notifications"
+          >
+            <FaBell className="text-base" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[10px] font-extrabold rounded-full flex items-center justify-center shadow-md border-2 border-[#070d14]">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+
+          {/* Notifications Dropdown */}
+          {showNotifications && (
+            <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl bg-[#0a1017] border border-white/15 shadow-2xl z-50 text-white custom-scrollbar">
+              <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+                <h3 className="font-bold text-sm text-white">Live Alerts</h3>
+                <span className="text-xs text-emerald-400 font-semibold cursor-pointer hover:underline">Mark all read</span>
+              </div>
+              <div className="divide-y divide-white/5">
+                {notifications.length > 0 ? (
+                  notifications.map((notif) => (
+                    <div key={notif.id} className={`p-4 hover:bg-white/5 transition cursor-pointer ${!notif.read ? 'bg-emerald-500/10' : ''}`}>
+                      <div className="flex items-start gap-3">
+                        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${notif.read ? 'bg-slate-600' : 'bg-emerald-400'}`} />
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-xs font-semibold ${notif.read ? 'text-slate-400' : 'text-white'}`}>{notif.title}</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">{notif.message}</p>
+                          <p className="text-[10px] text-slate-500 mt-1.5">{notif.time}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-slate-500 text-xs">No active notifications</div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 👤 Rich Profile Menu */}
         {isAuthenticated ? (
           <div className="relative" ref={profileMenuRef}>
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-white/10 transition-all group"
+              className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-white/10 transition-all group border border-white/5"
               aria-label="Profile menu"
             >
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md font-bold text-white text-xs">

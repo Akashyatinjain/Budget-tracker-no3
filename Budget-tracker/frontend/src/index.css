@@ -2,26 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 🌙 Global Styles */
+/* 🌙 Global Base Styles */
 html,
 body,
 #root {
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: #0f0f0f; /* dark bg */
-  color: #f5f5f5; /* light text */
+  background-color: #0f0f0f;
+  color: #f5f5f5;
   font-family: 'Inter', sans-serif;
 }
 
 /* Example reusable card style */
 .card {
   @apply bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6;
-}
-
-/* Example text style */
-.read-the-docs {
-  @apply text-gray-400 text-sm;
 }
 
 /* Smooth transitions */
@@ -37,46 +32,17 @@ body,
   overflow-y: auto;
 }
 
-/* Custom scrollbar for modern look */
 .sidebar-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
-
 .sidebar-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
-
 .sidebar-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #7c3aed; /* purple-600 */
+  background-color: #7c3aed;
   border-radius: 4px;
   border: 2px solid transparent;
   background-clip: content-box;
-}
-
-.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: #9d4edd; /* lighter purple on hover */
-}
-
-/* Firefox scrollbar */
-.sidebar-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: #7c3aed transparent;
-}
-
-/* Custom scrollbars for tables and content */
-@layer utilities {
-  .scrollbar-thin {
-    scrollbar-width: thin;
-  }
-  
-  .scrollbar-thumb-purple-600::-webkit-scrollbar-thumb {
-    background-color: #9333ea;
-    border-radius: 9999px;
-  }
-  
-  .scrollbar-track-transparent::-webkit-scrollbar-track {
-    background-color: transparent;
-  }
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -90,60 +56,228 @@ body,
   background: rgba(16, 185, 129, 0.25);
   border-radius: 10px;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(16, 185, 129, 0.5);
-}
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(16, 185, 129, 0.25) transparent;
 }
 
-/* 🎨 FinTrack Theme Engine Overrides */
+/* 🎨 FinTrack Enterprise Premium Light Theme Engine Overrides */
 html.theme-light,
 html.theme-light body,
 html.theme-light #root {
   background-color: #f8fafc !important;
+  background-image: none !important;
   color: #0f172a !important;
 }
 
-html.theme-light .bg-\[\#030712\],
-html.theme-light .bg-\[\#07101f\],
-html.theme-light .bg-\[\#050816\],
-html.theme-light .bg-\[\#070d14\],
-html.theme-light .bg-\[\#0a1017\],
-html.theme-light .bg-\[\#0d1117\],
-html.theme-light .bg-\[\#090e17\],
-html.theme-light .bg-\[\#070c14\] {
+/* 1. Main Outer Page Layouts & Outer Frame Backgrounds (Eliminating dark outer margins) */
+html.theme-light div,
+html.theme-light main,
+html.theme-light section,
+html.theme-light article {
+  background-image: none !important;
+}
+
+html.theme-light div[class*="min-h-screen"],
+html.theme-light div[class*="bg-gradient-to-br"],
+html.theme-light div[class*="bg-gradient-to-r"],
+html.theme-light div[class*="bg-[#030712]"],
+html.theme-light div[class*="bg-[#07101f]"],
+html.theme-light div[class*="bg-[#050816]"],
+html.theme-light div[class*="bg-[#0b121e]"],
+html.theme-light div[class*="bg-[#0d141e]"],
+html.theme-light div[class*="bg-[#0d1520]"],
+html.theme-light div[class*="bg-[#0a1017]"],
+html.theme-light div[class*="bg-[#111118]"],
+html.theme-light div[class*="bg-[#161b22]"],
+html.theme-light div[class*="bg-[#070c14]"],
+html.theme-light div[class*="bg-[#090e17]"],
+html.theme-light div[class*="bg-[#0d1827]"],
+html.theme-light div[class*="bg-[#09101d]"],
+html.theme-light div[class*="bg-[#0d1424]"] {
+  background-color: #f8fafc !important;
+  background-image: none !important;
+  color: #0f172a !important;
+}
+
+/* 2. Sidebar Light Mode Styling */
+html.theme-light aside {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-right: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.03) !important;
+}
+
+html.theme-light aside nav button {
+  color: #334155 !important;
+}
+
+html.theme-light aside nav button:hover {
   background-color: #f1f5f9 !important;
   color: #0f172a !important;
 }
 
+/* 3. Header Navbar Light Mode Styling */
+html.theme-light header {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  background-image: none !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
+}
+
+/* 4. Cards, Hero Modules & Analytics Banners */
 html.theme-light .bg-white\/\[0\.04\],
 html.theme-light .bg-white\/\[0\.03\],
 html.theme-light .bg-white\/\[0\.02\],
-html.theme-light .bg-[#0b121e]\/80,
-html.theme-light .bg-[#0d141e],
-html.theme-light .bg-[#0d1520] {
+html.theme-light .bg-white\/\[0\.05\],
+html.theme-light .bg-white\/5,
+html.theme-light .bg-white\/10,
+html.theme-light .bg-\[\#0b121e\]\/80,
+html.theme-light .bg-\[\#0c1322\]\/80,
+html.theme-light .bg-\[\#0d141e\],
+html.theme-light .bg-\[\#0d1520\],
+html.theme-light .bg-\[\#07101f\],
+html.theme-light .bg-\[\#0a1017\],
+html.theme-light .bg-\[\#17202e\],
+html.theme-light .bg-\[\#0d1827\],
+html.theme-light .bg-\[\#09101d\],
+html.theme-light .bg-\[\#0d1424\],
+html.theme-light div[class*="rounded-2xl"],
+html.theme-light div[class*="rounded-xl"] {
   background-color: #ffffff !important;
-  border-color: #cbd5e1 !important;
+  background-image: none !important;
+  border: 1px solid #e2e8f0 !important;
   color: #0f172a !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02) !important;
 }
 
+/* 5. SVG Circles & Charts in Light Mode */
+html.theme-light circle[stroke="#17202e"] {
+  stroke: #e2e8f0 !important;
+}
+
+/* 6. Tables & Headers Overrides */
+html.theme-light thead,
+html.theme-light thead tr,
+html.theme-light th,
+html.theme-light tr[class*="bg-[#07101f]"] {
+  background-color: #f1f5f9 !important;
+  background-image: none !important;
+  color: #334155 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+html.theme-light tbody tr {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+html.theme-light tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+
+/* 7. Inputs, Selects & Search Bars */
+html.theme-light input,
+html.theme-light select,
+html.theme-light textarea,
+html.theme-light option {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.theme-light input::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* 8. Re-enable Vibrant Buttons, Icons & Badges in Light Mode */
+html.theme-light button[class*="bg-gradient-to-r"],
+html.theme-light button[class*="bg-emerald-"],
+html.theme-light button[class*="bg-purple-"],
+html.theme-light button[class*="bg-indigo-"],
+html.theme-light button[class*="bg-rose-"],
+html.theme-light span[class*="bg-gradient-to-r"] {
+  background-image: linear-gradient(to right, var(--tw-gradient-stops)) !important;
+}
+
+html.theme-light .bg-emerald-500\/10,
+html.theme-light .bg-emerald-500\/20,
+html.theme-light .bg-emerald-400\/10 {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+
+html.theme-light .bg-purple-500\/10,
+html.theme-light .bg-purple-500\/20 {
+  background-color: #faf5ff !important;
+  border-color: #e9d5ff !important;
+  color: #7e22ce !important;
+}
+
+html.theme-light .bg-rose-500\/10,
+html.theme-light .bg-rose-500\/20 {
+  background-color: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+  color: #be123c !important;
+}
+
+html.theme-light .bg-amber-500\/10,
+html.theme-light .bg-amber-500\/20 {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #b45309 !important;
+}
+
+html.theme-light .bg-blue-500\/10,
+html.theme-light .bg-blue-500\/20,
+html.theme-light .bg-cyan-500\/10 {
+  background-color: #f0f9ff !important;
+  border-color: #bae6fd !important;
+  color: #0369a1 !important;
+}
+
+/* 9. Sharp Typography Contrast Overrides */
 html.theme-light .text-white {
   color: #0f172a !important;
 }
-
-html.theme-light .text-slate-300,
-html.theme-light .text-slate-400 {
+html.theme-light .text-slate-100 {
+  color: #1e293b !important;
+}
+html.theme-light .text-slate-200 {
+  color: #334155 !important;
+}
+html.theme-light .text-slate-300 {
   color: #475569 !important;
 }
+html.theme-light .text-slate-400 {
+  color: #64748b !important;
+}
+html.theme-light .text-slate-500 {
+  color: #94a3b8 !important;
+}
 
+/* 10. Borders & Separators Overrides */
 html.theme-light .border-white\/10,
 html.theme-light .border-white\/5,
-html.theme-light .border-white\/15 {
+html.theme-light .border-white\/15,
+html.theme-light .border-white\/20,
+html.theme-light .border-white\/\[0\.06\],
+html.theme-light .border-[#213b21]\/60 {
   border-color: #e2e8f0 !important;
 }
 
-
-
+/* 11. Dropdown Menus & Modals in Light Mode */
+html.theme-light div[class*="bg-[#0a1017]"],
+html.theme-light div[class*="bg-[#111118]"],
+html.theme-light div[class*="bg-[#070d14]"] {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+}

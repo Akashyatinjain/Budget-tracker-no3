@@ -79,7 +79,7 @@ const SettingsPage = () => {
   });
 
   const [preferences, setPreferences] = useState({
-    theme: "dark",
+    theme: localStorage.getItem("fintrack_theme") || "dark",
     dashboard_layout: "standard",
     default_view: "dashboard",
     weekly_report: true,
@@ -697,7 +697,11 @@ const SettingsPage = () => {
                       ].map(t => (
                         <div
                           key={t.value}
-                          onClick={() => { setPreferences({ ...preferences, theme: t.value }); toast.success(`Theme set to ${t.title}`); }}
+                          onClick={() => {
+                            setPreferences({ ...preferences, theme: t.value });
+                            applyTheme(t.value);
+                            toast.success(`✨ Visual theme updated to ${t.title}`);
+                          }}
                           className={`p-4 rounded-xl border cursor-pointer transition-all ${preferences.theme === t.value ? 'bg-emerald-500/15 border-emerald-500/40 text-white shadow-lg' : 'bg-white/[0.03] border-white/10 text-slate-400 hover:bg-white/5'}`}
                         >
                           <t.icon size={20} className={preferences.theme === t.value ? 'text-emerald-400 mb-2' : 'text-slate-400 mb-2'} />
