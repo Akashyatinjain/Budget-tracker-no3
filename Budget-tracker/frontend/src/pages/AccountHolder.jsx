@@ -100,32 +100,12 @@ const AccountHolderPage = () => {
     { id: 'export', label: 'Data Export', icon: <FaDownload /> }
   ];
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen bg-[#0a0a0f] text-gray-100">
-        <AdvancedSidebar
-          user={user}
-          mobileOpen={mobileSidebarOpen}
-          onMobileClose={() => setMobileSidebarOpen(false)}
-        />
-        <div className="flex-1 flex items-center justify-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="flex items-center gap-3 text-emerald-400"
-          >
-            <FiTrendingUp className="w-6 h-6" />
-            <span>Loading profile...</span>
-          </motion.div>
-        </div>
-      </div>
-    );
-  }
+  const currentUser = user || authUser || {};
 
   return (
     <div className="flex min-h-screen bg-[#0a0a0f] text-gray-100">
       <AdvancedSidebar
-        user={user}
+        user={currentUser}
         mobileOpen={mobileSidebarOpen}
         onMobileClose={() => setMobileSidebarOpen(false)}
       />
@@ -252,7 +232,7 @@ const AccountHolderPage = () => {
                           />
                         ) : (
                           <div className="bg-white/5 rounded-xl px-4 py-3 text-white border border-white/5">
-                            {user.first_name || 'Not set'}
+                            {currentUser?.first_name || 'Not set'}
                           </div>
                         )}
                       </div>
@@ -268,7 +248,7 @@ const AccountHolderPage = () => {
                           />
                         ) : (
                           <div className="bg-white/5 rounded-xl px-4 py-3 text-white border border-white/5">
-                            {user.last_name || 'Not set'}
+                            {currentUser?.last_name || 'Not set'}
                           </div>
                         )}
                       </div>
@@ -284,7 +264,7 @@ const AccountHolderPage = () => {
                           />
                         ) : (
                           <div className="bg-white/5 rounded-xl px-4 py-3 text-white border border-white/5">
-                            {user.email}
+                            {currentUser?.email || 'Not set'}
                           </div>
                         )}
                       </div>
@@ -300,7 +280,7 @@ const AccountHolderPage = () => {
                           />
                         ) : (
                           <div className="bg-white/5 rounded-xl px-4 py-3 text-white border border-white/5">
-                            {user.phone || 'Not set'}
+                            {currentUser?.phone || 'Not set'}
                           </div>
                         )}
                       </div>
@@ -321,7 +301,7 @@ const AccountHolderPage = () => {
                         ) : (
                           <div className="bg-white/5 rounded-xl px-4 py-3 text-white border border-white/5 flex items-center gap-2">
                             <MdCurrencyExchange className="text-emerald-400" />
-                            {user.currency || 'INR'}
+                            {currentUser?.currency || 'INR'}
                           </div>
                         )}
                       </div>
@@ -341,7 +321,7 @@ const AccountHolderPage = () => {
                           </select>
                         ) : (
                           <div className="bg-white/5 rounded-xl px-4 py-3 text-white border border-white/5">
-                            {user.language || 'en'}
+                            {currentUser?.language || 'en'}
                           </div>
                         )}
                       </div>
@@ -361,7 +341,7 @@ const AccountHolderPage = () => {
                           </select>
                         ) : (
                           <div className="bg-white/5 rounded-xl px-4 py-3 text-white border border-white/5">
-                            {user.timezone || 'Asia/Kolkata'}
+                            {currentUser?.timezone || 'Asia/Kolkata'}
                           </div>
                         )}
                       </div>

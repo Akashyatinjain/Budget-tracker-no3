@@ -165,7 +165,7 @@ const SettingsPage = () => {
     setSaving(true);
     
     try {
-      await axios.put(`${VITE_BASE_URL}/api/users/profile`, profileData, axiosConfig);
+      await api.put("/api/users/profile", profileData);
       showMessage("success", "Profile updated successfully");
     } catch (err) {
       console.error("Update profile error:", err);
@@ -191,7 +191,7 @@ const SettingsPage = () => {
     setSaving(true);
     
     try {
-      await axios.put(`${VITE_BASE_URL}/api/users/password`, securityData, axiosConfig);
+      await api.put("/api/users/password", securityData);
       showMessage("success", "Password updated successfully");
       setSecurityData({
         current_password: "",
@@ -200,7 +200,7 @@ const SettingsPage = () => {
       });
     } catch (err) {
       console.error("Change password error:", err);
-      showMessage("error", err.response?.data?.error || "Failed to change password");
+      showMessage("error", err.response?.data?.error || err.response?.data?.msg || "Failed to change password");
     } finally {
       setSaving(false);
     }
@@ -210,7 +210,7 @@ const SettingsPage = () => {
     setSaving(true);
     
     try {
-      await axios.put(`${VITE_BASE_URL}/api/user-preferences`, preferences, axiosConfig);
+      await api.put("/api/users/preferences", preferences);
       showMessage("success", "Preferences updated successfully");
     } catch (err) {
       console.error("Update preferences error:", err);
@@ -224,7 +224,7 @@ const SettingsPage = () => {
     setSaving(true);
     
     try {
-      await axios.put(`${VITE_BASE_URL}/api/privacy-settings`, privacySettings, axiosConfig);
+      await api.put("/api/users/privacy", privacySettings);
       showMessage("success", "Privacy settings updated successfully");
     } catch (err) {
       console.error("Update privacy settings error:", err);
@@ -236,8 +236,7 @@ const SettingsPage = () => {
 
   const exportData = async () => {
     try {
-      const response = await axios.get(`${VITE_BASE_URL}/api/export-data`, {
-        ...axiosConfig,
+      const response = await api.get("/api/users/export-data", {
         responseType: 'blob'
       });
       
@@ -269,7 +268,7 @@ const SettingsPage = () => {
     }
 
     try {
-      await axios.delete(`${VITE_BASE_URL}/api/users/account`, axiosConfig);
+      await api.delete("/api/users/me");
       localStorage.removeItem("token");
       window.location.href = "/";
     } catch (err) {
@@ -291,28 +290,6 @@ const SettingsPage = () => {
     { id: "data", label: "Data", icon: FiDatabase },
     { id: "about", label: "About", icon: FiInfo }
   ];
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen bg-[#0a0a0f] text-gray-100">
-        <AdvancedSidebar
-          user={user}
-          mobileOpen={mobileSidebarOpen}
-          onMobileClose={() => setMobileSidebarOpen(false)}
-        />
-        <div className="flex-1 flex items-center justify-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="flex items-center gap-3 text-emerald-400"
-          >
-            <FiSettings className="w-6 h-6" />
-            <span>Loading settings...</span>
-          </motion.div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-screen bg-[#0a0a0f] text-gray-100">

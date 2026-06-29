@@ -295,21 +295,6 @@ const CurrenciesPage = () => {
     }
   ];
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-[#030712] via-[#07101f] to-[#050816] text-emerald-300">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="flex items-center gap-3"
-        >
-          <Globe className="w-6 h-6" />
-          <span className="text-slate-400">Loading currencies...</span>
-        </motion.div>
-      </div>
-    );
-  }
-
   return (
     <div className="relative flex min-h-screen overflow-hidden bg-gradient-to-br from-[#030712] via-[#07101f] to-[#050816] text-white">
 
@@ -344,48 +329,31 @@ const CurrenciesPage = () => {
           <div className="absolute left-1/2 top-0 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[180px]" />
           <div className="absolute bottom-0 right-0 h-[450px] w-[450px] rounded-full bg-cyan-500/10 blur-[180px]" />
 
-          {/* ====== Page Header with Gradient ====== */}
+          {/* ====== Page Header ====== */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="relative overflow-hidden rounded-[32px] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-emerald-500/[0.03] backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,.45)] p-8"
+            transition={{ duration: 0.3 }}
+            className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-emerald-500/[0.03] backdrop-blur-2xl p-4 md:p-5 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4"
           >
-            <div className="absolute -top-28 -right-20 h-80 w-80 rounded-full bg-emerald-500/15 blur-[120px]" />
-            <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-cyan-500/15 blur-[120px]" />
-
-            <div className="relative flex flex-col lg:flex-row justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
+                <Sparkles className="w-5 h-5" />
+              </div>
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-emerald-300 text-sm font-semibold">
-                  <Sparkles className="w-4 h-4" />
-                  Multi-Currency Support
-                </div>
-                <h1 className="mt-6 text-5xl font-black leading-tight">
-                  <span className="bg-gradient-to-r from-white via-emerald-200 to-cyan-300 bg-clip-text text-transparent">
-                    Currency
-                  </span>
-                  <br/>
-                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-                    Management
-                  </span>
-                </h1>
-                <p className="mt-5 max-w-xl text-slate-400 leading-8">
-                  Manage currencies & exchange rates.
-                  Convert between any supported currency instantly.
-                </p>
+                <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">Currency Management</h1>
+                <p className="text-xs text-slate-400">Manage currencies & exchange rates instantly.</p>
               </div>
+            </div>
 
-              <div className="flex flex-wrap items-end gap-3">
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => setShowAddCurrency(true)}
-                  className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-5 py-3 font-semibold shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/60 transition-all flex items-center gap-2"
-                >
-                  <Plus size={16} />
-                  Add Currency
-                </motion.button>
-              </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowAddCurrency(true)}
+                className="rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-3.5 py-2 font-semibold text-xs text-white shadow-md shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center gap-2"
+              >
+                <Plus size={14} />
+                Add Currency
+              </button>
             </div>
           </motion.div>
 

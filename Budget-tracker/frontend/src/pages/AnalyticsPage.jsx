@@ -188,21 +188,6 @@ const AnalyticsPage = () => {
     },
   ];
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-[#030712] via-[#07101f] to-[#050816] text-emerald-300">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="flex items-center gap-3"
-        >
-          <RefreshCw className="w-6 h-6" />
-          <span className="text-slate-400">Loading analytics...</span>
-        </motion.div>
-      </div>
-    );
-  }
-
   return (
     <div className="relative flex min-h-screen overflow-hidden bg-gradient-to-br from-[#030712] via-[#07101f] to-[#050816] text-white">
 
@@ -237,60 +222,43 @@ const AnalyticsPage = () => {
           <div className="absolute left-1/2 top-0 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[180px]" />
           <div className="absolute bottom-0 right-0 h-[450px] w-[450px] rounded-full bg-cyan-500/10 blur-[180px]" />
 
-          {/* ====== Page Header with Gradient ====== */}
+          {/* ====== Page Header ====== */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="relative overflow-hidden rounded-[32px] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-emerald-500/[0.03] backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,.45)] p-8"
+            transition={{ duration: 0.3 }}
+            className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-emerald-500/[0.03] backdrop-blur-2xl p-4 md:p-5 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4"
           >
-            <div className="absolute -top-28 -right-20 h-80 w-80 rounded-full bg-emerald-500/15 blur-[120px]" />
-            <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-cyan-500/15 blur-[120px]" />
-
-            <div className="relative flex flex-col lg:flex-row justify-between gap-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
+                <Brain className="w-5 h-5" />
+              </div>
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-emerald-300 text-sm font-semibold">
-                  <Brain className="w-4 h-4" />
-                  Deep Analytics Engine
-                </div>
-                <h1 className="mt-6 text-5xl font-black leading-tight">
-                  <span className="bg-gradient-to-r from-white via-emerald-200 to-cyan-300 bg-clip-text text-transparent">
-                    Financial
-                  </span>
-                  <br/>
-                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-                    Analytics Hub
-                  </span>
-                </h1>
-                <p className="mt-5 max-w-xl text-slate-400 leading-8">
-                  Deep insights into your spending &amp; saving patterns.
-                  Make data-driven decisions for a richer future.
-                </p>
+                <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">Financial Analytics Hub</h1>
+                <p className="text-xs text-slate-400">Deep insights into your spending &amp; saving patterns</p>
               </div>
+            </div>
 
-              {/* Time Range Pills */}
-              <div className="flex flex-wrap items-end gap-2">
-                {[
-                  { key: "week",  label: "This Week"  },
-                  { key: "month", label: "This Month" },
-                  { key: "year",  label: "This Year"  },
-                  { key: "all",   label: "All Time"   },
-                ].map((range) => (
-                  <motion.button
-                    key={range.key}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setTimeRange(range.key)}
-                    className={`px-5 py-3 rounded-2xl text-sm font-semibold transition-all ${
-                      timeRange === range.key
-                        ? "bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 text-white shadow-xl shadow-emerald-500/30"
-                        : "bg-white/5 backdrop-blur-xl border border-white/10 text-slate-400 hover:text-white hover:border-emerald-500/30"
-                    }`}
-                  >
-                    {range.label}
-                  </motion.button>
-                ))}
-              </div>
+            {/* Time Range Pills */}
+            <div className="flex flex-wrap items-center gap-2">
+              {[
+                { key: "week",  label: "This Week"  },
+                { key: "month", label: "This Month" },
+                { key: "year",  label: "This Year"  },
+                { key: "all",   label: "All Time"   },
+              ].map((range) => (
+                <button
+                  key={range.key}
+                  onClick={() => setTimeRange(range.key)}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+                    timeRange === range.key
+                      ? "bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 text-white shadow-md shadow-emerald-500/30"
+                      : "bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:border-emerald-500/30"
+                  }`}
+                >
+                  {range.label}
+                </button>
+              ))}
             </div>
           </motion.div>
 

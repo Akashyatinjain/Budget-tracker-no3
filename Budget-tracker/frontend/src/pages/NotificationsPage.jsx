@@ -1,8 +1,10 @@
 // NotificationsPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { toast } from "react-hot-toast";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
+import { useAuth } from "../context/AuthContext";
 import { motion } from "framer-motion";
 import {
   markAsRead,
@@ -37,6 +39,7 @@ import {
 } from "lucide-react";
 
 const NotificationsPage = () => {
+  const { user: authUser, token: authToken } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -310,22 +313,6 @@ const NotificationsPage = () => {
       bg: "from-cyan-500/10 to-blue-500/5"
     },
   ];
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-[#030712] via-[#07101f] to-[#050816] text-emerald-300">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="flex items-center gap-3"
-        >
-          <Bell className="w-6 h-6" />
-          <span className="text-slate-400">Loading notifications...</span>
-        </motion.div>
-      </div>
-    );
-  }
-
   return (
     <div className="relative flex min-h-screen overflow-hidden bg-gradient-to-br from-[#030712] via-[#07101f] to-[#050816] text-white">
 
@@ -346,7 +333,7 @@ const NotificationsPage = () => {
 
       {/* Sidebar */}
       <AdvancedSidebar
-        user={user}
+        user={user || authUser || { username: "Guest" }}
         mobileOpen={mobileSidebarOpen}
         onMobileClose={() => setMobileSidebarOpen(false)}
       />
@@ -360,58 +347,39 @@ const NotificationsPage = () => {
           <div className="absolute left-1/2 top-0 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[180px]" />
           <div className="absolute bottom-0 right-0 h-[450px] w-[450px] rounded-full bg-cyan-500/10 blur-[180px]" />
 
-          {/* ====== Page Header with Gradient ====== */}
+          {/* ====== Page Header ====== */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="relative overflow-hidden rounded-[32px] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-emerald-500/[0.03] backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,.45)] p-8"
+            transition={{ duration: 0.3 }}
+            className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-emerald-500/[0.03] backdrop-blur-2xl p-4 md:p-5 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4"
           >
-            <div className="absolute -top-28 -right-20 h-80 w-80 rounded-full bg-emerald-500/15 blur-[120px]" />
-            <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-cyan-500/15 blur-[120px]" />
-
-            <div className="relative flex flex-col lg:flex-row justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
+                <Sparkles className="w-5 h-5" />
+              </div>
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-emerald-300 text-sm font-semibold">
-                  <Sparkles className="w-4 h-4" />
-                  Smart Notifications
-                </div>
-                <h1 className="mt-6 text-5xl font-black leading-tight">
-                  <span className="bg-gradient-to-r from-white via-emerald-200 to-cyan-300 bg-clip-text text-transparent">
-                    Notification
-                  </span>
-                  <br/>
-                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-                    Center
-                  </span>
-                </h1>
-                <p className="mt-5 max-w-xl text-slate-400 leading-8">
-                  Stay updated with your financial activities.
-                  Never miss an important alert.
-                </p>
+                <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">Notification Center</h1>
+                <p className="text-xs text-slate-400">Stay updated with your financial activities.</p>
               </div>
+            </div>
 
-              <div className="flex flex-wrap items-end gap-3">
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => setShowSettings(true)}
-                  className="rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 px-5 py-3 font-semibold text-slate-300 hover:text-white hover:border-emerald-500/30 transition-all shadow-lg flex items-center gap-2"
-                >
-                  <Settings size={16} />
-                  Settings
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={markAllAsReadHandler}
-                  disabled={notificationStats.unread === 0}
-                  className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-5 py-3 font-semibold shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/60 transition-all disabled:opacity-50 flex items-center gap-2"
-                >
-                  <CheckCircle size={16} />
-                  Mark All Read
-                </motion.button>
-              </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setShowSettings(true)}
+                className="rounded-xl bg-white/5 border border-white/10 px-3.5 py-2 font-semibold text-xs text-slate-300 hover:text-white hover:border-emerald-500/30 transition-all flex items-center gap-2"
+              >
+                <Settings size={14} />
+                Settings
+              </button>
+              <button
+                onClick={markAllAsReadHandler}
+                disabled={notificationStats.unread === 0}
+                className="rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-3.5 py-2 font-semibold text-xs text-white shadow-md shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all disabled:opacity-50 flex items-center gap-2"
+              >
+                <CheckCircle size={14} />
+                Mark All Read
+              </button>
             </div>
           </motion.div>
 
@@ -693,8 +661,9 @@ const NotificationsPage = () => {
           </motion.div>
 
         </main>
+      </div>
 
-        {/* ====== Notification Settings Modal ====== */}
+      {/* ====== Notification Settings Modal ====== */}
         {showSettings && (
           <div 
             className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[11000] p-4"
@@ -704,7 +673,7 @@ const NotificationsPage = () => {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+              className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] "
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-3 mb-6">
@@ -746,8 +715,8 @@ const NotificationsPage = () => {
                           </div>
                           <div>
                             <div className="font-semibold text-white text-sm capitalize">
-                              {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                            </div>
+                            {key.replace(/_/g, ' ').replace(/^./, str => str.toUpperCase())}
+                          </div>
                             <div className="text-xs text-slate-500 mt-0.5">
                               {getSettingDescription(key)}
                             </div>
@@ -792,7 +761,6 @@ const NotificationsPage = () => {
             </motion.div>
           </div>
         )}
-      </div>
     </div>
   );
 };
