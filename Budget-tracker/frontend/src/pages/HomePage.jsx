@@ -278,20 +278,20 @@ export default function HomePage() {
               The Complete Financial Management Suite for India
             </div>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight text-white">
+            <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold leading-[1.15] sm:leading-[1.1] tracking-tight text-white">
               Take complete control of your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">Financial Future</span>
             </h1>
 
-            <p className="text-lg sm:text-xl text-gray-400 max-w-xl leading-relaxed">
+            <p className="text-base sm:text-xl text-gray-400 max-w-xl leading-relaxed">
               Track expenses, automate category budgets, monitor subscriptions, and analyze long-term financial trends with bank-grade precision.
             </p>
 
-            <div className="flex flex-wrap items-center gap-4 pt-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3.5 pt-2">
               <motion.button
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.96 }}
                 onClick={() => navigate("/sign-up")}
-                className="px-9 py-4 bg-emerald-600 hover:bg-emerald-500 font-semibold rounded-2xl flex items-center gap-3 text-base sm:text-lg transition-all text-white shadow-xl shadow-emerald-600/30"
+                className="w-full sm:w-auto px-8 py-3.5 sm:py-4 bg-emerald-600 hover:bg-emerald-500 font-semibold rounded-2xl flex items-center justify-center gap-3 text-base sm:text-lg transition-all text-white shadow-xl shadow-emerald-600/30"
               >
                 Start Your Free Trial
                 <FaArrowRight className="text-sm" />
@@ -299,7 +299,7 @@ export default function HomePage() {
 
               <button
                 onClick={() => document.getElementById('demo').scrollIntoView({ behavior: 'smooth' })}
-                className="px-8 py-4 border border-white/20 hover:border-emerald-500/50 hover:bg-white/5 rounded-2xl font-medium text-base sm:text-lg transition-all"
+                className="w-full sm:w-auto px-7 py-3.5 sm:py-4 border border-white/20 hover:border-emerald-500/50 hover:bg-white/5 rounded-2xl font-medium text-base sm:text-lg transition-all text-center"
               >
                 Explore Live Features
               </button>
@@ -352,18 +352,18 @@ export default function HomePage() {
               <div className="p-6 sm:p-8 space-y-6">
                 {activeDemoTab === "overview" && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                    <div className="flex justify-between items-end">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2">
                       <div>
                         <p className="text-gray-400 text-xs tracking-wider uppercase font-medium">Net Financial Worth</p>
-                        <p className="text-4xl sm:text-5xl font-extrabold tracking-tight mt-1 text-white">₹68,42,750</p>
+                        <p className="text-3xl sm:text-5xl font-extrabold tracking-tight mt-1 text-white">₹68,42,750</p>
                         <p className="text-emerald-400 text-xs sm:text-sm font-semibold mt-1 flex items-center gap-1">
                           ▲ +₹4,28,390 (+6.7%) this month
                         </p>
                       </div>
-                      <span className="text-xs text-gray-400 bg-white/5 px-3 py-1.5 rounded-xl border border-white/5">March 2026</span>
+                      <span className="self-start sm:self-auto text-xs text-gray-400 bg-white/5 px-3 py-1.5 rounded-xl border border-white/5">March 2026</span>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-3.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-3.5">
                       <div className="bg-[#1F2937]/90 rounded-2xl p-4 border border-white/5">
                         <p className="text-xs text-gray-400">Total Income</p>
                         <p className="text-xl sm:text-2xl font-bold text-emerald-400 mt-1">₹2,84,000</p>
@@ -452,8 +452,8 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Floating Badge */}
-            <div className="absolute -top-4 -right-4 bg-[#111827] border border-emerald-500/40 text-emerald-400 text-xs px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2 font-semibold">
+            {/* Floating Badge (hidden on tiny mobile screens so it doesn't overflow) */}
+            <div className="hidden sm:flex absolute -top-4 -right-4 bg-[#111827] border border-emerald-500/40 text-emerald-400 text-xs px-4 py-2.5 rounded-2xl shadow-xl items-center gap-2 font-semibold">
               <FaChartLine /> Verified Financial Engine
             </div>
           </motion.div>
