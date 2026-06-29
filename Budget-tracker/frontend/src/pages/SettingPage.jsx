@@ -5,8 +5,8 @@ import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
 import { useAuth, api } from "../context/AuthContext";
 import { motion } from "framer-motion";
-import { 
-  FiUser, FiLock, FiSettings, FiShield, FiDatabase, FiInfo, 
+import {
+  FiUser, FiLock, FiSettings, FiShield, FiDatabase, FiInfo,
   FiZap, FiShield as FiShieldIcon, FiClock, FiSave, FiDownload,
   FiAlertTriangle, FiLogOut, FiChevronRight
 } from "react-icons/fi";
@@ -146,7 +146,7 @@ const SettingsPage = () => {
       const res = await api.get("/api/users/preferences");
       const prefs = res.data.preferences || {};
       setPreferences(prev => ({ ...prev, ...prefs }));
-      
+
       const privacyRes = await api.get("/api/users/privacy");
       const privacy = privacyRes.data.settings || {};
       setPrivacySettings(prev => ({ ...prev, ...privacy }));
@@ -163,7 +163,7 @@ const SettingsPage = () => {
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     setSaving(true);
-    
+
     try {
       await api.put("/api/users/profile", profileData);
       showMessage("success", "Profile updated successfully");
@@ -177,19 +177,19 @@ const SettingsPage = () => {
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
-    
+
     if (securityData.new_password !== securityData.confirm_password) {
       showMessage("error", "New passwords do not match");
       return;
     }
-    
+
     if (securityData.new_password.length < 6) {
       showMessage("error", "Password must be at least 6 characters long");
       return;
     }
 
     setSaving(true);
-    
+
     try {
       await api.put("/api/users/password", securityData);
       showMessage("success", "Password updated successfully");
@@ -208,7 +208,7 @@ const SettingsPage = () => {
 
   const handlePreferencesUpdate = async () => {
     setSaving(true);
-    
+
     try {
       await api.put("/api/users/preferences", preferences);
       showMessage("success", "Preferences updated successfully");
@@ -222,7 +222,7 @@ const SettingsPage = () => {
 
   const handlePrivacyUpdate = async () => {
     setSaving(true);
-    
+
     try {
       await api.put("/api/users/privacy", privacySettings);
       showMessage("success", "Privacy settings updated successfully");
@@ -239,7 +239,7 @@ const SettingsPage = () => {
       const response = await api.get("/api/users/export-data", {
         responseType: 'blob'
       });
-      
+
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -248,7 +248,7 @@ const SettingsPage = () => {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      
+
       showMessage("success", "Data exported successfully");
     } catch (err) {
       console.error("Export data error:", err);
@@ -355,11 +355,10 @@ const SettingsPage = () => {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`p-4 rounded-xl border ${
-                message.type === "success" 
-                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
+              className={`p-4 rounded-xl border ${message.type === "success"
+                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
                   : "bg-red-500/10 border-red-500/20 text-red-400"
-              }`}
+                }`}
             >
               {message.text}
             </motion.div>
@@ -392,11 +391,10 @@ const SettingsPage = () => {
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${
-                          activeTab === tab.id
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${activeTab === tab.id
                             ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
                             : "text-gray-400 hover:bg-white/5 hover:text-white"
-                        }`}
+                          }`}
                       >
                         <Icon className={`w-5 h-5 ${activeTab === tab.id ? "text-emerald-400" : "text-gray-500"}`} />
                         <span className="font-medium text-sm">{tab.label}</span>
@@ -418,7 +416,7 @@ const SettingsPage = () => {
                 transition={{ duration: 0.4 }}
                 className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl shadow-lg"
               >
-                
+
                 {/* Profile Settings */}
                 {activeTab === "profile" && (
                   <div className="p-6">
@@ -430,7 +428,7 @@ const SettingsPage = () => {
                           <input
                             type="text"
                             value={profileData.first_name}
-                            onChange={(e) => setProfileData({...profileData, first_name: e.target.value})}
+                            onChange={(e) => setProfileData({ ...profileData, first_name: e.target.value })}
                             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
                             placeholder="Enter your first name"
                           />
@@ -440,7 +438,7 @@ const SettingsPage = () => {
                           <input
                             type="text"
                             value={profileData.last_name}
-                            onChange={(e) => setProfileData({...profileData, last_name: e.target.value})}
+                            onChange={(e) => setProfileData({ ...profileData, last_name: e.target.value })}
                             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
                             placeholder="Enter your last name"
                           />
@@ -452,7 +450,7 @@ const SettingsPage = () => {
                         <input
                           type="email"
                           value={profileData.email}
-                          onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                          onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                           className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
                           placeholder="Enter your email"
                         />
@@ -463,7 +461,7 @@ const SettingsPage = () => {
                         <input
                           type="tel"
                           value={profileData.phone}
-                          onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+                          onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
                           className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
                           placeholder="Enter your phone number"
                         />
@@ -474,7 +472,7 @@ const SettingsPage = () => {
                           <label className="block text-sm text-gray-400 mb-1.5">Currency</label>
                           <select
                             value={profileData.currency}
-                            onChange={(e) => setProfileData({...profileData, currency: e.target.value})}
+                            onChange={(e) => setProfileData({ ...profileData, currency: e.target.value })}
                             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
                           >
                             {currencies.map(currency => (
@@ -488,7 +486,7 @@ const SettingsPage = () => {
                           <label className="block text-sm text-gray-400 mb-1.5">Language</label>
                           <select
                             value={profileData.language}
-                            onChange={(e) => setProfileData({...profileData, language: e.target.value})}
+                            onChange={(e) => setProfileData({ ...profileData, language: e.target.value })}
                             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
                           >
                             {languages.map(lang => (
@@ -500,7 +498,7 @@ const SettingsPage = () => {
                           <label className="block text-sm text-gray-400 mb-1.5">Timezone</label>
                           <select
                             value={profileData.timezone}
-                            onChange={(e) => setProfileData({...profileData, timezone: e.target.value})}
+                            onChange={(e) => setProfileData({ ...profileData, timezone: e.target.value })}
                             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
                           >
                             {timezones.map(tz => (
@@ -534,7 +532,7 @@ const SettingsPage = () => {
                         <input
                           type="password"
                           value={securityData.current_password}
-                          onChange={(e) => setSecurityData({...securityData, current_password: e.target.value})}
+                          onChange={(e) => setSecurityData({ ...securityData, current_password: e.target.value })}
                           className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
                           placeholder="Enter current password"
                           required
@@ -546,7 +544,7 @@ const SettingsPage = () => {
                         <input
                           type="password"
                           value={securityData.new_password}
-                          onChange={(e) => setSecurityData({...securityData, new_password: e.target.value})}
+                          onChange={(e) => setSecurityData({ ...securityData, new_password: e.target.value })}
                           className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
                           placeholder="Enter new password"
                           required
@@ -558,7 +556,7 @@ const SettingsPage = () => {
                         <input
                           type="password"
                           value={securityData.confirm_password}
-                          onChange={(e) => setSecurityData({...securityData, confirm_password: e.target.value})}
+                          onChange={(e) => setSecurityData({ ...securityData, confirm_password: e.target.value })}
                           className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
                           placeholder="Confirm new password"
                           required
@@ -607,7 +605,7 @@ const SettingsPage = () => {
                           <label className="block text-sm text-gray-400 mb-1.5">Theme</label>
                           <select
                             value={preferences.theme}
-                            onChange={(e) => setPreferences({...preferences, theme: e.target.value})}
+                            onChange={(e) => setPreferences({ ...preferences, theme: e.target.value })}
                             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
                           >
                             {themes.map(theme => (
@@ -621,7 +619,7 @@ const SettingsPage = () => {
                           <label className="block text-sm text-gray-400 mb-1.5">Dashboard Layout</label>
                           <select
                             value={preferences.dashboard_layout}
-                            onChange={(e) => setPreferences({...preferences, dashboard_layout: e.target.value})}
+                            onChange={(e) => setPreferences({ ...preferences, dashboard_layout: e.target.value })}
                             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
                           >
                             {dashboardLayouts.map(layout => (
@@ -636,7 +634,7 @@ const SettingsPage = () => {
                         <label className="block text-sm text-gray-400 mb-1.5">Default View</label>
                         <select
                           value={preferences.default_view}
-                          onChange={(e) => setPreferences({...preferences, default_view: e.target.value})}
+                          onChange={(e) => setPreferences({ ...preferences, default_view: e.target.value })}
                           className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
                         >
                           {defaultViews.map(view => (
@@ -665,7 +663,7 @@ const SettingsPage = () => {
                               <input
                                 type="checkbox"
                                 checked={preferences[setting.key]}
-                                onChange={(e) => setPreferences({...preferences, [setting.key]: e.target.checked})}
+                                onChange={(e) => setPreferences({ ...preferences, [setting.key]: e.target.checked })}
                                 className="sr-only peer"
                               />
                               <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-emerald-500 peer-checked:to-teal-400"></div>
@@ -711,7 +709,7 @@ const SettingsPage = () => {
                               <input
                                 type="checkbox"
                                 checked={privacySettings[setting.key]}
-                                onChange={(e) => setPrivacySettings({...privacySettings, [setting.key]: e.target.checked})}
+                                onChange={(e) => setPrivacySettings({ ...privacySettings, [setting.key]: e.target.checked })}
                                 className="sr-only peer"
                               />
                               <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-emerald-500 peer-checked:to-teal-400"></div>
