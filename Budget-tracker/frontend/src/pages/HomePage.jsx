@@ -160,7 +160,7 @@ export default function HomePage() {
   const wealthGained = futureWealth - totalInvested;
 
   return (
-    <div className="bg-[#0A0F1C] text-white min-h-screen overflow-x-hidden font-sans">
+    <div className="bg-[#0A0F1C] text-white min-h-screen max-w-full overflow-x-clip font-sans">
       {/* Dynamic Particles Background */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <Particles
@@ -270,8 +270,8 @@ export default function HomePage() {
       </nav>
 
       {/* 🚀 Hero Section */}
-      <section className="pt-28 sm:pt-36 pb-12 sm:pb-20 relative z-10">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+      <section className="pt-24 sm:pt-36 pb-12 sm:pb-20 relative z-10 w-full max-w-full overflow-hidden">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 grid lg:grid-cols-2 gap-8 lg:gap-16 items-center w-full max-w-full">
           <div className="space-y-6 sm:space-y-8 text-left">
             <div className="inline-flex items-center gap-2 sm:gap-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs sm:text-sm font-medium px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full backdrop-blur-md">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0"></span>
@@ -286,20 +286,20 @@ export default function HomePage() {
               Track expenses, automate category budgets, monitor subscriptions, and analyze long-term financial trends with bank-grade precision.
             </p>
 
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3.5 pt-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-2 w-full max-w-full">
               <motion.button
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => navigate("/sign-up")}
-                className="w-full sm:w-auto px-8 py-3.5 sm:py-4 bg-emerald-600 hover:bg-emerald-500 font-semibold rounded-2xl flex items-center justify-center gap-3 text-sm sm:text-lg transition-all text-white shadow-xl shadow-emerald-600/30"
+                className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 bg-emerald-600 hover:bg-emerald-500 font-semibold rounded-2xl flex items-center justify-center gap-2.5 text-sm sm:text-lg transition-all text-white shadow-xl shadow-emerald-600/30 box-border"
               >
                 Start Your Free Trial
-                <FaArrowRight className="text-sm" />
+                <FaArrowRight className="text-sm flex-shrink-0" />
               </motion.button>
 
               <button
                 onClick={() => document.getElementById('demo').scrollIntoView({ behavior: 'smooth' })}
-                className="w-full sm:w-auto px-7 py-3.5 sm:py-4 bg-slate-800/80 hover:bg-slate-700/90 border border-slate-700/60 rounded-2xl font-semibold text-sm sm:text-lg transition-all text-center text-white shadow-md"
+                className="w-full sm:w-auto px-6 sm:px-7 py-3.5 sm:py-4 bg-slate-800/80 hover:bg-slate-700/90 border border-slate-700/60 rounded-2xl font-semibold text-sm sm:text-lg transition-all text-center text-white shadow-md box-border"
               >
                 Explore Live Features
               </button>
@@ -318,11 +318,11 @@ export default function HomePage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7 }}
-            className="relative"
+            className="relative w-full max-w-full overflow-hidden"
           >
-            <div className="bg-[#111827] border border-gray-700/80 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl shadow-emerald-950/20 backdrop-blur-xl">
+            <div className="bg-[#111827] border border-gray-700/80 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl shadow-emerald-950/20 backdrop-blur-xl w-full max-w-full">
               {/* Tab Header Bar */}
-              <div className="bg-[#0F172A] px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between border-b border-gray-700/80 overflow-x-auto custom-scrollbar">
+              <div className="bg-[#0F172A] px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between border-b border-gray-700/80 overflow-x-auto w-full max-w-full custom-scrollbar">
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   {[
                     { id: "overview", label: "Overview" },
