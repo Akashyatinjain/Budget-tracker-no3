@@ -25,7 +25,8 @@ import {
   FiLock,
   FiSliders,
   FiDatabase,
-  FiInfo
+  FiInfo,
+  FiPercent
 } from "react-icons/fi";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -50,6 +51,7 @@ const buildMenu = (role, notificationsCount = 0) => [
       { id: "subscriptions", label: "Subscriptions", icon: <FiClock />,      route: "/subscriptions" },
       { id: "currencies",    label: "Currencies",    icon: <FiGlobe />,      route: "/currencies" },
       { id: "friend-loans",  label: "Friend Loans",  icon: <FiUsers />,      route: "/friend-loans" },
+      { id: "emi-calculator", label: "EMI Calculator", icon: <FiPercent />,  route: "/emi-calculator" },
     ],
   },
   {
