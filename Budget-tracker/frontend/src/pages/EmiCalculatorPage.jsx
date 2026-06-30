@@ -185,9 +185,9 @@ export default function EmiCalculatorPage() {
 
                 {/* Slider 1: Loan Amount */}
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                     <span className="text-xs font-semibold text-slate-300">Principal Loan Amount</span>
-                    <div className="relative">
+                    <div className="relative w-full sm:w-auto">
                       <span className="absolute left-2.5 top-1.5 text-[10px] text-slate-400 font-bold">₹</span>
                       <input
                         type="number"
@@ -196,7 +196,7 @@ export default function EmiCalculatorPage() {
                         max="100000000"
                         step="10000"
                         onChange={(e) => setPrincipal(Number(e.target.value))}
-                        className="w-40 pl-5 pr-2 py-1 bg-slate-950 border border-white/10 rounded-lg text-xs font-bold text-white text-right focus:outline-none focus:border-purple-500 transition-colors"
+                        className="w-full sm:w-40 pl-5 pr-2 py-1 bg-slate-950 border border-white/10 rounded-lg text-xs font-bold text-white text-right focus:outline-none focus:border-purple-500 transition-colors"
                       />
                     </div>
                   </div>
@@ -219,9 +219,9 @@ export default function EmiCalculatorPage() {
 
                 {/* Slider 2: Interest Rate */}
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                     <span className="text-xs font-semibold text-slate-300">Interest Rate (% p.a.)</span>
-                    <div className="relative">
+                    <div className="relative w-full sm:w-auto">
                       <input
                         type="number"
                         value={interestRate}
@@ -229,7 +229,7 @@ export default function EmiCalculatorPage() {
                         max="35"
                         step="0.1"
                         onChange={(e) => setInterestRate(Number(e.target.value))}
-                        className="w-24 pr-6 pl-2 py-1 bg-slate-950 border border-white/10 rounded-lg text-xs font-bold text-white text-right focus:outline-none focus:border-purple-500 transition-colors"
+                        className="w-full sm:w-24 pr-6 pl-2 py-1 bg-slate-950 border border-white/10 rounded-lg text-xs font-bold text-white text-right focus:outline-none focus:border-purple-500 transition-colors"
                       />
                       <span className="absolute right-2.5 top-1.5 text-[10px] text-slate-400 font-bold">%</span>
                     </div>
@@ -253,9 +253,9 @@ export default function EmiCalculatorPage() {
 
                 {/* Slider 3: Loan Tenure */}
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                     <span className="text-xs font-semibold text-slate-300">Loan Tenure</span>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
                       {/* Switch Toggle Type */}
                       <div className="flex bg-slate-950 border border-white/10 rounded-lg p-0.5 shrink-0">
                         <button
@@ -291,15 +291,15 @@ export default function EmiCalculatorPage() {
                           Mo
                         </button>
                       </div>
-                      
-                      <div className="relative">
+
+                      <div className="relative w-full sm:w-auto">
                         <input
                           type="number"
                           value={tenure}
                           min="1"
                           max={tenureType === "years" ? 40 : 480}
                           onChange={(e) => setTenure(Number(e.target.value))}
-                          className="w-20 pr-7 pl-2 py-1 bg-slate-950 border border-white/10 rounded-lg text-xs font-bold text-white text-right focus:outline-none focus:border-purple-500 transition-colors"
+                          className="w-full sm:w-20 pr-7 pl-2 py-1 bg-slate-950 border border-white/10 rounded-lg text-xs font-bold text-white text-right focus:outline-none focus:border-purple-500 transition-colors"
                         />
                         <span className="absolute right-2 top-1.5 text-[9px] text-slate-500 font-bold uppercase">
                           {tenureType === "years" ? "Yr" : "Mo"}
@@ -393,22 +393,22 @@ export default function EmiCalculatorPage() {
                 </div>
 
                 {/* Breakdown Legend Details */}
-                <div className="flex flex-col gap-2.5 mt-1">
-                  <div className="flex items-center justify-between text-xs border-b border-white/5 pb-2">
+                <div className="flex flex-col gap-2.5 mt-1 text-[11px] sm:text-xs">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2 gap-2 flex-wrap">
                     <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
+                      <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
                       <span className="text-slate-400 font-medium">Principal Loan Amount</span>
                     </div>
                     <span className="font-bold text-white">{formatCurrency(principal)}</span>
                   </div>
-                  <div className="flex items-center justify-between text-xs border-b border-white/5 pb-2">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2 gap-2 flex-wrap">
                     <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+                      <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0" />
                       <span className="text-slate-400 font-medium">Total Interest Payable</span>
                     </div>
                     <span className="font-bold text-purple-400">{formatCurrency(totalInterest)}</span>
                   </div>
-                  <div className="flex items-center justify-between text-xs pt-1">
+                  <div className="flex items-center justify-between pt-1 gap-2 flex-wrap">
                     <span className="text-slate-200 font-bold">Total Payable Cost</span>
                     <span className="font-black text-indigo-300">{formatCurrency(totalPayment)}</span>
                   </div>
@@ -425,17 +425,17 @@ export default function EmiCalculatorPage() {
             className="flex flex-col gap-3 mt-3"
           >
             {/* Header controls for schedule */}
-            <div className="flex items-center justify-between bg-slate-900/40 p-3 rounded-xl border border-white/5 backdrop-blur-md">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-slate-900/40 p-3 rounded-xl border border-white/5 backdrop-blur-md gap-3">
               <span className="text-xs font-bold text-white flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-purple-400" />
                 Amortization / Repayment Schedule
               </span>
 
               {/* Schedule View Toggle buttons */}
-              <div className="flex bg-slate-950 border border-white/10 rounded-lg p-0.5">
+              <div className="flex bg-slate-950 border border-white/10 rounded-lg p-0.5 w-full sm:w-auto justify-between sm:justify-start">
                 <button
                   onClick={() => setScheduleView("yearly")}
-                  className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                  className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all w-1/2 sm:w-auto text-center ${
                     scheduleView === "yearly"
                       ? "bg-purple-600 text-white shadow-sm"
                       : "text-slate-400 hover:text-white"
@@ -445,7 +445,7 @@ export default function EmiCalculatorPage() {
                 </button>
                 <button
                   onClick={() => setScheduleView("monthly")}
-                  className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                  className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all w-1/2 sm:w-auto text-center ${
                     scheduleView === "monthly"
                       ? "bg-purple-600 text-white shadow-sm"
                       : "text-slate-400 hover:text-white"
@@ -457,58 +457,130 @@ export default function EmiCalculatorPage() {
             </div>
 
             {/* Amortization Schedule Table container */}
-            <div className="overflow-x-auto rounded-2xl border border-white/10 bg-slate-900/30 backdrop-blur-xl max-h-[400px] overflow-y-auto">
-              {scheduleView === "yearly" && (yearlyDetails && yearlyDetails.length > 0) ? (
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-white/10 bg-slate-950/70 text-[9px] uppercase font-bold text-slate-400 tracking-wider sticky top-0 backdrop-blur-xl">
-                      <th className="py-3 px-4">Year</th>
-                      <th className="py-3 px-4">Opening Balance</th>
-                      <th className="py-3 px-4">EMI Paid (Yearly)</th>
-                      <th className="py-3 px-4 text-indigo-400">Principal Component</th>
-                      <th className="py-3 px-4 text-purple-400">Interest Component</th>
-                      <th className="py-3 px-4 text-right">Closing Balance</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5 text-xs">
-                    {yearlyDetails.map((y) => (
-                      <tr key={y.year} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="py-3 px-4 font-bold text-white">Year {y.year}</td>
-                        <td className="py-3 px-4 text-slate-400">{formatCurrency(y.openingBalance)}</td>
-                        <td className="py-3 px-4 text-slate-300 font-semibold">{formatCurrency(y.emi)}</td>
-                        <td className="py-3 px-4 text-indigo-300 font-bold">{formatCurrency(y.principalPaid)}</td>
-                        <td className="py-3 px-4 text-purple-300 font-bold">{formatCurrency(y.interestPaid)}</td>
-                        <td className="py-3 px-4 text-right font-bold text-emerald-400">{formatCurrency(y.closingBalance)}</td>
+            <div className="overflow-x-auto rounded-2xl border border-white/10 bg-slate-900/30 backdrop-blur-xl max-h-[400px] overflow-y-auto p-1 md:p-0">
+              
+              {/* Desktop/Tablet View: Table Layout */}
+              <div className="hidden md:block">
+                {scheduleView === "yearly" && (yearlyDetails && yearlyDetails.length > 0) ? (
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-white/10 bg-slate-950/70 text-[9px] uppercase font-bold text-slate-400 tracking-wider sticky top-0 backdrop-blur-xl">
+                        <th className="py-3 px-4">Year</th>
+                        <th className="py-3 px-4">Opening Balance</th>
+                        <th className="py-3 px-4">EMI Paid (Yearly)</th>
+                        <th className="py-3 px-4 text-indigo-400">Principal Component</th>
+                        <th className="py-3 px-4 text-purple-400">Interest Component</th>
+                        <th className="py-3 px-4 text-right">Closing Balance</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : scheduleView === "monthly" && (monthlyDetails && monthlyDetails.length > 0) ? (
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-white/10 bg-slate-950/70 text-[9px] uppercase font-bold text-slate-400 tracking-wider sticky top-0 backdrop-blur-xl">
-                      <th className="py-3 px-4">Month</th>
-                      <th className="py-3 px-4">Opening Balance</th>
-                      <th className="py-3 px-4">EMI Installment</th>
-                      <th className="py-3 px-4 text-indigo-400">Principal Repaid</th>
-                      <th className="py-3 px-4 text-purple-400">Interest Paid</th>
-                      <th className="py-3 px-4 text-right">Remaining Balance</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5 text-xs">
-                    {monthlyDetails.map((m) => (
-                      <tr key={m.month} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="py-2.5 px-4 font-bold text-white">Month {m.month}</td>
-                        <td className="py-2.5 px-4 text-slate-400">{formatCurrency(m.openingBalance)}</td>
-                        <td className="py-2.5 px-4 text-slate-300 font-semibold">{formatCurrency(m.emi)}</td>
-                        <td className="py-2.5 px-4 text-indigo-300">{formatCurrency(m.principalPaid)}</td>
-                        <td className="py-2.5 px-4 text-purple-300">{formatCurrency(m.interestPaid)}</td>
-                        <td className="py-2.5 px-4 text-right font-bold text-emerald-400">{formatCurrency(m.closingBalance)}</td>
+                    </thead>
+                    <tbody className="divide-y divide-white/5 text-xs">
+                      {yearlyDetails.map((y) => (
+                        <tr key={y.year} className="hover:bg-white/[0.02] transition-colors">
+                          <td className="py-3 px-4 font-bold text-white">Year {y.year}</td>
+                          <td className="py-3 px-4 text-slate-400">{formatCurrency(y.openingBalance)}</td>
+                          <td className="py-3 px-4 text-slate-300 font-semibold">{formatCurrency(y.emi)}</td>
+                          <td className="py-3 px-4 text-indigo-300 font-bold">{formatCurrency(y.principalPaid)}</td>
+                          <td className="py-3 px-4 text-purple-300 font-bold">{formatCurrency(y.interestPaid)}</td>
+                          <td className="py-3 px-4 text-right font-bold text-emerald-400">{formatCurrency(y.closingBalance)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : scheduleView === "monthly" && (monthlyDetails && monthlyDetails.length > 0) ? (
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-white/10 bg-slate-950/70 text-[9px] uppercase font-bold text-slate-400 tracking-wider sticky top-0 backdrop-blur-xl">
+                        <th className="py-3 px-4">Month</th>
+                        <th className="py-3 px-4">Opening Balance</th>
+                        <th className="py-3 px-4">EMI Installment</th>
+                        <th className="py-3 px-4 text-indigo-400">Principal Repaid</th>
+                        <th className="py-3 px-4 text-purple-400">Interest Paid</th>
+                        <th className="py-3 px-4 text-right">Remaining Balance</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
+                    </thead>
+                    <tbody className="divide-y divide-white/5 text-xs">
+                      {monthlyDetails.map((m) => (
+                        <tr key={m.month} className="hover:bg-white/[0.02] transition-colors">
+                          <td className="py-2.5 px-4 font-bold text-white">Month {m.month}</td>
+                          <td className="py-2.5 px-4 text-slate-400">{formatCurrency(m.openingBalance)}</td>
+                          <td className="py-2.5 px-4 text-slate-300 font-semibold">{formatCurrency(m.emi)}</td>
+                          <td className="py-2.5 px-4 text-indigo-300">{formatCurrency(m.principalPaid)}</td>
+                          <td className="py-2.5 px-4 text-purple-300">{formatCurrency(m.interestPaid)}</td>
+                          <td className="py-2.5 px-4 text-right font-bold text-emerald-400">{formatCurrency(m.closingBalance)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : null}
+              </div>
+
+              {/* Mobile View: Premium Stacked Cards Layout */}
+              <div className="md:hidden flex flex-col gap-3 p-2">
+                {scheduleView === "yearly" && (yearlyDetails && yearlyDetails.length > 0) ? (
+                  yearlyDetails.map((y) => (
+                    <div key={y.year} className="bg-slate-950/50 border border-white/5 rounded-xl p-3.5 flex flex-col gap-2.5 shadow-md">
+                      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                        <span className="font-bold text-white text-xs">Year {y.year}</span>
+                        <div className="flex flex-col items-end">
+                          <span className="text-[9px] text-slate-500 uppercase font-bold">Closing Balance</span>
+                          <span className="font-extrabold text-emerald-400 text-xs">{formatCurrency(y.closingBalance)}</span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-[10px]">
+                        <div>
+                          <span className="block text-slate-500 font-bold uppercase text-[9px] tracking-wide">Opening Balance</span>
+                          <span className="font-semibold text-slate-300">{formatCurrency(y.openingBalance)}</span>
+                        </div>
+                        <div>
+                          <span className="block text-slate-500 font-bold uppercase text-[9px] tracking-wide">EMI Paid (Yearly)</span>
+                          <span className="font-semibold text-slate-300">{formatCurrency(y.emi)}</span>
+                        </div>
+                        <div>
+                          <span className="block text-indigo-400/80 font-bold uppercase text-[9px] tracking-wide">Principal Paid</span>
+                          <span className="font-bold text-indigo-300">{formatCurrency(y.principalPaid)}</span>
+                        </div>
+                        <div>
+                          <span className="block text-purple-400/80 font-bold uppercase text-[9px] tracking-wide">Interest Paid</span>
+                          <span className="font-bold text-purple-300">{formatCurrency(y.interestPaid)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : scheduleView === "monthly" && (monthlyDetails && monthlyDetails.length > 0) ? (
+                  monthlyDetails.map((m) => (
+                    <div key={m.month} className="bg-slate-950/50 border border-white/5 rounded-xl p-3.5 flex flex-col gap-2.5 shadow-md">
+                      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                        <span className="font-bold text-white text-xs">Month {m.month}</span>
+                        <div className="flex flex-col items-end">
+                          <span className="text-[9px] text-slate-500 uppercase font-bold">Closing Balance</span>
+                          <span className="font-extrabold text-emerald-400 text-xs">{formatCurrency(m.closingBalance)}</span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-[10px]">
+                        <div>
+                          <span className="block text-slate-500 font-bold uppercase text-[9px] tracking-wide">Opening Balance</span>
+                          <span className="font-semibold text-slate-300">{formatCurrency(m.openingBalance)}</span>
+                        </div>
+                        <div>
+                          <span className="block text-slate-500 font-bold uppercase text-[9px] tracking-wide">EMI Installment</span>
+                          <span className="font-semibold text-slate-300">{formatCurrency(m.emi)}</span>
+                        </div>
+                        <div>
+                          <span className="block text-indigo-400/80 font-bold uppercase text-[9px] tracking-wide">Principal Repaid</span>
+                          <span className="font-bold text-indigo-300">{formatCurrency(m.principalPaid)}</span>
+                        </div>
+                        <div>
+                          <span className="block text-purple-400/80 font-bold uppercase text-[9px] tracking-wide">Interest Paid</span>
+                          <span className="font-bold text-purple-300">{formatCurrency(m.interestPaid)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : null}
+              </div>
+
+              {/* No Data State */}
+              {(!yearlyDetails || yearlyDetails.length === 0) && (!monthlyDetails || monthlyDetails.length === 0) && (
                 <div className="py-12 text-center text-xs text-slate-500 font-medium">
                   Set input values above to view repayment schedule
                 </div>
