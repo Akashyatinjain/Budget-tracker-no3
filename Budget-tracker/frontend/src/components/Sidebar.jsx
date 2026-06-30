@@ -49,6 +49,7 @@ const buildMenu = (role, notificationsCount = 0) => [
       { id: "budgets",       label: "Budgets",       icon: <FiRepeat />,     route: "/budgets" },
       { id: "subscriptions", label: "Subscriptions", icon: <FiClock />,      route: "/subscriptions" },
       { id: "currencies",    label: "Currencies",    icon: <FiGlobe />,      route: "/currencies" },
+      { id: "friend-loans",  label: "Friend Loans",  icon: <FiUsers />,      route: "/friend-loans" },
     ],
   },
   {

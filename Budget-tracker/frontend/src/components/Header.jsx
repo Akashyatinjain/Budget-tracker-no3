@@ -48,6 +48,7 @@ const Header = ({ onMobileToggle, onLogout }) => {
     if (path === "/budgets") return [{ label: "Money", route: "/budgets" }, { label: "Budgets", route: "/budgets" }];
     if (path === "/trends") return [{ label: "Analytics", route: "/trends" }, { label: "Trends", route: "/trends" }];
     if (path === "/currencies") return [{ label: "Money", route: "/currencies" }, { label: "Currencies", route: "/currencies" }];
+    if (path === "/friend-loans") return [{ label: "Money", route: "/friend-loans" }, { label: "Friend Loans", route: "/friend-loans" }];
     if (path === "/notifications") return [{ label: "System", route: "/notifications" }, { label: "Notifications", route: "/notifications" }];
     return [{ label: "FinTrack", route: "/dashboard" }, { label: "Overview", route: "/dashboard" }];
   };

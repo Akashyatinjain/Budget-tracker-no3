@@ -16,6 +16,7 @@ import SubscriptionsPage from './pages/Subscription';
 import ReportsPage from './pages/Report';
 import NotificationsPage from './pages/NotificationsPage';
 import SettingsPage from './pages/SettingPage';
+import FriendLoansPage from './pages/FriendLoansPage';
 import { Toaster } from 'react-hot-toast';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider } from './context/AuthContext';
@@ -77,6 +78,7 @@ function App() {
         <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+        <Route path="/friend-loans" element={<ProtectedRoute><FriendLoansPage /></ProtectedRoute>} />
 
         {/* Legacy / Alias / App Prefix Routes */}
         <Route path="/app" element={<Navigate to="/dashboard" replace />} />
@@ -87,6 +89,7 @@ function App() {
         <Route path="/app/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
         <Route path="/app/subscriptions" element={<ProtectedRoute><SubscriptionsPage /></ProtectedRoute>} />
         <Route path="/app/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+        <Route path="/app/friend-loans" element={<ProtectedRoute><FriendLoansPage /></ProtectedRoute>} />
 
         {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

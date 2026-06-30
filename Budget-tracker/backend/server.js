@@ -20,6 +20,7 @@ import settingsRouter from './routes/settingsRoute.js';
 import reportsRouter from './routes/reportsRoute.js';
 import notificationRoutes from "./routes/notificationRoutes.js";
 import { checkBudgetsAndNotify } from "./utils/budgetNotifications.js";
+import friendLoanRoutes from "./routes/friendLoanRoutes.js";
 
 dotenv.config();
 
@@ -74,6 +75,7 @@ app.use("/api/subscriptions", subscriptionRoutes);
 app.use('/api/users', settingsRouter);
 app.use('/api/reports', reportsRouter);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/friend-loans", friendLoanRoutes);
 // ---------------- Helper: sign JWT & set cookie ----------------
 // ...existing code...
 function createAndSetToken(res, user) {

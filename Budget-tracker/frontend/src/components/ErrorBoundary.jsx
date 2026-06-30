@@ -22,7 +22,7 @@ class ErrorBoundary extends React.Component {
             <h2 className="text-2xl text-purple-400 mb-4">Something went wrong</h2>
             <button
               onClick={() => this.setState({ hasError: false })}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 cursor-pointer"
             >
               Try again
             </button>
