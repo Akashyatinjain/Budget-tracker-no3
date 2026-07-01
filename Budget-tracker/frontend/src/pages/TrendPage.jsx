@@ -1,5 +1,7 @@
 // TrendsPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect } from "react";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
@@ -590,6 +592,7 @@ const TrendsPage = () => {
             >
               <button
                 onClick={() => setShowForecastModal(false)}
+                aria-label="Close modal"
                 className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg"
               >
                 <X className="w-5 h-5" />

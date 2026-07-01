@@ -526,6 +526,7 @@ const NotificationsPage = () => {
             <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
               <button
                 onClick={toggleSound}
+                aria-label="Toggle alert sounds"
                 className={`flex-1 sm:flex-initial p-2 sm:p-2.5 rounded-xl border transition-all flex items-center justify-center gap-1.5 text-xs font-semibold ${
                   soundEnabled 
                     ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
@@ -595,6 +596,7 @@ const NotificationsPage = () => {
               <input
                 type="text"
                 placeholder="Search notifications..."
+                aria-label="Search notifications"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-9 py-2.5 sm:py-3 bg-[#0a1017] border border-white/15 rounded-xl text-white text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-slate-500 shadow-inner"
@@ -602,6 +604,7 @@ const NotificationsPage = () => {
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
+                  aria-label="Clear search query"
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
                 >
                   <X size={16} />
@@ -767,6 +770,7 @@ const NotificationsPage = () => {
                                 {/* Selection Checkbox */}
                                 <button
                                   onClick={() => toggleSelect(notification.id)}
+                                  aria-label="Select notification"
                                   className="mt-0.5 sm:mt-1 text-slate-500 hover:text-emerald-400 transition-colors flex-shrink-0"
                                 >
                                   {isSelected ? (
@@ -874,6 +878,7 @@ const NotificationsPage = () => {
                                 {!notification.is_read && (
                                   <button
                                     onClick={() => markAsReadHandler(notification.id)}
+                                    aria-label="Mark notification as read"
                                     className="px-2.5 py-1 sm:p-2 text-emerald-400 hover:bg-emerald-500/20 bg-emerald-500/10 sm:bg-transparent rounded-lg sm:rounded-xl transition-all flex items-center gap-1 text-[11px] sm:text-xs font-semibold"
                                     title="Mark as read"
                                   >
@@ -883,6 +888,7 @@ const NotificationsPage = () => {
                                 )}
                                 <button
                                   onClick={() => deleteNotificationHandler(notification.id)}
+                                  aria-label="Delete notification"
                                   className="px-2.5 py-1 sm:p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 bg-white/5 sm:bg-transparent rounded-lg sm:rounded-xl transition-all flex items-center gap-1 text-[11px] sm:text-xs font-semibold"
                                   title="Delete notification"
                                 >
@@ -996,6 +1002,7 @@ const NotificationsPage = () => {
                             ...prev,
                             [key]: e.target.checked
                           }))}
+                          aria-label={key.replace(/_/g, ' ')}
                           className="sr-only peer"
                         />
                         <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-emerald-500 peer-checked:to-teal-500"></div>

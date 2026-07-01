@@ -293,48 +293,54 @@ router.put('/privacy', verifyToken, async (req, res, next) => {
   }
 });
 
-// GET /api/export-data - Export user data
+// GET /api/users/export-data - Export user data
 router.get('/export-data', verifyToken, async (req, res, next) => {
   try {
-    const userId = req.user.user_id;
-    const tempDir = path.join(process.cwd(), 'temp');
+    const userId = req.user.user_id || req.user.id;
     
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir);
-    }
+    // Set headers for file download
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename="budget-data.zip"');
 
-    const archive = archiver('zip');
-    const output = fs.createWriteStream(path.join(tempDir, `export-${userId}.zip`));
+    const archive = archiver('zip', { zlib: { level: 9 } });
 
-    output.on('close', () => {
-      res.download(path.join(tempDir, `export-${userId}.zip`), 'budget-data.zip', (err) => {
-        if (err) console.error('Download error:', err);
-        // Cleanup
-        fs.unlink(path.join(tempDir, `export-${userId}.zip`), (err) => {
-          if (err) console.error('Cleanup error:', err);
-        });
-      });
+    archive.on('warning', (err) => {
+      if (err.code === 'ENOENT') {
+        console.warn('Archiver warning:', err);
+      } else {
+        throw err;
+      }
     });
 
-    archive.pipe(output);
+    archive.on('error', (err) => {
+      throw err;
+    });
+
+    // Pipe the archive stream directly into the express response
+    archive.pipe(res);
 
     // Export transactions
     const transactions = await pool.query('SELECT * FROM transactions WHERE user_id = $1', [userId]);
-    archive.append(JSON.stringify(transactions.rows), { name: 'transactions.json' });
+    archive.append(JSON.stringify(transactions.rows, null, 2), { name: 'transactions.json' });
 
     // Export budgets
     const budgets = await pool.query('SELECT * FROM budgets WHERE user_id = $1', [userId]);
-    archive.append(JSON.stringify(budgets.rows), { name: 'budgets.json' });
+    archive.append(JSON.stringify(budgets.rows, null, 2), { name: 'budgets.json' });
 
     // Export categories
     const categories = await pool.query('SELECT * FROM categories WHERE user_id = $1', [userId]);
-    archive.append(JSON.stringify(categories.rows), { name: 'categories.json' });
+    archive.append(JSON.stringify(categories.rows, null, 2), { name: 'categories.json' });
 
     // Export subscriptions
     const subscriptions = await pool.query('SELECT * FROM subscriptions WHERE user_id = $1', [userId]);
-    archive.append(JSON.stringify(subscriptions.rows), { name: 'subscriptions.json' });
+    archive.append(JSON.stringify(subscriptions.rows, null, 2), { name: 'subscriptions.json' });
 
-    archive.finalize();
+    // Export friend loans
+    const friendLoans = await pool.query('SELECT * FROM friend_loans WHERE user_id = $1', [userId]);
+    archive.append(JSON.stringify(friendLoans.rows, null, 2), { name: 'friend_loans.json' });
+
+    // Finalize the archive (closes the stream)
+    await archive.finalize();
   } catch (error) {
     next(error);
   }

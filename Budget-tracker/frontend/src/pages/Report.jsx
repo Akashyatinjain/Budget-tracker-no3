@@ -1,5 +1,7 @@
 // ReportsPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect, useRef } from "react";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { useLocation } from "react-router-dom";
@@ -393,21 +395,72 @@ const ReportsPage = () => {
   const confirmDownloadPDF = async () => {
     setExporting(true);
     try {
-      const res = await apiClient.get("/api/reports/export/pdf", { responseType: "arraybuffer" });
-      const blob = new Blob([res.data], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `fintrack-report-${new Date().toISOString().replace(/[:.]/g, "-")}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      const element = document.getElementById("printable-report-content");
+      if (!element) {
+        throw new Error("Printable report container not found");
+      }
+
+      // Capture element with html2canvas
+      const canvas = await html2canvas(element, {
+        scale: 2, // High resolution
+        useCORS: true,
+        backgroundColor: "#030712", // dark theme background color
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+
+      const ratio = pdfWidth / imgWidth;
+      const canvasPageHeight = pdfHeight / ratio;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+      let pageNumber = 1;
+
+      // Add first page
+      pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight * ratio, undefined, "FAST");
+      heightLeft -= canvasPageHeight;
+
+      // Add subsequent pages if content overflows A4
+      while (heightLeft > 0) {
+        position = -canvasPageHeight * pageNumber;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight * ratio, undefined, "FAST");
+        heightLeft -= canvasPageHeight;
+        pageNumber++;
+      }
+
+      const filename = `fintrack-report-${reportType}-${timeRange}-${new Date().toISOString().split("T")[0]}.pdf`;
+      pdf.save(filename);
+
       setShowPdfModal(false);
-      toast.success("📄 FinTrack PDF Report generated and downloaded!");
+      toast.success("📄 Official PDF Report (with Graphs) generated & downloaded!");
     } catch (err) {
-      console.error("PDF export error:", err);
-      toast.error("Failed to export PDF report.");
+      console.error("Client side PDF generation failed. Attempting fallback text export:", err);
+      try {
+        const res = await apiClient.get("/api/reports/export/pdf", { responseType: "arraybuffer" });
+        const blob = new Blob([res.data], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `fintrack-report-${new Date().toISOString().replace(/[:.]/g, "-")}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        setShowPdfModal(false);
+        toast.success("📄 Fallback text PDF Report generated & downloaded!");
+      } catch (fallbackErr) {
+        console.error("PDF fallback export error:", fallbackErr);
+        toast.error("Failed to export PDF report.");
+      }
     } finally {
       setExporting(false);
     }
@@ -648,8 +701,10 @@ const ReportsPage = () => {
             </div>
           </motion.div>
 
-          {/* ====== Stat Cards ====== */}
-          <motion.div
+          {/* ====== Printable Report Content Wrapper ====== */}
+          <div id="printable-report-content" className="flex flex-col gap-6 p-2 bg-[#030712] rounded-2xl">
+            {/* ====== Stat Cards ====== */}
+            <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -1050,6 +1105,7 @@ const ReportsPage = () => {
                 </p>
               </div>
             </motion.div>
+          </div>
           </div>
 
           {/* ====== Footer Branding ====== */}
