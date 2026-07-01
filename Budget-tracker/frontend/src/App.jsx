@@ -80,7 +80,7 @@ function App() {
         <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
         <Route path="/friend-loans" element={<ProtectedRoute><FriendLoansPage /></ProtectedRoute>} />
-        <Route path="/emi-calculator" element={<ProtectedRoute><EmiCalculatorPage /></ProtectedRoute>} />
+        <Route path="/emi-calculator" element={<EmiCalculatorPage />} />
 
         {/* Legacy / Alias / App Prefix Routes */}
         <Route path="/app" element={<Navigate to="/dashboard" replace />} />
@@ -92,7 +92,7 @@ function App() {
         <Route path="/app/subscriptions" element={<ProtectedRoute><SubscriptionsPage /></ProtectedRoute>} />
         <Route path="/app/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
         <Route path="/app/friend-loans" element={<ProtectedRoute><FriendLoansPage /></ProtectedRoute>} />
-        <Route path="/app/emi-calculator" element={<ProtectedRoute><EmiCalculatorPage /></ProtectedRoute>} />
+        <Route path="/app/emi-calculator" element={<EmiCalculatorPage />} />
 
         {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

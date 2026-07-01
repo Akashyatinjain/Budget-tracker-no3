@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import apiClient from "../services/apiClient";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
@@ -63,6 +64,15 @@ const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const [avatarUrl, setAvatarUrl] = useState("");
   const fileInputRef = useRef(null);
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get("tab");
+    if (tab && ["profile", "security", "appearance", "data", "about"].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [location]);
 
   const [profileData, setProfileData] = useState({
     first_name: "Akash",
@@ -229,8 +239,24 @@ const SettingsPage = () => {
     toast.success(`Updated ${provider.toUpperCase()} connection status`);
   };
 
-  const exportData = () => {
-    toast.success("📊 Full backup zip package generating...");
+  const exportData = async () => {
+    const toastId = toast.loading("📊 Generating full backup ZIP package...");
+    try {
+      const res = await apiClient.get("/api/users/export-data", { responseType: "arraybuffer" });
+      const blob = new Blob([res.data], { type: "application/zip" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `fintrack-backup-${new Date().toISOString().split('T')[0]}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("📊 Full backup ZIP package downloaded successfully!", { id: toastId });
+    } catch (err) {
+      console.error("Backup export error:", err);
+      toast.error("Failed to generate backup package.", { id: toastId });
+    }
   };
 
   const deleteAccount = () => {

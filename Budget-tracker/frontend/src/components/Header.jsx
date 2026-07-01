@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { applyTheme } from "../App";
 import toast from "react-hot-toast";
 
-const Header = ({ onMobileToggle, onLogout }) => {
+const Header = ({ onMobileToggle = () => {}, onLogout }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
@@ -147,49 +147,7 @@ const Header = ({ onMobileToggle, onLogout }) => {
           )}
         </button>
 
-        {/* 🔔 Notifications Button with Live Numeric Badge */}
-        <div className="relative" ref={notificationsRef}>
-          <button
-            onClick={() => setShowNotifications(!showNotifications)}
-            className="relative p-2.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-all border border-white/5"
-            aria-label="Notifications"
-          >
-            <FaBell className="text-base" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[10px] font-extrabold rounded-full flex items-center justify-center shadow-md border-2 border-[#070d14]">
-                {unreadCount}
-              </span>
-            )}
-          </button>
 
-          {/* Notifications Dropdown */}
-          {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl bg-[#0a1017] border border-white/15 shadow-2xl z-50 text-white custom-scrollbar">
-              <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
-                <h3 className="font-bold text-sm text-white">Live Alerts</h3>
-                <span className="text-xs text-emerald-400 font-semibold cursor-pointer hover:underline">Mark all read</span>
-              </div>
-              <div className="divide-y divide-white/5">
-                {notifications.length > 0 ? (
-                  notifications.map((notif) => (
-                    <div key={notif.id} className={`p-4 hover:bg-white/5 transition cursor-pointer ${!notif.read ? 'bg-emerald-500/10' : ''}`}>
-                      <div className="flex items-start gap-3">
-                        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${notif.read ? 'bg-slate-600' : 'bg-emerald-400'}`} />
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-xs font-semibold ${notif.read ? 'text-slate-400' : 'text-white'}`}>{notif.title}</p>
-                          <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">{notif.message}</p>
-                          <p className="text-[10px] text-slate-500 mt-1.5">{notif.time}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-slate-500 text-xs">No active notifications</div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* 👤 Rich Profile Menu */}
         {isAuthenticated ? (

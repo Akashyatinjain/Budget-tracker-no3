@@ -95,6 +95,35 @@ const TransactionPage = () => {
     return () => { document.body.style.overflow = "auto"; };
   }, [mobileSidebarOpen, showModal, showEditModal]);
 
+  const exportCSV = () => {
+    if (!transactions || transactions.length === 0) {
+      toast.error("No transactions to export");
+      return;
+    }
+    const headers = ["Date", "Merchant", "Category", "Type", "Amount", "Description"];
+    const csvData = transactions.map(t => [
+      t.transaction_date ? new Date(t.transaction_date).toLocaleDateString() : "Unknown",
+      t.merchant || "N/A",
+      getCategoryName(t.category_id),
+      t.type || "unknown",
+      t.amount || 0,
+      t.description || ""
+    ]);
+
+    const csvContent = [headers, ...csvData]
+      .map(row => row.map(field => `"${field}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `transactions-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    toast.success("CSV exported successfully!");
+  };
+
   const handleAddTransaction = async (e) => {
     e.preventDefault();
     try {
@@ -744,7 +773,7 @@ const TransactionPage = () => {
             <div className="flex items-center gap-4 text-slate-400">
               <span className="hover:text-white cursor-pointer transition-colors">Privacy</span>
               <span>·</span>
-              <span className="hover:text-white cursor-pointer transition-colors">Export Data</span>
+              <span onClick={exportCSV} className="hover:text-white cursor-pointer transition-colors">Export Data</span>
               <span>·</span>
               <span className="hover:text-white cursor-pointer transition-colors">Shortcuts (Ctrl+K)</span>
             </div>

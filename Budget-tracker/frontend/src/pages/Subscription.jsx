@@ -106,6 +106,36 @@ const SubscriptionsPage = () => {
     return () => { document.body.style.overflow = "auto"; };
   }, [mobileSidebarOpen, showAddModal]);
 
+  const exportSubscriptionsCSV = () => {
+    if (!subscriptions || subscriptions.length === 0) {
+      toast.error("No subscriptions to export");
+      return;
+    }
+    const headers = ["Name", "Amount", "Billing Cycle", "Category", "Next Billing Date", "Status", "Description"];
+    const csvData = subscriptions.map(s => [
+      s.name || "N/A",
+      s.amount || 0,
+      s.billing_cycle || "monthly",
+      s.category || "other",
+      s.next_billing_date ? new Date(s.next_billing_date).toLocaleDateString() : "N/A",
+      s.status || "active",
+      s.description || ""
+    ]);
+
+    const csvContent = [headers, ...csvData]
+      .map(row => row.map(field => `"${field}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `subscriptions-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    toast.success("Subscriptions exported successfully!");
+  };
+
   const resetNewSubscription = () => setNewSubscription({
     name: "", amount: "", currency: "INR", billing_cycle: "monthly",
     category: "entertainment", next_billing_date: "", status: "active", description: ""
@@ -687,7 +717,7 @@ const SubscriptionsPage = () => {
               <span>·</span>
               <span className="hover:text-white cursor-pointer transition-colors">Audit Rules</span>
               <span>·</span>
-              <span className="hover:text-white cursor-pointer transition-colors">Export Subscriptions</span>
+              <span onClick={exportSubscriptionsCSV} className="hover:text-white cursor-pointer transition-colors">Export Subscriptions</span>
             </div>
           </motion.div>
 

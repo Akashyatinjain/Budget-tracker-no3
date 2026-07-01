@@ -64,9 +64,9 @@ const buildMenu = (role, notificationsCount = 0) => [
         icon: <FiFileText />, 
         route: "/reports",
         subItems: [
-          { id: "rep-overview", label: "Overview", icon: <FiPieChart />, route: "/reports" },
-          { id: "rep-monthly", label: "Monthly Trends", icon: <FiBarChart2 />, route: "/reports" },
-          { id: "rep-export", label: "Export PDF/CSV", icon: <FiDownload />, route: "/reports" },
+          { id: "rep-overview", label: "Overview", icon: <FiPieChart />, route: "/reports?type=spending" },
+          { id: "rep-monthly", label: "Monthly Trends", icon: <FiBarChart2 />, route: "/reports?type=income" },
+          { id: "rep-export", label: "Export PDF/CSV", icon: <FiDownload />, route: "/reports?action=export" },
         ]
       },
       ...(role === "admin"
@@ -91,9 +91,9 @@ const buildMenu = (role, notificationsCount = 0) => [
         icon: <FiSettings />, 
         route: "/settings",
         subItems: [
-          { id: "set-profile", label: "Profile & Identity", icon: <FiUser />, route: "/settings" },
-          { id: "set-security", label: "Security & 2FA", icon: <FiLock />, route: "/settings" },
-          { id: "set-pref", label: "Preferences", icon: <FiSliders />, route: "/settings" },
+          { id: "set-profile", label: "Profile & Identity", icon: <FiUser />, route: "/settings?tab=profile" },
+          { id: "set-security", label: "Security & 2FA", icon: <FiLock />, route: "/settings?tab=security" },
+          { id: "set-pref", label: "Preferences", icon: <FiSliders />, route: "/settings?tab=appearance" },
         ]
       },
     ],
@@ -166,9 +166,13 @@ export default function AdvancedSidebar({
   const isActive = useCallback(
     (route) => {
       if (!route) return false;
-      return location.pathname === route || location.pathname.startsWith(route + "/");
+      const [path, search] = route.split("?");
+      if (search) {
+        return location.pathname === path && location.search === `?${search}`;
+      }
+      return location.pathname === path || location.pathname.startsWith(path + "/");
     },
-    [location.pathname]
+    [location.pathname, location.search]
   );
 
   return (

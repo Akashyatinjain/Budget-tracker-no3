@@ -254,6 +254,31 @@ const NotificationsPage = () => {
   };
 
   const exportNotificationsCSV = () => {
+    if (!notifications || notifications.length === 0) {
+      toast.error("No notifications to export");
+      return;
+    }
+    const headers = ["Title", "Message", "Type", "Priority", "Status", "Created At"];
+    const csvData = notifications.map(n => [
+      n.title || "N/A",
+      n.message || "",
+      n.type || "system",
+      n.priority || "low",
+      n.is_read ? "Read" : "Unread",
+      n.created_at ? new Date(n.created_at).toLocaleString() : "N/A"
+    ]);
+
+    const csvContent = [headers, ...csvData]
+      .map(row => row.map(field => `"${field}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `notifications-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
     toast.success("📊 Notifications exported to CSV");
   };
 

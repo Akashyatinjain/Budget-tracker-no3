@@ -26,7 +26,7 @@ import {
   BarChart3, Download, PlusCircle, Import, Search,
   Sparkles, Shield, Zap, Crown, Activity,
   CreditCard, Home, ShoppingBag, Coffee,
-  Award, Clock, Star, Gem
+  Award, Clock, Star, Gem, FileSpreadsheet
 } from "lucide-react";
 
 // ====== ImportButton Component ======
@@ -78,22 +78,10 @@ function ImportButton() {
       />
       <button
         onClick={openFilePicker}
-      className="
-rounded-2xl
-bg-gradient-to-r
-from-emerald-500
-via-green-500
-to-lime-400
-px-5
-py-3
-font-semibold
-shadow-xl
-shadow-emerald-500/30
-hover:shadow-emerald-500/60
-transition-all
-"
+        className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-emerald-500/30 text-white font-semibold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
       >
-        <Import size={16} /> Import CSV
+        <Import className="w-4 h-4 text-emerald-400" />
+        Import CSV
       </button>
       <button
         onClick={() => toast(
@@ -107,20 +95,7 @@ transition-all
           "• transaction_date\n\n" +
           "⚠️ Column names must match exactly!"
         )}
-        className="
-rounded-2xl
-bg-gradient-to-r
-from-emerald-500
-via-green-500
-to-lime-400
-px-5
-py-3
-font-semibold
-shadow-xl
-shadow-emerald-500/30
-hover:shadow-emerald-500/60
-transition-all
-"
+        className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-emerald-500/30 text-white font-semibold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
       >
         CSV Format
       </button>
@@ -448,13 +423,23 @@ const FinanceDashboard = () => {
                 Here is your real-time financial overview and recent activity.
               </p>
             </div>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="self-start sm:self-auto px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-semibold text-xs shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all flex items-center gap-1.5"
-            >
-              <PlusCircle className="w-4 h-4" />
-              Add Transaction
-            </button>
+            <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+              <ImportButton />
+              <button
+                onClick={exportCSV}
+                className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-emerald-500/30 text-white font-semibold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+                Export CSV
+              </button>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-semibold text-xs shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <PlusCircle className="w-4 h-4" />
+                Add Transaction
+              </button>
+            </div>
           </motion.div>
 
           {/* ====== Summary Cards Grid with Net Worth HERO ====== */}

@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
+import { useLocation } from "react-router-dom";
+import apiClient from "../services/apiClient";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
 import { motion, AnimatePresence } from "framer-motion";
@@ -167,6 +169,20 @@ const ReportsPage = () => {
       setBackendReport(backendReports[0]);
     }
   }, [backendReports]);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const type = params.get("type");
+    if (type && reportTypes.some(r => r.value === type)) {
+      setReportType(type);
+    }
+    const action = params.get("action");
+    if (action === "export") {
+      setShowPdfModal(true);
+    }
+  }, [location]);
 
   const processReportData = () => {
     const now = new Date();
@@ -373,16 +389,72 @@ const ReportsPage = () => {
     setShowPdfModal(true);
   };
 
-  const confirmDownloadPDF = () => {
+  const confirmDownloadPDF = async () => {
     setExporting(true);
-    setTimeout(() => {
-      setExporting(false);
+    try {
+      const res = await apiClient.get("/api/reports/export/pdf", { responseType: "arraybuffer" });
+      const blob = new Blob([res.data], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `fintrack-report-${new Date().toISOString().replace(/[:.]/g, "-")}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
       setShowPdfModal(false);
       toast.success("📄 FinTrack PDF Report generated and downloaded!");
-    }, 1200);
+    } catch (err) {
+      console.error("PDF export error:", err);
+      toast.error("Failed to export PDF report.");
+    } finally {
+      setExporting(false);
+    }
   };
 
   const exportToCSV = () => {
+    if (!reportData) return;
+    const headers = ["Section", "Metric", "Value"];
+    const rows = [
+      ["Summary", "Total Income", reportData.totalIncome],
+      ["Summary", "Total Expenses", reportData.totalExpenses],
+      ["Summary", "Net Savings", reportData.netSavings],
+      ["Subscriptions", "Active Subscriptions", reportData.activeSubscriptions],
+      ["Subscriptions", "Monthly Est. Cost", reportData.subscriptionCost],
+      ["Transactions", "Total Count", reportData.totalTransactions]
+    ];
+
+    if (reportData.categorySpending) {
+      reportData.categorySpending.forEach(c => {
+        rows.push(["Category Spending", c.name, c.value]);
+      });
+    }
+
+    if (reportData.monthlyData) {
+      reportData.monthlyData.forEach(m => {
+        rows.push([`Monthly Trends (${m.month})`, "Income", m.income]);
+        rows.push([`Monthly Trends (${m.month})`, "Expenses", m.expenses]);
+        rows.push([`Monthly Trends (${m.month})`, "Savings", m.savings]);
+      });
+    }
+
+    if (reportData.topExpenses) {
+      reportData.topExpenses.forEach(e => {
+        rows.push(["Top Expenses", `${e.name} (${e.category}) - ${e.date}`, e.amount]);
+      });
+    }
+
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(field => `"${field}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `fintrack-report-${reportType}-${timeRange}-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
     toast.success("📊 Report exported to CSV format!");
   };
 
