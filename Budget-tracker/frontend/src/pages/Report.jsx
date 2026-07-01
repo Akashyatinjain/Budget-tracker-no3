@@ -155,6 +155,7 @@ const ReportsPage = () => {
   const [backendReport, setBackendReport] = useState(null);
 
   useEffect(() => {
+    document.title = "Reports | FinTrack Budget Tracker";
     if (!token) return;
     setLoading(true);
     Promise.all([

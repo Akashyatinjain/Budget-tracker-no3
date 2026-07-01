@@ -86,6 +86,7 @@ const TransactionPage = () => {
   };
 
   useEffect(() => {
+    document.title = "Transactions | FinTrack Budget Tracker";
     if (token) dispatch(fetchTransactions());
   }, [token, dispatch]);
 
@@ -443,6 +444,7 @@ const TransactionPage = () => {
                   <select
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
+                    aria-label="Filter by transaction type"
                     className="min-w-[130px] p-2.5 bg-[#0d141e] border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer hover:border-emerald-500/40"
                   >
                     <option value="all" className="bg-[#0d141a]">All Types</option>
@@ -450,12 +452,13 @@ const TransactionPage = () => {
                     <option value="expense" className="bg-[#0d141a]">🔴 Expense</option>
                   </select>
                 </div>
-
+ 
                 <div className="flex items-center gap-2">
                   <Tag className="w-4 h-4 text-purple-400 flex-shrink-0" />
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
+                    aria-label="Filter by category"
                     className="min-w-[160px] p-2.5 bg-[#0d141e] border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer hover:border-emerald-500/40"
                   >
                     <option value="all" className="bg-[#0d141a]">All Categories</option>
@@ -466,23 +469,25 @@ const TransactionPage = () => {
                     ))}
                   </select>
                 </div>
-
+ 
                 <div className="relative flex-1 max-w-xs">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <input
                     type="text"
                     placeholder="Search merchant..."
+                    aria-label="Search transactions by merchant"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 bg-[#0d141e] border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition-all"
                   />
                 </div>
               </div>
-
+ 
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => { setFilter("all"); setCategoryFilter("all"); setSearchQuery(""); }}
+                aria-label="Clear all filters"
                 className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:border-emerald-500/30 transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer"
               >
                 <RotateCcw className="w-4 h-4" />
@@ -601,6 +606,7 @@ const TransactionPage = () => {
                                 onClick={() => handleEditClick(t)}
                                 className="p-2 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all"
                                 title="Edit"
+                                aria-label="Edit transaction"
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
                               </motion.button>
@@ -610,6 +616,7 @@ const TransactionPage = () => {
                                 onClick={() => handleDeleteTransaction(id)}
                                 className="p-2 rounded-lg border border-rose-500/20 text-rose-400 hover:bg-rose-500/10 transition-all"
                                 title="Delete"
+                                aria-label="Delete transaction"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </motion.button>
@@ -702,6 +709,7 @@ const TransactionPage = () => {
                             whileTap={{ scale: 0.9 }}
                             onClick={() => handleEditClick(t)}
                             className="p-2 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+                            aria-label="Edit transaction"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </motion.button>
@@ -710,6 +718,7 @@ const TransactionPage = () => {
                             whileTap={{ scale: 0.9 }}
                             onClick={() => handleDeleteTransaction(id)}
                             className="p-2 rounded-lg border border-rose-500/20 text-rose-400 hover:bg-rose-500/10 transition-all"
+                            aria-label="Delete transaction"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </motion.button>
@@ -731,6 +740,7 @@ const TransactionPage = () => {
                   <button
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    aria-label="Previous page"
                     className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   >
                     <ChevronLeft className="w-4 h-4" />
@@ -739,6 +749,7 @@ const TransactionPage = () => {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
+                      aria-label={`Go to page ${page}`}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                         currentPage === page
                           ? "bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20"
@@ -751,6 +762,7 @@ const TransactionPage = () => {
                   <button
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    aria-label="Next page"
                     className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   >
                     <ChevronRight className="w-4 h-4" />

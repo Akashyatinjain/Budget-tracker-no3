@@ -64,6 +64,7 @@ const BudgetPage = () => {
     categories.find((c) => +c.id === +id)?.icon || "📋";
 
   useEffect(() => {
+    document.title = "Budgets | FinTrack Budget Tracker";
     if (!token) return;
     setLoading(true);
     setError("");

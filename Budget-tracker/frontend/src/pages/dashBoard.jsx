@@ -225,6 +225,7 @@ const FinanceDashboard = () => {
     : [];
 
   useEffect(() => {
+    document.title = "Dashboard | FinTrack Budget Tracker";
     if (token) {
       dispatch(fetchTransactionsThunk()).finally(() => setLoading(false));
     } else {

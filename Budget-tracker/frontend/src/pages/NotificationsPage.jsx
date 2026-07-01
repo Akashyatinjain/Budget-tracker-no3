@@ -204,6 +204,7 @@ const NotificationsPage = () => {
   };
 
   useEffect(() => {
+    document.title = "Notifications | FinTrack Budget Tracker";
     if (authToken) {
       setLoading(true);
       Promise.all([

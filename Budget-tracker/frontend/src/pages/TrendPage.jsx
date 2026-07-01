@@ -40,6 +40,7 @@ const TrendsPage = () => {
   ];
 
   useEffect(() => {
+    document.title = "Trends | FinTrack Budget Tracker";
     if (token) {
       dispatch(fetchTransactions()).finally(() => setLoading(false));
     } else {
@@ -320,6 +321,7 @@ const TrendsPage = () => {
               <select
                 value={timeRange}
                 onChange={(e) => setTimeRange(e.target.value)}
+                aria-label="Select trends time range"
                 className="bg-[#09101d] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500 transition-all appearance-none cursor-pointer"
               >
                 <option value="month" className="bg-[#0d141a]">Last 6 Months</option>

@@ -149,6 +149,7 @@ const SettingsPage = () => {
   ];
 
   useEffect(() => {
+    document.title = "Settings | FinTrack Budget Tracker";
     if (!token) { setLoading(false); return; }
     setLoading(true);
     dispatch(fetchUserProfile()).unwrap().then((userData) => {

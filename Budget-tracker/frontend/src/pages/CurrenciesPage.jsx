@@ -11,7 +11,6 @@ import {
   setDefaultCurrency,
   deleteCurrency,
 } from "../store/currencySlice";
-import apiClient from "../services/apiClient";
 import { motion } from "framer-motion";
 import {
   Plus,
@@ -90,14 +89,33 @@ const CurrenciesPage = () => {
   }, [mobileSidebarOpen, showAddCurrency]);
 
   useEffect(() => {
-    fetchCurrencies();
-  }, [token]);
+    document.title = "Currencies | FinTrack Budget Tracker";
+    if (token) {
+      dispatch(fetchCurrencies());
+    }
+  }, [token, dispatch]);
 
   useEffect(() => {
     calculateConversion();
   }, [converter.amount, converter.fromCurrency, converter.toCurrency, currencies]);
 
-  const loadCurrenciesData = async () => {
+  const initializeDefaultCurrencies = async () => {
+    try {
+      for (const currency of popularCurrencies) {
+        await dispatch(addCurrency({
+          code: currency.code,
+          name: currency.name,
+          rate_to_inr: currency.rate_to_inr,
+          is_default: currency.code === "INR",
+        })).unwrap();
+      }
+      dispatch(fetchCurrencies());
+    } catch (err) {
+      console.error("Initialize currencies error:", err);
+    }
+  };
+
+  useEffect(() => {
     if (!token) {
       setCurrencies(popularCurrencies.map((c) => ({ ...c, is_default: c.code === "INR" })));
       setUserCurrency("INR");
@@ -105,50 +123,22 @@ const CurrenciesPage = () => {
       return;
     }
 
-    setLoading(true);
-    try {
-      const res = await apiClient.get("/api/currencies");
-      const currenciesData = res?.data?.currencies || res?.data || [];
-      if (!Array.isArray(currenciesData) || currenciesData.length === 0) {
-        await initializeDefaultCurrencies();
-        const refetch = await apiClient.get("/api/currencies");
-        const redata = refetch?.data?.currencies || refetch?.data || popularCurrencies;
-        setCurrencies(redata);
-        const def = redata.find((c) => c.is_default);
-        if (def) setUserCurrency(def.code);
+    if (reduxLoading && currencies.length === 0) {
+      setLoading(true);
+      return;
+    }
+
+    if (!reduxLoading) {
+      if (rawCurrencies.length === 0) {
+        initializeDefaultCurrencies();
       } else {
-        setCurrencies(currenciesData);
-        const def = currenciesData.find((c) => c.is_default);
+        setCurrencies(rawCurrencies);
+        const def = rawCurrencies.find((c) => c.is_default);
         if (def) setUserCurrency(def.code);
+        setLoading(false);
       }
-    } catch (err) {
-      console.error("Fetch currencies error:", err);
-      setCurrencies(popularCurrencies.map((c) => ({ ...c, is_default: c.code === "INR" })));
-      setUserCurrency("INR");
-    } finally {
-      setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadCurrenciesData();
-  }, [token]);
-
-  const initializeDefaultCurrencies = async () => {
-    if (!token) return;
-    try {
-      for (const currency of popularCurrencies) {
-        await apiClient.post("/api/currencies", {
-          code: currency.code,
-          name: currency.name,
-          rate_to_inr: currency.rate_to_inr,
-          is_default: currency.code === "INR",
-        });
-      }
-    } catch (err) {
-      console.error("Initialize currencies error:", err);
-    }
-  };
+  }, [rawCurrencies, reduxLoading, token, dispatch]);
 
   const handleAddCurrency = async (e) => {
     e.preventDefault();
@@ -163,16 +153,16 @@ const CurrenciesPage = () => {
     }
 
     try {
-      await apiClient.post("/api/currencies", {
+      await dispatch(addCurrency({
         code: newCurrency.code,
         name: newCurrency.name,
         rate_to_inr: rateNum,
         is_default: !!newCurrency.is_default,
-      });
+      })).unwrap();
       toast.success("✨ Currency added successfully!");
       setShowAddCurrency(false);
       setNewCurrency({ code: "", name: "", rate_to_inr: "", is_default: false });
-      loadCurrenciesData();
+      dispatch(fetchCurrencies());
     } catch (err) {
       console.error("Add currency error:", err);
       toast.error("Error adding currency. Please try again.");
@@ -181,10 +171,9 @@ const CurrenciesPage = () => {
 
   const handleSetDefault = async (currencyCode) => {
     try {
-      await apiClient.put("/api/currencies/default", { currency_code: currencyCode });
+      await dispatch(setDefaultCurrency(currencyCode)).unwrap();
       toast.success(`Default currency set to ${currencyCode}`);
-      setUserCurrency(currencyCode);
-      loadCurrenciesData();
+      dispatch(fetchCurrencies());
     } catch (err) {
       console.error("Set default currency error:", err);
       toast.error("Error setting default currency.");
@@ -197,9 +186,9 @@ const CurrenciesPage = () => {
       return;
     }
     try {
-      await apiClient.delete(`/api/currencies/${currencyCode}`);
+      await dispatch(deleteCurrency(currencyCode)).unwrap();
       toast.success("Currency removed.");
-      loadCurrenciesData();
+      dispatch(fetchCurrencies());
     } catch (err) {
       console.error("Remove currency error:", err);
       toast.error("Error removing currency.");

@@ -17,6 +17,7 @@ export default function SignUp() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    document.title = "Sign Up | FinTrack Budget Tracker";
     if (isAuthenticated) {
       navigate("/dashboard", { replace: true });
     }

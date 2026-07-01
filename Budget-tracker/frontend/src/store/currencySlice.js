@@ -89,6 +89,24 @@ const currencySlice = createSlice({
           (c) =>
             String(c.currency_code || c.code) !== String(action.payload)
         );
+      })
+      .addCase(addCurrency.fulfilled, (state, action) => {
+        const newCurr = action.payload.currency || action.payload;
+        if (newCurr) {
+          const idx = state.items.findIndex(c => String(c.code || c.currency_code) === String(newCurr.code || newCurr.currency_code));
+          if (idx !== -1) {
+            state.items[idx] = newCurr;
+          } else {
+            state.items.push(newCurr);
+          }
+        }
+      })
+      .addCase(setDefaultCurrency.fulfilled, (state, action) => {
+        const code = String(action.payload.currencyCode || "").toUpperCase();
+        state.items = state.items.map(c => ({
+          ...c,
+          is_default: String(c.code || c.currency_code).toUpperCase() === code
+        }));
       });
   },
 });

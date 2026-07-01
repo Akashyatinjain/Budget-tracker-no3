@@ -19,6 +19,7 @@ export default function SignIn() {
   const from = location.state?.from?.pathname || "/dashboard";
 
   useEffect(() => {
+    document.title = "Sign In | FinTrack Budget Tracker";
     if (isAuthenticated) {
       navigate(from, { replace: true });
     }

@@ -1,10 +1,11 @@
 // SplitBillPage.jsx - FinTrack Bill Splitter
 import React, { useState, useEffect, useMemo } from "react";
+import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
-import apiClient from "../services/apiClient";
+import { addFriendLoan } from "../store/friendLoanSlice";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Users, Calculator, ArrowRight, Save, DollarSign,
@@ -13,6 +14,7 @@ import {
 
 export default function SplitBillPage() {
   const { user, token } = useAuth();
+  const dispatch = useDispatch();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Core Bill States
@@ -44,7 +46,9 @@ export default function SplitBillPage() {
   const [transactions, setTransactions] = useState([]);
   const [recordedLoans, setRecordedLoans] = useState({}); // tracker for which transaction index was saved as loan
   const [submittingIds, setSubmittingIds] = useState({});
-  const [validationError, setValidationError] = useState("");
+  useEffect(() => {
+    document.title = "Split Bills | FinTrack Budget Tracker";
+  }, []);
 
   // Sync participant fields when participant count changes
   useEffect(() => {
@@ -220,12 +224,12 @@ export default function SplitBillPage() {
         is_returned: false
       };
 
-      await apiClient.post("/api/friend-loans", payload);
+      await dispatch(addFriendLoan(payload)).unwrap();
       toast.success(`🎉 Recorded ₹${loanAmount} owed by ${friendName} as a Friend Loan!`);
       setRecordedLoans(prev => ({ ...prev, [index]: true }));
     } catch (err) {
       console.error("Error recording loan:", err);
-      toast.error(err.response?.data?.error || "Failed to record loan.");
+      toast.error(err || "Failed to record loan.");
     } finally {
       setSubmittingIds(prev => ({ ...prev, [index]: false }));
     }

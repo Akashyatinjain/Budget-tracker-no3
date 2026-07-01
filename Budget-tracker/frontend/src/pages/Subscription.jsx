@@ -95,6 +95,7 @@ const SubscriptionsPage = () => {
   };
 
   useEffect(() => {
+    document.title = "Subscriptions | FinTrack Budget Tracker";
     if (token) {
       dispatch(fetchSubscriptions()).finally(() => setLoading(false));
     } else {

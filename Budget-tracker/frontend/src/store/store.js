@@ -7,6 +7,7 @@ import currencyReducer from "./currencySlice";
 import notificationReducer from "./notificationSlice";
 import reportReducer from "./reportSlice";
 import userReducer from "./userSlice";
+import friendLoanReducer from "./friendLoanSlice";
 
 const store = configureStore({
   reducer: {
@@ -17,6 +18,7 @@ const store = configureStore({
     notifications: notificationReducer,
     reports: reportReducer,
     user: userReducer,
+    friendLoans: friendLoanReducer,
   },
 });
 

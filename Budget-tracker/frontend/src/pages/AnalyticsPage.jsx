@@ -44,6 +44,7 @@ const AnalyticsPage = () => {
   };
 
   useEffect(() => {
+    document.title = "Analytics | FinTrack Budget Tracker";
     if (!token) { setLoading(false); return; }
     dispatch(fetchTransactions()).finally(() => setLoading(false));
   }, [token, dispatch]);

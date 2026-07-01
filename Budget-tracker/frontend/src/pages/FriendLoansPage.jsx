@@ -1,10 +1,16 @@
 // FriendLoansPage.jsx - FinTrack Friend Loans Tracker
 import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
-import apiClient from "../services/apiClient";
+import {
+  fetchFriendLoans,
+  addFriendLoan,
+  updateFriendLoan,
+  deleteFriendLoan
+} from "../store/friendLoanSlice";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Trash2, DollarSign, Users, Calendar, Clock,
@@ -14,6 +20,8 @@ import {
 
 export default function FriendLoansPage() {
   const { user, token } = useAuth();
+  const dispatch = useDispatch();
+  const { items: reduxLoans, loading: reduxLoading, error: reduxError } = useSelector((state) => state.friendLoans);
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -33,26 +41,22 @@ export default function FriendLoansPage() {
   const [statusFilter, setStatusFilter] = useState("all"); // 'all', 'pending', 'returned'
 
   // Fetch all loans
-  const fetchLoans = async () => {
-    try {
-      setLoading(true);
-      const response = await apiClient.get("/api/friend-loans");
-      setLoans(response.data.loans || []);
-    } catch (err) {
-      console.error("Error fetching friend loans:", err);
-      const msg = err.response?.data?.error || "Failed to load friend loans.";
-      setError(msg);
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-    }
+  const fetchLoans = () => {
+    dispatch(fetchFriendLoans());
   };
 
   useEffect(() => {
+    document.title = "Friend Loans | FinTrack Budget Tracker";
     if (token) {
-      fetchLoans();
+      dispatch(fetchFriendLoans());
     }
-  }, [token]);
+  }, [token, dispatch]);
+
+  useEffect(() => {
+    setLoans(reduxLoans);
+    setLoading(reduxLoading);
+    setError(reduxError || "");
+  }, [reduxLoans, reduxLoading, reduxError]);
 
   // Form Submit (Add new loan)
   const handleAddLoan = async (e) => {
@@ -80,7 +84,7 @@ export default function FriendLoansPage() {
         is_returned: isReturned
       };
 
-      await apiClient.post("/api/friend-loans", payload);
+      await dispatch(addFriendLoan(payload)).unwrap();
       toast.success("✨ Friend loan record added successfully!");
       setShowModal(false);
       // Reset form
@@ -90,11 +94,10 @@ export default function FriendLoansPage() {
       setNotes("");
       setIsReturned(false);
       // Refetch
-      fetchLoans();
+      dispatch(fetchFriendLoans());
     } catch (err) {
       console.error("Error adding loan:", err);
-      const msg = err.response?.data?.error || "Failed to add friend loan.";
-      toast.error(msg);
+      toast.error(err || "Failed to add friend loan.");
     } finally {
       setSubmitting(false);
     }
@@ -104,9 +107,10 @@ export default function FriendLoansPage() {
   const handleToggleStatus = async (loan) => {
     try {
       const updatedStatus = !loan.is_returned;
-      await apiClient.put(`/api/friend-loans/${loan.loan_id}`, {
-        is_returned: updatedStatus
-      });
+      await dispatch(updateFriendLoan({
+        id: loan.loan_id,
+        data: { is_returned: updatedStatus }
+      })).unwrap();
       
       toast.success(
         updatedStatus 
@@ -114,15 +118,10 @@ export default function FriendLoansPage() {
           : `⚠️ Marked as pending for ${loan.friend_name}`
       );
       
-      // Update local state instead of full reload for snappy feel
-      setLoans(prevLoans => 
-        prevLoans.map(l => 
-          l.loan_id === loan.loan_id ? { ...l, is_returned: updatedStatus } : l
-        )
-      );
+      dispatch(fetchFriendLoans());
     } catch (err) {
       console.error("Error toggling status:", err);
-      toast.error(err.response?.data?.error || "Failed to update status.");
+      toast.error(err || "Failed to update status.");
     }
   };
 
@@ -132,12 +131,12 @@ export default function FriendLoansPage() {
       return;
     }
     try {
-      await apiClient.delete(`/api/friend-loans/${loanId}`);
+      await dispatch(deleteFriendLoan(loanId)).unwrap();
       toast.success("Entry removed");
-      setLoans(prevLoans => prevLoans.filter(l => l.loan_id !== loanId));
+      dispatch(fetchFriendLoans());
     } catch (err) {
       console.error("Error deleting loan:", err);
-      toast.error(err.response?.data?.error || "Failed to delete loan entry.");
+      toast.error(err || "Failed to delete loan entry.");
     }
   };
 
