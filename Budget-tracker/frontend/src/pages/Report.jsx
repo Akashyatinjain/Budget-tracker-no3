@@ -652,7 +652,7 @@ const ReportsPage = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-2 lg:grid-cols-4 gap-5"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5"
           >
             {statCards.map((stat, i) => (
               <motion.div
@@ -1022,7 +1022,7 @@ const ReportsPage = () => {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
                     <p className="text-xs text-slate-400">Projected Next Month Savings</p>
                     <h4 className="text-xl font-bold text-emerald-400 mt-1">₹62,400</h4>
