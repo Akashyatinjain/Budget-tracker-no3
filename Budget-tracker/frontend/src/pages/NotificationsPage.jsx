@@ -297,16 +297,24 @@ const NotificationsPage = () => {
 
   const handleBulkDelete = () => {
     if (selectedIds.length === 0) return;
-    setNotifications(prev => prev.filter(n => !selectedIds.includes(n.id)));
+    const count = selectedIds.length;
+    selectedIds.forEach(id => {
+      dispatch(optimisticRemoveNotification(id));
+      dispatch(removeNotification(id));
+    });
     setSelectedIds([]);
-    toast.success(`Deleted ${selectedIds.length} notifications`);
+    toast.success(`Deleted ${count} notifications`);
   };
 
   const handleBulkMarkRead = () => {
     if (selectedIds.length === 0) return;
-    setNotifications(prev => prev.map(n => selectedIds.includes(n.id) ? { ...n, is_read: true } : n));
+    const count = selectedIds.length;
+    selectedIds.forEach(id => {
+      dispatch(optimisticMarkRead(id));
+      dispatch(markNotificationAsRead(id));
+    });
     setSelectedIds([]);
-    toast.success(`Marked ${selectedIds.length} as read`);
+    toast.success(`Marked ${count} as read`);
   };
 
   const exportNotificationsCSV = () => {
