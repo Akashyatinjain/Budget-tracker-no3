@@ -347,16 +347,18 @@ const NotificationsPage = () => {
 
   // 5. Search & Filter Filtering
   const filteredNotifications = notifications.filter(notification => {
+    const normType = notification.type === "transaction" ? "expense" : notification.type;
     const matchesFilter =
       filter === "all" ? true :
       filter === "unread" ? !notification.is_read :
-      notification.type === filter;
+      normType === filter;
 
     const query = searchQuery.toLowerCase().trim();
     const matchesSearch = !query ||
       (notification.title && notification.title.toLowerCase().includes(query)) ||
       (notification.message && notification.message.toLowerCase().includes(query)) ||
-      (notification.type && notification.type.toLowerCase().includes(query));
+      (notification.type && notification.type.toLowerCase().includes(query)) ||
+      (normType && normType.toLowerCase().includes(query));
 
     return matchesFilter && matchesSearch;
   });
@@ -730,7 +732,8 @@ const NotificationsPage = () => {
                     {/* Group Items */}
                     <div className="divide-y divide-white/5">
                       {group.items.map((notification, index) => {
-                        const typeConfig = notificationTypes[notification.type] || notificationTypes.system;
+                        const normType = notification.type === "transaction" ? "expense" : notification.type;
+                        const typeConfig = notificationTypes[normType] || notificationTypes.system;
                         const priorityConfig = priorityLevels[notification.priority] || priorityLevels.low;
                         const isSelected = selectedIds.includes(notification.id);
                         const isExpanded = expandedIds.includes(notification.id);
@@ -747,7 +750,7 @@ const NotificationsPage = () => {
                             } border-l-4 ${
                               !notification.is_read 
                                 ? 'bg-gradient-to-r from-white/[0.05] to-transparent' 
-                                : 'bg-transparent'
+                                : 'bg-transparent opacity-55 hover:opacity-90'
                             } ${isSelected ? 'bg-emerald-500/10' : 'hover:bg-white/[0.03]'}`}
                           >
                             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
@@ -774,7 +777,7 @@ const NotificationsPage = () => {
                                 
                                 <div className="flex-1 min-w-0 cursor-pointer" onClick={() => toggleExpand(notification.id)}>
                                   <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 flex-wrap">
-                                    <h4 className={`font-semibold text-xs sm:text-sm ${!notification.is_read ? 'text-white font-bold' : 'text-slate-300'}`}>
+                                    <h4 className={`font-semibold text-xs sm:text-sm ${!notification.is_read ? 'text-white font-bold' : 'text-slate-500 line-through decoration-white/10'}`}>
                                       {notification.title}
                                     </h4>
 
@@ -795,7 +798,7 @@ const NotificationsPage = () => {
                                   
                                   {/* Message Preview */}
                                   <p 
-                                    className="text-slate-300 text-xs sm:text-sm leading-relaxed"
+                                    className={`text-xs sm:text-sm leading-relaxed ${!notification.is_read ? 'text-slate-300' : 'text-slate-500'}`}
                                     style={!isExpanded ? {
                                       display: '-webkit-box',
                                       WebkitLineClamp: 2,
