@@ -92,7 +92,7 @@ async function buildReportData(userId) {
 }
 
 // GET /api/reports
-router.get("/", verifyToken, async (req, res) => {
+router.get("/", verifyToken, async (req, res, next) => {
   const userId = req.user?.user_id || req.user?.id;
   if (!userId) return res.status(400).json({ error: "Invalid user" });
 
@@ -100,13 +100,12 @@ router.get("/", verifyToken, async (req, res) => {
     const report = await buildReportData(userId);
     res.json({ success: true, report });
   } catch (err) {
-    console.error("Fetch report data error:", err);
-    res.status(500).json({ error: "Failed to build report data" });
+    next(err);
   }
 });
 
 // GET /api/reports/export/excel
-router.get("/export/excel", verifyToken, async (req, res) => {
+router.get("/export/excel", verifyToken, async (req, res, next) => {
 
   const userId = req.user?.user_id || req.user?.id;
   if (!userId) return res.status(400).json({ error: "Invalid user" });
@@ -163,13 +162,12 @@ router.get("/export/excel", verifyToken, async (req, res) => {
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.send(Buffer.from(buffer));
   } catch (err) {
-    console.error("Excel export error:", err);
-    res.status(500).json({ error: "Failed to generate Excel report" });
+    next(err);
   }
 });
 
 // GET /api/reports/export/pdf
-router.get("/export/pdf", verifyToken, async (req, res) => {
+router.get("/export/pdf", verifyToken, async (req, res, next) => {
   const userId = req.user?.user_id || req.user?.id;
   if (!userId) return res.status(400).json({ error: "Invalid user" });
 
@@ -225,8 +223,7 @@ router.get("/export/pdf", verifyToken, async (req, res) => {
 
     doc.end();
   } catch (err) {
-    console.error("PDF export error:", err);
-    res.status(500).json({ error: "Failed to generate PDF report" });
+    next(err);
   }
 });
 

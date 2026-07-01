@@ -4,7 +4,7 @@ import { addTransaction, getTransactions, deleteTransaction,updateTransaction  }
 import { checkBudgetsAndNotify } from "../utils/budgetNotifications.js";
 
 // ✅ Add Transaction Controller
-export const addTransactionController = async (req, res) => {
+export const addTransactionController = async (req, res, next) => {
   try {
     const { merchant, amount, category_id, transaction_date, description, currency, type } = req.body;
     const userId = req.user?.id ?? req.user?.user_id; // support both shapes
@@ -42,7 +42,7 @@ export const addTransactionController = async (req, res) => {
     // Call budget check to possibly create budget warning/exceeded notifications
     try {
       // newTransaction should be the inserted row returned by addTransaction
-await checkBudgetsAndNotify(userId, newTransaction);
+      await checkBudgetsAndNotify(userId, newTransaction);
       console.log("checkBudgetsAndNotify ran for user:", userId);
     } catch (budgetErr) {
       console.warn("Budget notification failed:", budgetErr?.message || budgetErr);
@@ -51,26 +51,24 @@ await checkBudgetsAndNotify(userId, newTransaction);
     // Return created transaction (keep original shape)
     res.status(201).json(newTransaction);
   } catch (error) {
-    console.error("Add Transaction Error:", error);
-    res.status(500).json({ message: "Server Error" });
+    next(error);
   }
 };
 
 // ✅ Get Transactions Controller
-export const getTransactionsController = async (req, res) => {
+export const getTransactionsController = async (req, res, next) => {
   try {
     const userId = req.user?.id;
     const transactions = await getTransactions(userId);
     res.status(200).json(transactions);
   } catch (error) {
-    console.error("Get Transactions Error:", error);
-    res.status(500).json({ message: "Server Error" });
+    next(error);
   }
 };
 
 // ✅ Delete Transaction Controller
 
-   export const deleteTransactionController = async (req, res) => {
+   export const deleteTransactionController = async (req, res, next) => {
   try {
     const rawId = req.params.id;
     const transactionId = Number.isFinite(Number(rawId)) ? parseInt(rawId, 10) : null;
@@ -98,13 +96,12 @@ export const getTransactionsController = async (req, res) => {
 
     return res.status(200).json({ message: "Transaction deleted successfully", transaction: deleted });
   } catch (error) {
-    console.error("Delete Transaction Error:", error?.message || error, error?.stack || "");
-    return res.status(500).json({ message: "Server Error", error: error?.message || null });
+    next(error);
   }
 };
 
 // ✅ Import Transactions Controller
-export const importTransactionsController = async (req, res) => {
+export const importTransactionsController = async (req, res, next) => {
   try {
     const { rows } = req.body;
     const userId = req.user?.id ?? null;
@@ -145,7 +142,7 @@ export const importTransactionsController = async (req, res) => {
         await client.query(insertSql, [
           userId,
           row.category_id || null,
-row.transaction_type || row.type || null,          row.amount || null,
+          row.transaction_type || row.type || null,          row.amount || null,
           row.currency || null,
           row.description || null,
           row.merchant || null,
@@ -158,19 +155,17 @@ row.transaction_type || row.type || null,          row.amount || null,
       return res.status(200).json({ message: "Transactions imported successfully", inserted });
     } catch (err) {
       await client.query("ROLLBACK");
-      console.error("DB insert error:", err);
-      return res.status(500).json({ message: "DB insert failed" });
+      throw err;
     } finally {
       client.release();
     }
 
   } catch (error) {
-    console.error("Import Transactions Error:", error);
-    return res.status(500).json({ message: "Server Error" });
+    next(error);
   }
 };
 
-export const updateTransactionController = async (req, res) => {
+export const updateTransactionController = async (req, res, next) => {
   try {
     const rawId = req.params.id;
     const transactionId = Number.isFinite(Number(rawId)) ? parseInt(rawId, 10) : null;
@@ -204,8 +199,6 @@ export const updateTransactionController = async (req, res) => {
     console.info(`[UPDATE] success transactionId=${transactionId}`);
     return res.status(200).json({ message: "Transaction updated successfully", transaction: updated });
   } catch (error) {
-    // show full error for debugging
-    console.error("Update Transaction Error:", error?.message || error, error?.stack || "");
-    return res.status(500).json({ message: "Server Error", error: error?.message || "unknown" });
+    next(error);
   }
 };

@@ -10,7 +10,7 @@ import path from 'path';
 const router = express.Router();
 
 // GET /api/users/me - Get current user data
-router.get('/me', verifyToken, async (req, res) => {
+router.get('/me', verifyToken, async (req, res, next) => {
   try {
     const userId = req.user.user_id;
     const result = await pool.query(`
@@ -41,13 +41,12 @@ router.get('/me', verifyToken, async (req, res) => {
 
     res.json({ user });
   } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    next(error);
   }
 });
 
 // PUT /api/users/profile - Update user profile
-router.put('/profile', verifyToken, async (req, res) => {
+router.put('/profile', verifyToken, async (req, res, next) => {
   try {
     const userId = req.user.user_id;
     const { first_name, last_name, phone, currency, language, timezone, avatar_url, avatar, profile_picture } = req.body;
@@ -76,13 +75,12 @@ router.put('/profile', verifyToken, async (req, res) => {
 
     res.json({ user: updatedUser });
   } catch (error) {
-    console.error('Update profile error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    next(error);
   }
 });
 
 // PUT /api/users/password - Change password
-router.put('/password', verifyToken, async (req, res) => {
+router.put('/password', verifyToken, async (req, res, next) => {
   try {
     const userId = req.user.user_id;
     const { current_password, new_password } = req.body;
@@ -127,16 +125,12 @@ router.put('/password', verifyToken, async (req, res) => {
 
     res.json({ message: 'Password updated successfully' });
   } catch (error) {
-    console.error('Change password error:', error);
-    res.status(500).json({ 
-      error: 'Failed to change password',
-      details: error.message 
-    });
+    next(error);
   }
 });
 
 // GET /api/user-preferences - Get user preferences
-router.get('/preferences', verifyToken, async (req, res) => {
+router.get('/preferences', verifyToken, async (req, res, next) => {
   try {
     const userId = req.user.user_id;
     const result = await pool.query(`
@@ -180,13 +174,12 @@ router.get('/preferences', verifyToken, async (req, res) => {
 
     res.json({ preferences: result.rows[0] });
   } catch (error) {
-    console.error('Get preferences error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    next(error);
   }
 });
 
 // PUT /api/user-preferences - Update user preferences
-router.put('/preferences', verifyToken, async (req, res) => {
+router.put('/preferences', verifyToken, async (req, res, next) => {
   try {
     const userId = req.user.user_id;
     const {
@@ -221,13 +214,12 @@ router.put('/preferences', verifyToken, async (req, res) => {
 
     res.json({ preferences: result.rows[0] });
   } catch (error) {
-    console.error('Update preferences error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    next(error);
   }
 });
 
 // GET /api/privacy-settings - Get privacy settings
-router.get('/privacy', verifyToken, async (req, res) => {
+router.get('/privacy', verifyToken, async (req, res, next) => {
   try {
     const userId = req.user.user_id;
     const result = await pool.query(`
@@ -264,13 +256,12 @@ router.get('/privacy', verifyToken, async (req, res) => {
 
     res.json({ settings: result.rows[0] });
   } catch (error) {
-    console.error('Get privacy settings error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    next(error);
   }
 });
 
 // PUT /api/privacy-settings - Update privacy settings
-router.put('/privacy', verifyToken, async (req, res) => {
+router.put('/privacy', verifyToken, async (req, res, next) => {
   try {
     const userId = req.user.user_id;
     const {
@@ -298,13 +289,12 @@ router.put('/privacy', verifyToken, async (req, res) => {
 
     res.json({ settings: result.rows[0] });
   } catch (error) {
-    console.error('Update privacy settings error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    next(error);
   }
 });
 
 // GET /api/export-data - Export user data
-router.get('/export-data', verifyToken, async (req, res) => {
+router.get('/export-data', verifyToken, async (req, res, next) => {
   try {
     const userId = req.user.user_id;
     const tempDir = path.join(process.cwd(), 'temp');
@@ -346,13 +336,12 @@ router.get('/export-data', verifyToken, async (req, res) => {
 
     archive.finalize();
   } catch (error) {
-    console.error('Export data error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    next(error);
   }
 });
 
 // DELETE /api/users/account - Delete account
-router.delete('/account', verifyToken, async (req, res) => {
+router.delete('/account', verifyToken, async (req, res, next) => {
   const client = await pool.connect();
   
   try {
@@ -376,8 +365,7 @@ router.delete('/account', verifyToken, async (req, res) => {
     res.json({ message: 'Account deleted successfully' });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Delete account error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    next(error);
   } finally {
     client.release();
   }

@@ -1,4 +1,5 @@
 import axios from "axios";
+import toast from "react-hot-toast";
 
 const API_BASE = (import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/$/, "");
 
@@ -42,11 +43,17 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Handle global 401 unauthorization
+// Response Interceptor: Handle global 401 unauthorization and show error toasts
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+    const isAuthError = error.response && (error.response.status === 401 || error.response.status === 403);
+    const msg = error.response?.data?.message || error.response?.data?.error || error.response?.data?.msg || error.message || "An unexpected error occurred";
+    
+    // Pop a toast notification for the error
+    toast.error(msg);
+
+    if (isAuthError) {
       // Avoid redirect loops if already on sign-in or sign-up
       const currentPath = window.location.pathname;
       if (!currentPath.includes("sign-in") && !currentPath.includes("sign-up")) {

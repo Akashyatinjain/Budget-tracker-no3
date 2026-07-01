@@ -7,7 +7,7 @@ import { checkBudgetsAndNotify } from "../utils/budgetNotifications.js";
 const router = express.Router();
 
 // GET /api/budgets - list budgets
-router.get("/", verifyToken, async (req, res) => {
+router.get("/", verifyToken, async (req, res, next) => {
   try {
     const userId = req.user.user_id;
     const result = await pool.query(
@@ -16,13 +16,12 @@ router.get("/", verifyToken, async (req, res) => {
     );
     res.json({ budgets: result.rows });
   } catch (err) {
-    console.error("Fetch budgets error:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // POST /api/budgets - create budget
-router.post("/", verifyToken, async (req, res) => {
+router.post("/", verifyToken, async (req, res, next) => {
   try {
     const userId = req.user.user_id;
     const { category_id, amount, month, description } = req.body;
@@ -72,8 +71,8 @@ router.post("/", verifyToken, async (req, res) => {
     try {
       // call the same helper that checks exceed
       console.log("[BUDGET] Running exceed check after budget creation...");
-// after creating budget
-await checkBudgetsAndNotify(userId, { category_id, amount, month });
+      // after creating budget
+      await checkBudgetsAndNotify(userId, { category_id, amount, month });
     } catch (exErr) {
       console.warn("Budget exceed check failed:", exErr);
     }
@@ -81,13 +80,12 @@ await checkBudgetsAndNotify(userId, { category_id, amount, month });
     res.status(201).json({ budget: newBudget });
 
   } catch (err) {
-    console.error("Create budget error:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // DELETE /api/budgets/:id
-router.delete("/:id", verifyToken, async (req, res) => {
+router.delete("/:id", verifyToken, async (req, res, next) => {
   try {
     const { id } = req.params;
     const userId = req.user.user_id;
@@ -97,8 +95,7 @@ router.delete("/:id", verifyToken, async (req, res) => {
     ]);
     res.json({ msg: "Budget deleted" });
   } catch (err) {
-    console.error("Delete budget error:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 

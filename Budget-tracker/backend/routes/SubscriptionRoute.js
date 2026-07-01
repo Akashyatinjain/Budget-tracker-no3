@@ -8,7 +8,7 @@ const router = express.Router();
 const getUserId = (req) => req.user?.user_id ?? req.user?.id ?? null;
 
 // GET / -> list user's subscriptions
-router.get("/", verifyToken, async (req, res) => {
+router.get("/", verifyToken, async (req, res, next) => {
   try {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
@@ -19,13 +19,12 @@ router.get("/", verifyToken, async (req, res) => {
     );
     return res.json({ subscriptions: result.rows });
   } catch (err) {
-    console.error("Fetch subscriptions error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    next(err);
   }
 });
 
 // POST / -> create subscription
-router.post("/", verifyToken, async (req, res) => {
+router.post("/", verifyToken, async (req, res, next) => {
   try {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
@@ -55,13 +54,12 @@ router.post("/", verifyToken, async (req, res) => {
 
     return res.status(201).json({ subscription: insertRes.rows[0] });
   } catch (err) {
-    console.error("Create subscription error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    next(err);
   }
 });
 
 // PUT /:id -> update allowed fields (partial update)
-router.put("/:id", verifyToken, async (req, res) => {
+router.put("/:id", verifyToken, async (req, res, next) => {
   try {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
@@ -95,13 +93,12 @@ router.put("/:id", verifyToken, async (req, res) => {
 
     return res.json({ subscription: updateRes.rows[0] });
   } catch (err) {
-    console.error("Update subscription error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    next(err);
   }
 });
 
 // DELETE /:id -> delete subscription
-router.delete("/:id", verifyToken, async (req, res) => {
+router.delete("/:id", verifyToken, async (req, res, next) => {
   try {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
@@ -114,8 +111,7 @@ router.delete("/:id", verifyToken, async (req, res) => {
 
     return res.json({ message: "Subscription deleted successfully" });
   } catch (err) {
-    console.error("Delete subscription error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    next(err);
   }
 });
 

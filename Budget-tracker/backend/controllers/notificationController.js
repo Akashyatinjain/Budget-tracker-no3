@@ -2,7 +2,7 @@ import pool from "../config/db.js";
 
 const getUserId = (req) => req.user?.user_id ?? req.user?.id ?? null;
 
-export const getNotifications = async (req, res) => {
+export const getNotifications = async (req, res, next) => {
   try {
     const userId = getUserId(req);
     const q = `SELECT id, title, message, type, priority, is_read, action_url, data, created_at
@@ -10,12 +10,11 @@ export const getNotifications = async (req, res) => {
     const result = await pool.query(q, [userId]);
     res.json({ notifications: result.rows });
   } catch (err) {
-    console.error("getNotifications:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
-export const createNotification = async (req, res) => {
+export const createNotification = async (req, res, next) => {
   try {
     const userId = getUserId(req);
     const { title, message, type = "system", priority = "low", action_url = null, data = null } = req.body;
@@ -24,58 +23,53 @@ export const createNotification = async (req, res) => {
     const result = await pool.query(q, [userId, title, message, type, priority, action_url, data]);
     res.status(201).json({ notification: result.rows[0] });
   } catch (err) {
-    console.error("createNotification:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
-export const markAsRead = async (req, res) => {
+export const markAsRead = async (req, res, next) => {
   try {
     const userId = getUserId(req);
     const id = req.params.id;
     await pool.query("UPDATE notifications SET is_read = true WHERE id=$1 AND user_id=$2", [id, userId]);
     res.json({ success: true });
   } catch (err) {
-    console.error("markAsRead:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
-export const markAllRead = async (req, res) => {
+export const markAllRead = async (req, res, next) => {
   try {
     const userId = getUserId(req);
     await pool.query("UPDATE notifications SET is_read = true WHERE user_id=$1", [userId]);
     res.json({ success: true });
   } catch (err) {
-    console.error("markAllRead:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
-export const deleteNotification = async (req, res) => {
+export const deleteNotification = async (req, res, next) => {
   try {
     const userId = getUserId(req);
     const id = req.params.id;
     await pool.query("DELETE FROM notifications WHERE id=$1 AND user_id=$2", [id, userId]);
     res.json({ success: true });
   } catch (err) {
-    console.error("deleteNotification:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
-export const clearNotifications = async (req, res) => {
+export const clearNotifications = async (req, res, next) => {
   try {
     const userId = getUserId(req);
     await pool.query("DELETE FROM notifications WHERE user_id=$1", [userId]);
     res.json({ success: true });
   } catch (err) {
-    console.error("clearNotifications:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
-export const getSettings = async (req, res) => {
+export const getSettings = async (req, res, next) => {
   try {
     const userId = getUserId(req);
     const q = "SELECT settings FROM notification_settings WHERE user_id=$1";
@@ -91,12 +85,11 @@ export const getSettings = async (req, res) => {
     }
     res.json({ settings: r.rows[0].settings });
   } catch (err) {
-    console.error("getSettings:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
-export const updateSettings = async (req, res) => {
+export const updateSettings = async (req, res, next) => {
   try {
     const userId = getUserId(req);
     const settings = req.body;
@@ -109,7 +102,6 @@ export const updateSettings = async (req, res) => {
     const r = await pool.query(upsert, [userId, settings]);
     res.json({ settings: r.rows[0].settings });
   } catch (err) {
-    console.error("updateSettings:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };

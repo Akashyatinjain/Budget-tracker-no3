@@ -22,7 +22,7 @@ router.post(
     body("email").isEmail().withMessage("Valid email is required"),
     body("password").isLength({ min: 6 }).withMessage("Password min 6 chars"),
   ],
-  async (req, res) => {
+  async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -40,7 +40,7 @@ router.post(
 
       res.status(201).json({ msg: "User registered successfully", user: newUser, token });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      next(err);
     }
   }
 );
@@ -54,7 +54,7 @@ router.post(
     body("email").isEmail(),
     body("password").notEmpty(),
   ],
-  async (req, res) => {
+  async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -80,7 +80,7 @@ router.post(
         token,
       });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      next(err);
     }
   }
 );
@@ -88,40 +88,40 @@ router.post(
 // =======================
 // Get Profile
 // =======================
-router.get("/me", verifyToken, async (req, res) => {
+router.get("/me", verifyToken, async (req, res, next) => {
   try {
     const user = await findUserById(req.user.user_id);
     if (!user) return res.status(404).json({ msg: "User not found" });
     res.json(user);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // =======================
 // Admin – Get All Users
 // =======================
-router.get("/all", verifyToken, async (req, res) => {
+router.get("/all", verifyToken, async (req, res, next) => {
   try {
     if (req.user.role !== "admin") return res.status(403).json({ msg: "Access denied" });
     const users = await getAllUsers();
     res.json(users);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // =======================
 // Admin – Update User Role
 // =======================
-router.put("/role/:id", verifyToken, async (req, res) => {
+router.put("/role/:id", verifyToken, async (req, res, next) => {
   try {
     if (req.user.role !== "admin") return res.status(403).json({ msg: "Access denied" });
     const { role } = req.body;
     const updated = await updateUser(req.params.id, { role });
     res.json({ msg: "Role updated", user: updated });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 

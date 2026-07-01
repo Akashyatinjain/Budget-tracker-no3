@@ -66,7 +66,6 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use(errorHandler);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/users", userRoutes);
 app.use('/api/budgets', budgetRoutes); // Add this line
@@ -95,7 +94,7 @@ function createAndSetToken(res, user) {
 }
 // ...existing code...
 
-app.get("/transactions", verifyToken, async (req, res) => {
+app.get("/transactions", verifyToken, async (req, res, next) => {
   try {
     const result = await pool.query(
       `SELECT t.*, c.name AS category_name 
@@ -107,12 +106,12 @@ app.get("/transactions", verifyToken, async (req, res) => {
     );
     res.json({ transactions: result.rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 
-app.get("/categories", verifyToken, async (req, res) => {
+app.get("/categories", verifyToken, async (req, res, next) => {
   try {
     const result = await pool.query(
       "SELECT * FROM categories WHERE user_id=$1",
@@ -120,12 +119,12 @@ app.get("/categories", verifyToken, async (req, res) => {
     );
     res.json({ categories: result.rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 
-app.post("/transactions", verifyToken, async (req, res) => {
+app.post("/transactions", verifyToken, async (req, res, next) => {
   try {
     console.log("POST /transactions req.user:", req.user); // <-- debug
     const {
@@ -169,14 +168,13 @@ app.post("/transactions", verifyToken, async (req, res) => {
 
     res.status(201).json({ transaction: insertedTxn, notification: createdNotification });
   } catch (err) {
-    console.error("POST /transactions error:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 
 
-app.post("/sign-up", async (req, res) => {
+app.post("/sign-up", async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
 
@@ -214,13 +212,12 @@ app.post("/sign-up", async (req, res) => {
 
     res.status(201).json({ message: "User created & authenticated", user, token });
   } catch (err) {
-    console.error("Signup error:", err);
-    res.status(500).json({ error: err.message || "Something went wrong" });
+    next(err);
   }
 });
 
 // ================= SIGN IN =================
-app.post("/sign-in", async (req, res) => {
+app.post("/sign-in", async (req, res, next) => {
   try {
     const { emailOrName, password } = req.body;
     if (!emailOrName || !password)
@@ -250,8 +247,7 @@ app.post("/sign-in", async (req, res) => {
 
     res.json({ message: "Login successful", user: safeUser, token });
   } catch (err) {
-    console.error("Signin error:", err);
-    res.status(500).json({ error: err.message || "Something went wrong" });
+    next(err);
   }
 });
 
@@ -322,7 +318,7 @@ app.get(
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 
 // Debug endpoint: create a test notification for the authenticated user
-app.post("/api/debug/create-budget-notif", verifyToken, async (req, res) => {
+app.post("/api/debug/create-budget-notif", verifyToken, async (req, res, next) => {
   try {
     const userId = req.user?.user_id ?? req.user?.id;
     const { title="Debug Budget", message="Debug message", priority="medium" } = req.body;
@@ -332,9 +328,13 @@ app.post("/api/debug/create-budget-notif", verifyToken, async (req, res) => {
       [userId, title, message, "budget", priority, "/budgets"]
     );
     res.status(201).json({ notification: r.rows[0] });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) {
+    next(err);
+  }
 });
 
+// Global Error Handler Middleware registered at the end
+app.use(errorHandler);
 
 // Start server
 const PORT = process.env.PORT || 5000; // Render provides PORT

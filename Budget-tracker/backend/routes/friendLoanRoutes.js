@@ -28,7 +28,7 @@ const router = express.Router();
 })();
 
 // 1. GET /api/friend-loans - Fetch all loans for the logged-in user
-router.get("/", verifyToken, async (req, res) => {
+router.get("/", verifyToken, async (req, res, next) => {
   try {
     const userId = req.user.user_id || req.user.id;
     if (!userId) {
@@ -42,13 +42,12 @@ router.get("/", verifyToken, async (req, res) => {
 
     res.json({ loans: result.rows });
   } catch (err) {
-    console.error("Error fetching friend loans:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // 2. POST /api/friend-loans - Add a new friend loan entry
-router.post("/", verifyToken, async (req, res) => {
+router.post("/", verifyToken, async (req, res, next) => {
   try {
     const userId = req.user.user_id || req.user.id;
     if (!userId) {
@@ -80,13 +79,12 @@ router.post("/", verifyToken, async (req, res) => {
 
     res.status(201).json({ loan: result.rows[0] });
   } catch (err) {
-    console.error("Error creating friend loan:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // 3. PUT /api/friend-loans/:id - Update loan details (e.g. mark returned)
-router.put("/:id", verifyToken, async (req, res) => {
+router.put("/:id", verifyToken, async (req, res, next) => {
   try {
     const userId = req.user.user_id || req.user.id;
     const { id } = req.params;
@@ -154,13 +152,12 @@ router.put("/:id", verifyToken, async (req, res) => {
     const result = await pool.query(updateQuery, values);
     res.json({ loan: result.rows[0] });
   } catch (err) {
-    console.error("Error updating friend loan:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // 4. DELETE /api/friend-loans/:id - Remove loan record
-router.delete("/:id", verifyToken, async (req, res) => {
+router.delete("/:id", verifyToken, async (req, res, next) => {
   try {
     const userId = req.user.user_id || req.user.id;
     const { id } = req.params;
@@ -180,8 +177,7 @@ router.delete("/:id", verifyToken, async (req, res) => {
 
     res.json({ message: "Loan entry deleted successfully", loan: result.rows[0] });
   } catch (err) {
-    console.error("Error deleting friend loan:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 

@@ -11,7 +11,7 @@ import {
 } from "../models/userModel.js";
 
 // ✅ Signup Controller
-export const registerUser = async (req, res) => {
+export const registerUser = async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
 
@@ -48,13 +48,12 @@ export const registerUser = async (req, res) => {
       token,
     });
   } catch (err) {
-    console.error("Register error:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
 // ✅ Login Controller
-export const loginUser = async (req, res) => {
+export const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -93,36 +92,34 @@ export const loginUser = async (req, res) => {
       token,
     });
   } catch (err) {
-    console.error("Login error:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
 // ✅ Get Profile (Protected)
-export const getProfile = async (req, res) => {
+export const getProfile = async (req, res, next) => {
   try {
     const user = await findUserById(req.user.user_id);
     if (!user) return res.status(404).json({ msg: "User not found" });
     res.json({ user });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
 // ✅ Update Profile (Protected)
-export const updateProfile = async (req, res) => {
+export const updateProfile = async (req, res, next) => {
   try {
     const user_id = req.user.user_id;
     const updated = await updateUser(user_id, req.body);
     res.json({ msg: "Profile updated successfully", user: updated });
   } catch (err) {
-    console.error("Update profile controller error:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
 // ✅ Upload Profile Avatar (Protected)
-export const uploadAvatar = async (req, res) => {
+export const uploadAvatar = async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "Please provide an image file" });
@@ -152,13 +149,12 @@ export const uploadAvatar = async (req, res) => {
       user: updatedUser,
     });
   } catch (err) {
-    console.error("Upload avatar error:", err);
-    res.status(500).json({ error: err.message || "Upload avatar failed" });
+    next(err);
   }
 };
 
 // ✅ Change Password (Protected)
-export const changePassword = async (req, res) => {
+export const changePassword = async (req, res, next) => {
   try {
     const user_id = req.user.user_id;
     const { current_password, new_password } = req.body;
@@ -182,18 +178,17 @@ export const changePassword = async (req, res) => {
 
     res.json({ msg: "Password changed successfully" });
   } catch (err) {
-    console.error("Change password error:", err);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
 // ✅ Delete Account (Protected)
-export const deleteAccount = async (req, res) => {
+export const deleteAccount = async (req, res, next) => {
   try {
     const user_id = req.user.user_id;
     await deleteUser(user_id);
     res.json({ msg: "Account deleted successfully" });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };

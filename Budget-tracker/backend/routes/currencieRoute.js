@@ -31,19 +31,18 @@ function getReqUserId(req) {
  */
 
 // GET /api/currencies  (global)
-router.get("/", verifyToken, async (req, res) => {
+router.get("/", verifyToken, async (req, res, next) => {
   try {
     const sql = "SELECT code, name, rate_to_inr, is_default FROM currencies ORDER BY is_default DESC, code";
     const result = await pool.query(sql);
     return res.json({ currencies: result.rows });
   } catch (error) {
-    console.error("Fetch currencies error:", error);
-    return res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
 // POST /api/currencies  (global mode)
-router.post("/", verifyToken, async (req, res) => {
+router.post("/", verifyToken, async (req, res, next) => {
   try {
     const { code, name, rate_to_inr } = req.body;
     let { is_default = false, force = false } = req.body;
@@ -130,13 +129,12 @@ router.post("/", verifyToken, async (req, res) => {
       client.release();
     }
   } catch (error) {
-    console.error("Create currency error:", error);
-    return res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
 // PUT /api/currencies/default  (global)
-router.put("/default", verifyToken, async (req, res) => {
+router.put("/default", verifyToken, async (req, res, next) => {
   try {
     const { currency_code } = req.body;
     if (!currency_code) return res.status(400).json({ error: "currency_code is required" });
@@ -173,13 +171,12 @@ router.put("/default", verifyToken, async (req, res) => {
       client.release();
     }
   } catch (error) {
-    console.error("Set default currency error:", error);
-    return res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
 // DELETE /api/currencies/:code  (global)
-router.delete("/:code", verifyToken, async (req, res) => {
+router.delete("/:code", verifyToken, async (req, res, next) => {
   try {
     const codeParam = (req.params.code || "").toUpperCase();
 
@@ -191,8 +188,7 @@ router.delete("/:code", verifyToken, async (req, res) => {
     }
     return res.json({ message: "Currency deleted", currency: delRes.rows[0] });
   } catch (error) {
-    console.error("Delete currency error:", error);
-    return res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
