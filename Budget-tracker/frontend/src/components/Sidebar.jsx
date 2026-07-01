@@ -51,6 +51,7 @@ const buildMenu = (role, notificationsCount = 0) => [
       { id: "subscriptions", label: "Subscriptions", icon: <FiClock />,      route: "/subscriptions" },
       { id: "currencies",    label: "Currencies",    icon: <FiGlobe />,      route: "/currencies" },
       { id: "friend-loans",  label: "Friend Loans",  icon: <FiUsers />,      route: "/friend-loans" },
+      { id: "split-bill",    label: "Split Bills",   icon: <FiActivity />,   route: "/split-bill" },
       { id: "emi-calculator", label: "EMI Calculator", icon: <FiPercent />,  route: "/emi-calculator" },
     ],
   },
