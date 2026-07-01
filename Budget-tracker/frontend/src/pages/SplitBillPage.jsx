@@ -8,18 +8,24 @@ import apiClient from "../services/apiClient";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Users, Calculator, ArrowRight, Save, DollarSign,
-  UserPlus, UserMinus, Sparkles, RefreshCw, Check, Info
+  UserPlus, UserMinus, Sparkles, Check, Info, AlertCircle
 } from "lucide-react";
 
 export default function SplitBillPage() {
   const { user, token } = useAuth();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Bill States
+  // Core Bill States
   const [billTitle, setBillTitle] = useState("");
   const [billAmount, setBillAmount] = useState("");
   const [currency, setCurrency] = useState("INR");
+  
+  // Advanced Toggles
+  const [showAdvancedSplit, setShowAdvancedSplit] = useState(false);
+  const [showMultiplePayers, setShowMultiplePayers] = useState(false);
+
   const [splitMethod, setSplitMethod] = useState("equal"); // 'equal', 'exact', 'percentage'
+  const [singlePayerIdx, setSinglePayerIdx] = useState(0); // Default: first person (You)
 
   // Participant States
   const userName = user?.username || user?.name || user?.email?.split("@")[0] || "You";
@@ -38,19 +44,18 @@ export default function SplitBillPage() {
   const [transactions, setTransactions] = useState([]);
   const [recordedLoans, setRecordedLoans] = useState({}); // tracker for which transaction index was saved as loan
   const [submittingIds, setSubmittingIds] = useState({});
+  const [validationError, setValidationError] = useState("");
 
   // Sync participant fields when participant count changes
   useEffect(() => {
     setParticipants(prev => {
       const nextParticipants = [...prev];
       if (participantsCount > nextParticipants.length) {
-        // Add more
         for (let i = nextParticipants.length; i < participantsCount; i++) {
           const char = String.fromCharCode(65 + (i - 1)); // Friend A, B, C...
           nextParticipants.push({ name: `Friend ${char}`, amountPaid: "" });
         }
       } else if (participantsCount < nextParticipants.length) {
-        // Truncate
         nextParticipants.length = participantsCount;
       }
       return nextParticipants;
@@ -81,47 +86,35 @@ export default function SplitBillPage() {
     );
   };
 
-  // Preset Payer helper (Quick select single payer)
-  const setSinglePayer = (index) => {
-    if (!billAmount || Number(billAmount) <= 0) {
-      toast.error("Please enter a valid bill amount first");
-      return;
-    }
-    setParticipants(prev =>
-      prev.map((p, idx) => (idx === index ? { ...p, amountPaid: billAmount } : { ...p, amountPaid: "" }))
-    );
-  };
-
-  // Perform Calculations
-  const handleCalculate = (e) => {
-    if (e) e.preventDefault();
-
+  // Perform Calculations (Automatic Real-time)
+  useEffect(() => {
     const totalBill = Number(billAmount);
     if (!totalBill || totalBill <= 0) {
-      toast.error("Please enter a valid bill amount greater than 0");
+      setTransactions([]);
+      setValidationError("");
       return;
     }
 
-    // Verify Sum of Payments
-    const totalPaid = participants.reduce((sum, p) => sum + Number(p.amountPaid || 0), 0);
-    if (Math.abs(totalPaid - totalBill) > 0.05) {
-      // If no payments entered, auto-assume the first person (user) paid the whole bill
-      const allEmpty = participants.every(p => !p.amountPaid || Number(p.amountPaid) === 0);
-      if (allEmpty) {
-        setParticipants(prev =>
-          prev.map((p, idx) => (idx === 0 ? { ...p, amountPaid: billAmount } : p))
-        );
-        toast.success(`Assuming ${participants[0].name} paid the full bill.`);
-      } else {
-        toast.error(`The sum of paid amounts (${getSymbol()}${totalPaid}) does not match the total bill (${getSymbol()}${totalBill}). Please update paid amounts.`);
+    // Determine Paid Amounts for each participant
+    let paidAmounts = [];
+    if (showMultiplePayers) {
+      paidAmounts = participants.map(p => Number(p.amountPaid || 0));
+      const totalPaid = paidAmounts.reduce((a, b) => a + b, 0);
+      if (Math.abs(totalPaid - totalBill) > 0.1) {
+        setValidationError(`Sum of payments (${getSymbol()}${totalPaid.toFixed(2)}) must match the bill amount (${getSymbol()}${totalBill})`);
+        setTransactions([]);
         return;
       }
+    } else {
+      paidAmounts = participants.map((_, idx) => (idx === singlePayerIdx ? totalBill : 0));
     }
+
+    setValidationError("");
 
     // Compute shares based on method
     let shares = Array(participantsCount).fill(0);
 
-    if (splitMethod === "equal") {
+    if (splitMethod === "equal" || !showAdvancedSplit) {
       const equalShare = Number((totalBill / participantsCount).toFixed(2));
       shares = Array(participantsCount).fill(equalShare);
       const totalShare = shares.reduce((a, b) => a + b, 0);
@@ -129,26 +122,28 @@ export default function SplitBillPage() {
       if (diff !== 0) {
         shares[0] += diff; // offset rounding to the first person
       }
-    } else if (splitMethod === "exact") {
+    } else if (splitMethod === "exact" && showAdvancedSplit) {
       let sumShares = 0;
       shares = participants.map((_, idx) => {
         const val = Number(customShares[idx] || 0);
         sumShares += val;
         return val;
       });
-      if (Math.abs(sumShares - totalBill) > 0.05) {
-        toast.error(`Total shares (${getSymbol()}${sumShares}) do not match the bill amount (${getSymbol()}${totalBill})`);
+      if (Math.abs(sumShares - totalBill) > 0.1) {
+        setValidationError(`Sum of shares (${getSymbol()}${sumShares}) must match the bill amount (${getSymbol()}${totalBill})`);
+        setTransactions([]);
         return;
       }
-    } else if (splitMethod === "percentage") {
+    } else if (splitMethod === "percentage" && showAdvancedSplit) {
       let sumPercents = 0;
       shares = participants.map((_, idx) => {
         const pct = Number(customPercents[idx] || 0);
         sumPercents += pct;
         return Number(((totalBill * pct) / 100).toFixed(2));
       });
-      if (Math.abs(sumPercents - 100) > 0.1) {
-        toast.error(`Total percentages (${sumPercents}%) must sum up to exactly 100%`);
+      if (Math.abs(sumPercents - 100) > 0.5) {
+        setValidationError(`Sum of percentages (${sumPercents}%) must equal exactly 100%`);
+        setTransactions([]);
         return;
       }
       const totalShare = shares.reduce((a, b) => a + b, 0);
@@ -160,7 +155,7 @@ export default function SplitBillPage() {
 
     // Compute net balances
     const balances = participants.map((p, idx) => {
-      const paid = Number(p.amountPaid || 0);
+      const paid = paidAmounts[idx];
       const share = shares[idx];
       return {
         name: p.name || `Person ${idx + 1}`,
@@ -169,7 +164,7 @@ export default function SplitBillPage() {
       };
     });
 
-    // Simplify Debt
+    // Simplify debts
     const debtors = balances
       .filter(b => b.balance < -0.01)
       .map(b => ({ ...b, balance: Math.abs(b.balance) }))
@@ -183,7 +178,6 @@ export default function SplitBillPage() {
     let dIdx = 0;
     let cIdx = 0;
 
-    // Greedy matching algorithm
     while (dIdx < debtors.length && cIdx < creditors.length) {
       const debtor = debtors[dIdx];
       const creditor = creditors[cIdx];
@@ -205,8 +199,10 @@ export default function SplitBillPage() {
     }
 
     setTransactions(results);
-    setRecordedLoans({}); // reset recorded tracker for new calculation
-  };
+  }, [
+    billAmount, participants, splitMethod, singlePayerIdx,
+    customShares, customPercents, showAdvancedSplit, showMultiplePayers, participantsCount
+  ]);
 
   // Record a transaction as a Friend Loan in the database
   const handleRecordLoan = async (index, txn) => {
@@ -235,12 +231,7 @@ export default function SplitBillPage() {
     }
   };
 
-  // Animations variants
-  const pageVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0.3 } }
-  };
-
+  // Card Variants
   const cardVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 24 } }
@@ -280,7 +271,7 @@ export default function SplitBillPage() {
               </div>
               <div>
                 <h1 className="text-lg md:text-xl font-bold text-white tracking-tight">Split Bills</h1>
-                <p className="text-[11px] text-slate-400">Easily split shared expenses, calculate balances, and record debts among 2 to 10 friends.</p>
+                <p className="text-[11px] text-slate-400">Calculate shared costs instantly. Defaults to equal splits with automatic live calculations.</p>
               </div>
             </div>
           </motion.div>
@@ -293,22 +284,17 @@ export default function SplitBillPage() {
               animate="visible"
               className="lg:col-span-7 overflow-hidden rounded-2xl border border-white/10 bg-slate-900/30 p-4 md:p-5 backdrop-blur-xl shadow-xl flex flex-col gap-4 text-white"
             >
-              <h2 className="text-sm font-bold tracking-wide text-white border-b border-white/10 pb-2.5 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-purple-400" /> Bill Details & Payer Setup
-              </h2>
-
-              <form onSubmit={handleCalculate} className="flex flex-col gap-4">
-                {/* Row 1: Bill title and Amount */}
+              <div className="flex flex-col gap-4">
+                {/* 1. Basic Bill Entry */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Bill Title / Notes</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Bill Title / Description</label>
                     <input
                       type="text"
                       placeholder="e.g. Goa Trip Dinner"
                       value={billTitle}
                       onChange={(e) => setBillTitle(e.target.value)}
                       className="px-3.5 py-2.5 bg-slate-950/70 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500 transition-colors"
-                      required
                     />
                   </div>
 
@@ -324,17 +310,16 @@ export default function SplitBillPage() {
                         className="w-full pl-8 pr-4 py-2.5 bg-slate-950/70 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500 transition-colors"
                         min="1"
                         step="any"
-                        required
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Row 2: Participant Count Slider & Currency */}
+                {/* 2. Payer and Count Selection */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-white/5 pt-4">
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Number of Persons</label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Number of Persons (2 to 10)</label>
                       <span className="text-xs font-bold text-purple-400">{participantsCount} Persons</span>
                     </div>
                     <div className="flex items-center gap-3">
@@ -365,131 +350,85 @@ export default function SplitBillPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Currency</label>
-                    <select
-                      value={currency}
-                      onChange={(e) => setCurrency(e.target.value)}
-                      className="px-3.5 py-2.5 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500 transition-colors"
-                    >
-                      <option value="INR">INR (₹)</option>
-                      <option value="USD">USD ($)</option>
-                      <option value="EUR">EUR (€)</option>
-                      <option value="GBP">GBP (£)</option>
-                      <option value="JPY">JPY (¥)</option>
-                    </select>
-                  </div>
+                  {/* Simplified "Who Paid" Dropdown Selector (hides manual calculations) */}
+                  {!showMultiplePayers ? (
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex justify-between items-center">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Who Paid the Bill?</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowMultiplePayers(true);
+                            setSinglePayerIdx(-1);
+                          }}
+                          className="text-[9px] text-purple-400 hover:underline cursor-pointer"
+                        >
+                          Multiple Payers?
+                        </button>
+                      </div>
+                      <select
+                        value={singlePayerIdx}
+                        onChange={(e) => setSinglePayerIdx(parseInt(e.target.value))}
+                        className="px-3.5 py-2.5 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500 transition-colors"
+                      >
+                        {participants.map((p, idx) => (
+                          <option key={idx} value={idx}>{p.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex justify-between items-center">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Multiple Payer Mode</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowMultiplePayers(false);
+                            setSinglePayerIdx(0);
+                          }}
+                          className="text-[9px] text-purple-400 hover:underline cursor-pointer"
+                        >
+                          Single Payer?
+                        </button>
+                      </div>
+                      <div className="text-[10px] bg-purple-500/5 text-purple-300 p-2.5 border border-purple-500/10 rounded-xl">
+                        Specify individual payments inside the participant list below.
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Section: Split Mode tabs */}
-                <div className="flex flex-col gap-2 border-t border-white/5 pt-4">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">How to Split</label>
-                  <div className="grid grid-cols-3 gap-2 bg-slate-950/70 p-1 rounded-xl border border-white/5">
-                    <button
-                      type="button"
-                      onClick={() => setSplitMethod("equal")}
-                      className={`py-2 rounded-lg text-xs font-semibold tracking-wide transition-all ${
-                        splitMethod === "equal" ? "bg-purple-600 text-white" : "text-slate-400 hover:bg-slate-900"
-                      }`}
-                    >
-                      Equally
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSplitMethod("exact")}
-                      className={`py-2 rounded-lg text-xs font-semibold tracking-wide transition-all ${
-                        splitMethod === "exact" ? "bg-purple-600 text-white" : "text-slate-400 hover:bg-slate-900"
-                      }`}
-                    >
-                      Exact Shares
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSplitMethod("percentage")}
-                      className={`py-2 rounded-lg text-xs font-semibold tracking-wide transition-all ${
-                        splitMethod === "percentage" ? "bg-purple-600 text-white" : "text-slate-400 hover:bg-slate-900"
-                      }`}
-                    >
-                      Percentages
-                    </button>
-                  </div>
-                </div>
-
-                {/* Dynamic Section: Participants Customization Table */}
+                {/* Stepper details: Participant Names */}
                 <div className="border-t border-white/5 pt-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Participants Info & Paid Amount</span>
-                    <span className="text-[9px] text-slate-500 italic">Paid amount must sum up to {getSymbol()}{billAmount || 0}</span>
+                  <div className="flex justify-between items-center mb-2.5">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Customize Participant Names</span>
+                    <span className="text-[10px] text-slate-500 italic">Person 1 is always You</span>
                   </div>
 
-                  <div className="max-h-[300px] overflow-y-auto rounded-xl border border-white/5 bg-slate-950/40 p-2.5 flex flex-col gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[220px] overflow-y-auto pr-1">
                     {participants.map((p, idx) => (
-                      <div key={idx} className="flex flex-col sm:flex-row items-center gap-2.5 bg-slate-900/40 p-2 rounded-lg border border-white/[0.03]">
-                        {/* Member Name */}
-                        <div className="flex-1 w-full flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-500 w-5 shrink-0 text-center">{idx + 1}</span>
-                          <input
-                            type="text"
-                            value={p.name}
-                            onChange={(e) => updateParticipantName(idx, e.target.value)}
-                            placeholder={`Person ${idx + 1}`}
-                            className="w-full px-3 py-1.5 bg-slate-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-purple-500"
-                            disabled={idx === 0} // lock primary user name
-                          />
-                        </div>
+                      <div key={idx} className="flex items-center gap-2 bg-slate-950/50 p-2 rounded-xl border border-white/5">
+                        <span className="text-[10px] font-bold text-slate-500 w-5 shrink-0 text-center">{idx + 1}</span>
+                        <input
+                          type="text"
+                          value={p.name}
+                          onChange={(e) => updateParticipantName(idx, e.target.value)}
+                          placeholder={`Friend ${String.fromCharCode(65 + (idx - 1))}`}
+                          className="w-full bg-transparent border-none text-xs text-white focus:outline-none placeholder-slate-600"
+                          disabled={idx === 0} // Lock user name
+                        />
 
-                        {/* Paid Amount */}
-                        <div className="w-full sm:w-44 flex items-center gap-2">
-                          <div className="relative flex-1">
-                            <span className="absolute left-2.5 top-1.5 text-[10px] text-slate-500 font-semibold">{getSymbol()}</span>
+                        {/* If multiple payers: render payment input */}
+                        {showMultiplePayers && (
+                          <div className="relative w-24 shrink-0">
+                            <span className="absolute left-2 top-1.5 text-[10px] text-slate-500 font-bold">{getSymbol()}</span>
                             <input
                               type="number"
+                              placeholder="Paid"
                               value={p.amountPaid}
                               onChange={(e) => updateParticipantPaid(idx, e.target.value)}
-                              placeholder="Paid 0.00"
-                              className="w-full pl-6 pr-2 py-1.5 bg-slate-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-purple-500"
-                              min="0"
-                              step="any"
+                              className="w-full pl-5 pr-1.5 py-1 bg-slate-950 border border-white/10 rounded-lg text-[10px] text-white focus:outline-none focus:border-purple-500"
                             />
-                          </div>
-
-                          {/* Quick single payer button */}
-                          <button
-                            type="button"
-                            onClick={() => setSinglePayer(idx)}
-                            className="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 text-[10px] text-purple-400 font-bold rounded-lg border border-purple-500/10 hover:border-purple-500/30 transition-all shrink-0 cursor-pointer"
-                            title="Paid full amount"
-                          >
-                            Paid Full
-                          </button>
-                        </div>
-
-                        {/* Dynamic Custom Split shares/percentages fields */}
-                        {splitMethod !== "equal" && (
-                          <div className="w-full sm:w-28 shrink-0">
-                            {splitMethod === "exact" ? (
-                              <div className="relative">
-                                <span className="absolute left-2.5 top-1.5 text-[10px] text-slate-500 font-bold">{getSymbol()}</span>
-                                <input
-                                  type="number"
-                                  placeholder="Share"
-                                  value={customShares[idx] || ""}
-                                  onChange={(e) => setCustomShares(prev => ({ ...prev, [idx]: e.target.value }))}
-                                  className="w-full pl-6 pr-2 py-1.5 bg-slate-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-purple-500"
-                                />
-                              </div>
-                            ) : (
-                              <div className="relative">
-                                <span className="absolute right-2.5 top-1.5 text-[10px] text-slate-500 font-bold">%</span>
-                                <input
-                                  type="number"
-                                  placeholder="Percent"
-                                  value={customPercents[idx] || ""}
-                                  onChange={(e) => setCustomPercents(prev => ({ ...prev, [idx]: e.target.value }))}
-                                  className="w-full pl-2 pr-6 py-1.5 bg-slate-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-purple-500"
-                                />
-                              </div>
-                            )}
                           </div>
                         )}
                       </div>
@@ -497,14 +436,89 @@ export default function SplitBillPage() {
                   </div>
                 </div>
 
-                {/* Calculate Actions */}
-                <button
-                  type="submit"
-                  className="mt-2 w-full rounded-xl bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-400 py-3 font-bold text-xs text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <RefreshCw size={14} className="animate-spin-slow" /> Calculate Bill Split
-                </button>
-              </form>
+                {/* Section: Advanced Split Share Toggles */}
+                <div className="border-t border-white/5 pt-4">
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-300 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={showAdvancedSplit}
+                        onChange={(e) => {
+                          setShowAdvancedSplit(e.target.checked);
+                          if (!e.target.checked) setSplitMethod("equal");
+                        }}
+                        className="rounded text-purple-600 focus:ring-purple-500 accent-purple-500"
+                      />
+                      Customize individual split shares (unequal)
+                    </label>
+                  </div>
+
+                  <AnimatePresence>
+                    {showAdvancedSplit && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden mt-3"
+                      >
+                        <div className="grid grid-cols-2 gap-2 bg-slate-950/70 p-1 rounded-xl border border-white/5 mb-3">
+                          <button
+                            type="button"
+                            onClick={() => setSplitMethod("exact")}
+                            className={`py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+                              splitMethod === "exact" ? "bg-purple-600 text-white" : "text-slate-400 hover:bg-slate-900"
+                            }`}
+                          >
+                            Exact Shares
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSplitMethod("percentage")}
+                            className={`py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+                              splitMethod === "percentage" ? "bg-purple-600 text-white" : "text-slate-400 hover:bg-slate-900"
+                            }`}
+                          >
+                            Percentages (%)
+                          </button>
+                        </div>
+
+                        <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto pr-1">
+                          {participants.map((p, idx) => (
+                            <div key={idx} className="flex items-center justify-between gap-3 bg-slate-950/30 p-2 rounded-lg border border-white/5">
+                              <span className="text-xs text-slate-300 truncate">{p.name}</span>
+                              <div className="w-32 shrink-0">
+                                {splitMethod === "exact" ? (
+                                  <div className="relative">
+                                    <span className="absolute left-2.5 top-1.5 text-[10px] text-slate-500 font-bold">{getSymbol()}</span>
+                                    <input
+                                      type="number"
+                                      placeholder="Owes"
+                                      value={customShares[idx] || ""}
+                                      onChange={(e) => setCustomShares(prev => ({ ...prev, [idx]: e.target.value }))}
+                                      className="w-full pl-6 pr-2 py-1 bg-slate-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-purple-500"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="relative">
+                                    <span className="absolute right-2.5 top-1.5 text-[10px] text-slate-500 font-bold">%</span>
+                                    <input
+                                      type="number"
+                                      placeholder="%"
+                                      value={customPercents[idx] || ""}
+                                      onChange={(e) => setCustomPercents(prev => ({ ...prev, [idx]: e.target.value }))}
+                                      className="w-full pl-2.5 pr-6 py-1 bg-slate-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-purple-500"
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
             </motion.div>
 
             {/* Calculations Output Card (right/5 cols) */}
@@ -516,17 +530,22 @@ export default function SplitBillPage() {
             >
               <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/30 p-4 md:p-5 backdrop-blur-xl shadow-xl flex flex-col gap-4 text-white">
                 <h2 className="text-sm font-bold tracking-wide text-white border-b border-white/10 pb-2.5 flex items-center gap-2">
-                  <Calculator className="w-4 h-4 text-purple-400" /> Split Results
+                  <Calculator className="w-4 h-4 text-purple-400" /> Split Results (Live Calc)
                 </h2>
 
-                {transactions.length === 0 ? (
+                {validationError ? (
+                  <div className="flex items-center gap-2.5 bg-rose-500/10 text-rose-300 p-3.5 border border-rose-500/20 rounded-xl">
+                    <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                    <p className="text-[11px] font-medium leading-relaxed">{validationError}</p>
+                  </div>
+                ) : transactions.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center">
                     <div className="p-3 bg-slate-800/40 rounded-full text-slate-500 mb-3 border border-white/5">
-                      <Calculator className="w-6 h-6 animate-pulse" />
+                      <Users className="w-6 h-6 animate-pulse" />
                     </div>
-                    <h4 className="text-xs font-bold text-slate-300">No calculation performed yet</h4>
+                    <h4 className="text-xs font-bold text-slate-300">Enter a bill amount to start</h4>
                     <p className="text-[10px] text-slate-500 mt-1 max-w-xs leading-relaxed">
-                      Enter the bill amount, participant payments, select a split method, and click calculate.
+                      Splits are calculated in real-time as you type. Set your bill amount above!
                     </p>
                   </div>
                 ) : (
@@ -535,22 +554,21 @@ export default function SplitBillPage() {
                       <Info className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
                       <div>
                         <h4 className="text-xs font-semibold text-purple-200">Simplified Settlement Paths</h4>
-                        <p className="text-[10px] text-slate-400 mt-1">We calculated balances and simplified the debts to minimize payments.</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">We simplified the transfer paths to reduce payments.</p>
                       </div>
                     </div>
 
                     <div className="flex flex-col gap-2.5 max-h-[350px] overflow-y-auto pr-1">
                       {transactions.map((txn, index) => {
-                        const isOwedToUser = txn.toIdx === 0; // The recipient is the first person (You)
+                        const isOwedToUser = txn.toIdx === 0;
                         const isRecorded = recordedLoans[index];
 
                         return (
                           <div
                             key={index}
-                            className="bg-slate-950/60 rounded-xl border border-white/5 p-3 flex flex-col gap-2"
+                            className="bg-slate-950/60 rounded-xl border border-white/5 p-3 flex flex-col gap-2 hover:bg-slate-950/80 transition-colors"
                           >
                             <div className="flex items-center justify-between gap-2">
-                              {/* Debtor owes Creditor */}
                               <div className="flex items-center gap-1.5 overflow-hidden">
                                 <span className="text-xs font-bold text-slate-300 truncate" title={txn.from}>
                                   {txn.from}
@@ -561,13 +579,12 @@ export default function SplitBillPage() {
                                 </span>
                               </div>
 
-                              {/* Amount */}
                               <div className="text-sm font-extrabold text-white shrink-0">
                                 {getSymbol()}{txn.amount.toLocaleString("en-IN")}
                               </div>
                             </div>
 
-                            {/* Action to Record as Friend Loan (Only visible if the debtor owes the user) */}
+                            {/* Direct Record Action */}
                             {isOwedToUser && (
                               <div className="flex items-center justify-end mt-1 border-t border-white/5 pt-2">
                                 <button
