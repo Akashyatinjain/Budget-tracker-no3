@@ -156,6 +156,53 @@ const NotificationsPage = () => {
     }
   ];
 
+  const playNotificationSound = () => {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = audioCtx.currentTime;
+      
+      const osc1 = audioCtx.createOscillator();
+      const gain1 = audioCtx.createGain();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(587.33, now); // D5
+      gain1.gain.setValueAtTime(0, now);
+      gain1.gain.linearRampToValueAtTime(0.15, now + 0.05);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      
+      osc1.connect(gain1);
+      gain1.connect(audioCtx.destination);
+      
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.type = "sine";
+      osc2.frequency.setValueAtTime(880, now + 0.12); // A5
+      gain2.gain.setValueAtTime(0, now + 0.12);
+      gain2.gain.linearRampToValueAtTime(0.15, now + 0.17);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.52);
+      
+      osc2.connect(gain2);
+      gain2.connect(audioCtx.destination);
+      
+      osc1.start(now);
+      osc1.stop(now + 0.4);
+      osc2.start(now + 0.12);
+      osc2.stop(now + 0.6);
+    } catch (e) {
+      console.warn("AudioContext failed or blocked by browser policy:", e);
+    }
+  };
+
+  const toggleSound = () => {
+    const nextVal = !soundEnabled;
+    setSoundEnabled(nextVal);
+    if (nextVal) {
+      playNotificationSound();
+      toast.success("🔔 Sound On");
+    } else {
+      toast.success("🔕 Muted");
+    }
+  };
+
   useEffect(() => {
     if (authToken) {
       setLoading(true);
@@ -174,6 +221,15 @@ const NotificationsPage = () => {
       setLoading(false);
     }
   }, [authToken, dispatch]);
+
+  useEffect(() => {
+    if (soundEnabled && notifications && notifications.length > 0) {
+      const hasUnread = notifications.some(n => !n.is_read);
+      if (hasUnread) {
+        playNotificationSound();
+      }
+    }
+  }, [notifications.length, soundEnabled]);
 
   useEffect(() => {
     document.body.style.overflow = mobileSidebarOpen || showSettings ? "hidden" : "auto";
@@ -458,7 +514,7 @@ const NotificationsPage = () => {
 
             <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
               <button
-                onClick={() => setSoundEnabled(!soundEnabled)}
+                onClick={toggleSound}
                 className={`flex-1 sm:flex-initial p-2 sm:p-2.5 rounded-xl border transition-all flex items-center justify-center gap-1.5 text-xs font-semibold ${
                   soundEnabled 
                     ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
@@ -468,14 +524,6 @@ const NotificationsPage = () => {
               >
                 {soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
                 <span>{soundEnabled ? "Sound On" : "Muted"}</span>
-              </button>
-
-              <button
-                onClick={() => setShowSettings(true)}
-                className="flex-1 sm:flex-initial rounded-xl bg-white/5 border border-white/10 p-2 sm:px-3.5 sm:py-2.5 font-semibold text-xs text-slate-300 hover:text-white hover:border-emerald-500/30 transition-all flex items-center justify-center gap-1.5 hover:bg-white/10 shadow-sm"
-              >
-                <Settings size={15} />
-                <span className="truncate">Preferences</span>
               </button>
               
               <button

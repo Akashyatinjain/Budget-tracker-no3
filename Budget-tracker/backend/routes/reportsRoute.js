@@ -7,80 +7,88 @@ import PDFDocument from "pdfkit";
 const router = express.Router();
 
 async function buildReportData(userId) {
-  const totalsQ = await pool.query(
-    `SELECT
-       COALESCE(SUM(CASE WHEN type='income' THEN amount END),0)::numeric AS total_income,
-       COALESCE(SUM(CASE WHEN type='expense' THEN amount END),0)::numeric AS total_expense
-     FROM transactions
-     WHERE user_id = $1`,
-    [userId]
-  );
-  const totals = totalsQ.rows[0] || { total_income: 0, total_expense: 0 };
-  const net_savings = Number(totals.total_income) - Number(totals.total_expense);
-
-  const byCatQ = await pool.query(
-    `SELECT COALESCE(c.name, 'Uncategorized') AS name, COALESCE(SUM(t.amount),0)::numeric AS total
-     FROM transactions t
-     LEFT JOIN categories c ON t.category_id = c.category_id
-     WHERE t.user_id = $1 AND t.type = 'expense'
-     GROUP BY name
-     ORDER BY total DESC`,
-    [userId]
-  );
-
-  const monthlyQ = await pool.query(
-    `SELECT to_char(date_trunc('month', transaction_date), 'Mon YYYY') AS month,
-            SUM(CASE WHEN type='income' THEN amount ELSE 0 END)::numeric AS income,
-            SUM(CASE WHEN type='expense' THEN amount ELSE 0 END)::numeric AS expenses
-     FROM transactions
-     WHERE user_id = $1
-       AND transaction_date >= (date_trunc('month', now()) - interval '11 months')
-     GROUP BY date_trunc('month', transaction_date)
-     ORDER BY date_trunc('month', transaction_date)`,
-    [userId]
-  );
-
-  const merchantsQ = await pool.query(
-    `SELECT merchant, SUM(amount)::numeric AS total, COUNT(*) AS count
-     FROM transactions
-     WHERE user_id = $1 AND type = 'expense' AND merchant IS NOT NULL
-     GROUP BY merchant
-     ORDER BY total DESC
-     LIMIT 10`,
-    [userId]
-  );
-
-  const recentQ = await pool.query(
-    `SELECT t.*, c.name AS category_name
-     FROM transactions t
-     LEFT JOIN categories c ON t.category_id = c.category_id
-     WHERE t.user_id = $1
-     ORDER BY t.transaction_date DESC
-     LIMIT 200`,
-    [userId]
-  );
-
-  let budgetsRows = [];
   try {
-    const budgetsQ = await pool.query(`SELECT * FROM budgets WHERE user_id = $1 ORDER BY updated_at DESC`, [userId]);
-    budgetsRows = budgetsQ.rows;
-  } catch (e) {
-    budgetsRows = [];
-  }
+    const totalsQ = await pool.query(
+      `SELECT
+         COALESCE(SUM(CASE WHEN type='income' THEN amount END),0)::numeric AS total_income,
+         COALESCE(SUM(CASE WHEN type='expense' THEN amount END),0)::numeric AS total_expense
+       FROM transactions
+       WHERE user_id = $1`,
+      [userId]
+    );
+    const totals = totalsQ.rows[0] || { total_income: 0, total_expense: 0 };
+    const net_savings = Number(totals.total_income) - Number(totals.total_expense);
 
-  return {
-    generated_at: new Date().toISOString(),
-    totals: {
-      total_income: Number(totals.total_income),
-      total_expense: Number(totals.total_expense),
-      net_savings: Number(net_savings),
-    },
-    by_category: byCatQ.rows.map(r => ({ name: r.name, total: Number(r.total) })),
-    monthly: monthlyQ.rows.map(r => ({ month: r.month, income: Number(r.income), expenses: Number(r.expenses) })),
-    top_merchants: merchantsQ.rows.map(r => ({ merchant: r.merchant, total: Number(r.total), count: Number(r.count) })),
-    budgets: budgetsRows,
-    recent_transactions: recentQ.rows,
-  };
+    const byCatQ = await pool.query(
+      `SELECT COALESCE(c.name, 'Uncategorized') AS name, COALESCE(SUM(t.amount),0)::numeric AS total
+       FROM transactions t
+       LEFT JOIN categories c ON t.category_id = c.category_id
+       WHERE t.user_id = $1 AND t.type = 'expense'
+       GROUP BY c.name
+       ORDER BY total DESC`,
+      [userId]
+    );
+
+    const monthlyQ = await pool.query(
+      `SELECT to_char(m_date, 'Mon YYYY') AS month,
+              SUM(CASE WHEN type='income' THEN amount ELSE 0 END)::numeric AS income,
+              SUM(CASE WHEN type='expense' THEN amount ELSE 0 END)::numeric AS expenses
+       FROM (
+         SELECT date_trunc('month', transaction_date) AS m_date, type, amount
+         FROM transactions
+         WHERE user_id = $1
+           AND transaction_date >= (date_trunc('month', now()) - interval '11 months')
+       ) sub
+       GROUP BY m_date
+       ORDER BY m_date`,
+      [userId]
+    );
+
+    const merchantsQ = await pool.query(
+      `SELECT merchant, SUM(amount)::numeric AS total, COUNT(*) AS count
+       FROM transactions
+       WHERE user_id = $1 AND type = 'expense' AND merchant IS NOT NULL
+       GROUP BY merchant
+       ORDER BY total DESC
+       LIMIT 10`,
+      [userId]
+    );
+
+    const recentQ = await pool.query(
+      `SELECT t.*, c.name AS category_name
+       FROM transactions t
+       LEFT JOIN categories c ON t.category_id = c.category_id
+       WHERE t.user_id = $1
+       ORDER BY t.transaction_date DESC
+       LIMIT 200`,
+      [userId]
+    );
+
+    let budgetsRows = [];
+    try {
+      const budgetsQ = await pool.query(`SELECT * FROM budgets WHERE user_id = $1 ORDER BY updated_at DESC`, [userId]);
+      budgetsRows = budgetsQ.rows;
+    } catch (e) {
+      budgetsRows = [];
+    }
+
+    return {
+      generated_at: new Date().toISOString(),
+      totals: {
+        total_income: Number(totals.total_income),
+        total_expense: Number(totals.total_expense),
+        net_savings: Number(net_savings),
+      },
+      by_category: byCatQ.rows.map(r => ({ name: r.name, total: Number(r.total) })),
+      monthly: monthlyQ.rows.map(r => ({ month: r.month, income: Number(r.income), expenses: Number(r.expenses) })),
+      top_merchants: merchantsQ.rows.map(r => ({ merchant: r.merchant, total: Number(r.total), count: Number(r.count) })),
+      budgets: budgetsRows,
+      recent_transactions: recentQ.rows,
+    };
+  } catch (err) {
+    console.error("CRITICAL: buildReportData failed query execution:", err);
+    throw err;
+  }
 }
 
 // GET /api/reports
@@ -185,16 +193,16 @@ router.get("/export/pdf", verifyToken, async (req, res) => {
     doc.fontSize(12).fillColor("#fff").text("Summary", { underline: true });
     doc.moveDown(0.3);
     doc.fontSize(10).fillColor("#fff");
-    doc.text(`Total Income: ₹${report.totals.total_income.toLocaleString("en-IN")}`);
-    doc.text(`Total Expense: ₹${report.totals.total_expense.toLocaleString("en-IN")}`);
-    doc.text(`Net Savings: ₹${report.totals.net_savings.toLocaleString("en-IN")}`);
+    doc.text(`Total Income: INR ${report.totals.total_income.toLocaleString("en-IN")}`);
+    doc.text(`Total Expense: INR ${report.totals.total_expense.toLocaleString("en-IN")}`);
+    doc.text(`Net Savings: INR ${report.totals.net_savings.toLocaleString("en-IN")}`);
     doc.moveDown(0.6);
 
     // By category (top 10)
     doc.fontSize(12).fillColor("#fff").text("Top Categories", { underline: true });
     doc.moveDown(0.3);
     report.by_category.slice(0, 20).forEach((c, i) => {
-      doc.fontSize(10).fillColor("#fff").text(`${i + 1}. ${c.name} — ₹${Number(c.total).toLocaleString("en-IN")}`);
+      doc.fontSize(10).fillColor("#fff").text(`${i + 1}. ${c.name} — INR ${Number(c.total).toLocaleString("en-IN")}`);
     });
     doc.moveDown(0.6);
 
@@ -202,7 +210,7 @@ router.get("/export/pdf", verifyToken, async (req, res) => {
     doc.fontSize(12).fillColor("#fff").text("Top Merchants", { underline: true });
     doc.moveDown(0.3);
     report.top_merchants.forEach((m, i) => {
-      doc.fontSize(10).text(`${i + 1}. ${m.merchant} — ₹${Number(m.total).toLocaleString("en-IN")} (${m.count} tx)`);
+      doc.fontSize(10).text(`${i + 1}. ${m.merchant} — INR ${Number(m.total).toLocaleString("en-IN")} (${m.count} tx)`);
     });
     doc.moveDown(0.6);
 
@@ -212,7 +220,7 @@ router.get("/export/pdf", verifyToken, async (req, res) => {
     const recent = report.recent_transactions.slice(0, 30);
     recent.forEach((t) => {
       const date = new Date(t.transaction_date).toLocaleDateString();
-      doc.fontSize(10).text(`${date} — ${t.description || t.merchant || "Tx"} — ${t.type} — ₹${Number(t.amount).toLocaleString("en-IN")}`);
+      doc.fontSize(10).text(`${date} — ${t.description || t.merchant || "Tx"} — ${t.type} — INR ${Number(t.amount).toLocaleString("en-IN")}`);
     });
 
     doc.end();
