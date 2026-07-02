@@ -96,14 +96,27 @@ function createAndSetToken(res, user) {
 
 app.get("/transactions", verifyToken, async (req, res, next) => {
   try {
-    const result = await pool.query(
-      `SELECT t.*, c.name AS category_name 
-       FROM transactions t
-       LEFT JOIN categories c ON t.category_id = c.category_id
-       WHERE t.user_id = $1
-       ORDER BY t.transaction_date DESC`,
-      [req.user.id]
-    );
+    let result;
+    try {
+      result = await pool.query(
+        `SELECT t.*, c.name AS category_name 
+         FROM transactions t
+         LEFT JOIN categories c ON t.category_id = c.category_id
+         WHERE t.user_id = $1
+         ORDER BY t.transaction_date DESC`,
+        [req.user.id]
+      );
+    } catch (joinErr) {
+      // Fallback: categories table may use 'id' instead of 'category_id'
+      result = await pool.query(
+        `SELECT t.*, c.name AS category_name 
+         FROM transactions t
+         LEFT JOIN categories c ON t.category_id = c.id
+         WHERE t.user_id = $1
+         ORDER BY t.transaction_date DESC`,
+        [req.user.id]
+      );
+    }
     res.json({ transactions: result.rows });
   } catch (err) {
     next(err);
@@ -336,8 +349,45 @@ app.post("/api/debug/create-budget-notif", verifyToken, async (req, res, next) =
 // Global Error Handler Middleware registered at the end
 app.use(errorHandler);
 
+// ================= Database Initialization =================
+async function ensureTables() {
+  try {
+    // Ensure notification_settings table exists
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS notification_settings (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL UNIQUE,
+        settings JSONB DEFAULT '{}',
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    console.log("✅ notification_settings table ensured");
+
+    // Ensure categories table has category_id column (some deployments may use 'id' instead)
+    const catCols = await pool.query(
+      `SELECT column_name FROM information_schema.columns WHERE table_name='categories' AND column_name='category_id'`
+    );
+    if (catCols.rows.length === 0) {
+      // Check if 'id' column exists and rename it to category_id
+      const idCol = await pool.query(
+        `SELECT column_name FROM information_schema.columns WHERE table_name='categories' AND column_name='id'`
+      );
+      if (idCol.rows.length > 0) {
+        await pool.query(`ALTER TABLE categories RENAME COLUMN id TO category_id`);
+        console.log("✅ Renamed categories.id → categories.category_id");
+      }
+    }
+  } catch (err) {
+    console.warn("⚠️ ensureTables warning (non-fatal):", err.message);
+  }
+}
+
 // Start server
 const PORT = process.env.PORT || 5000; // Render provides PORT
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+ensureTables().then(() => {
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}).catch(() => {
+  app.listen(PORT, () => console.log(`Server running on port ${PORT} (DB init had warnings)`));
+});
 
-export default app;
+export default app;

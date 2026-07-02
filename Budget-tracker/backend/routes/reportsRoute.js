@@ -19,15 +19,29 @@ async function buildReportData(userId) {
     const totals = totalsQ.rows[0] || { total_income: 0, total_expense: 0 };
     const net_savings = Number(totals.total_income) - Number(totals.total_expense);
 
-    const byCatQ = await pool.query(
-      `SELECT COALESCE(c.name, 'Uncategorized') AS name, COALESCE(SUM(t.amount),0)::numeric AS total
-       FROM transactions t
-       LEFT JOIN categories c ON t.category_id = c.category_id
-       WHERE t.user_id = $1 AND t.type = 'expense'
-       GROUP BY c.name
-       ORDER BY total DESC`,
-      [userId]
-    );
+    let byCatQ;
+    try {
+      byCatQ = await pool.query(
+        `SELECT COALESCE(c.name, 'Uncategorized') AS name, COALESCE(SUM(t.amount),0)::numeric AS total
+         FROM transactions t
+         LEFT JOIN categories c ON t.category_id = c.category_id
+         WHERE t.user_id = $1 AND t.type = 'expense'
+         GROUP BY c.name
+         ORDER BY total DESC`,
+        [userId]
+      );
+    } catch (joinErr) {
+      // Fallback: categories table may use 'id' instead of 'category_id'
+      byCatQ = await pool.query(
+        `SELECT COALESCE(c.name, 'Uncategorized') AS name, COALESCE(SUM(t.amount),0)::numeric AS total
+         FROM transactions t
+         LEFT JOIN categories c ON t.category_id = c.id
+         WHERE t.user_id = $1 AND t.type = 'expense'
+         GROUP BY c.name
+         ORDER BY total DESC`,
+        [userId]
+      );
+    }
 
     const monthlyQ = await pool.query(
       `SELECT to_char(m_date, 'Mon YYYY') AS month,
@@ -54,15 +68,29 @@ async function buildReportData(userId) {
       [userId]
     );
 
-    const recentQ = await pool.query(
-      `SELECT t.*, c.name AS category_name
-       FROM transactions t
-       LEFT JOIN categories c ON t.category_id = c.category_id
-       WHERE t.user_id = $1
-       ORDER BY t.transaction_date DESC
-       LIMIT 200`,
-      [userId]
-    );
+    let recentQ;
+    try {
+      recentQ = await pool.query(
+        `SELECT t.*, c.name AS category_name
+         FROM transactions t
+         LEFT JOIN categories c ON t.category_id = c.category_id
+         WHERE t.user_id = $1
+         ORDER BY t.transaction_date DESC
+         LIMIT 200`,
+        [userId]
+      );
+    } catch (joinErr) {
+      // Fallback: categories table may use 'id' instead of 'category_id'
+      recentQ = await pool.query(
+        `SELECT t.*, c.name AS category_name
+         FROM transactions t
+         LEFT JOIN categories c ON t.category_id = c.id
+         WHERE t.user_id = $1
+         ORDER BY t.transaction_date DESC
+         LIMIT 200`,
+        [userId]
+      );
+    }
 
     let budgetsRows = [];
     try {

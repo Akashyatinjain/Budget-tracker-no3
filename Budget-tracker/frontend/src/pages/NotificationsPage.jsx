@@ -529,8 +529,8 @@ const NotificationsPage = () => {
                 aria-label="Toggle alert sounds"
                 className={`flex-1 sm:flex-initial p-2 sm:p-2.5 rounded-xl border transition-all flex items-center justify-center gap-1.5 text-xs font-semibold ${
                   soundEnabled 
-                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
-                    : "bg-white/5 border-white/10 text-slate-400 hover:text-white"
+                    ? "bg-emerald-600/20 border-emerald-500 text-emerald-600 shadow-sm shadow-emerald-500/20" 
+                    : "bg-slate-200/80 border-slate-400 text-slate-700 hover:bg-slate-300/80"
                 }`}
                 title="Toggle Alert Sounds"
               >
