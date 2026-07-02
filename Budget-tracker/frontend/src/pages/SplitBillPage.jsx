@@ -43,6 +43,7 @@ export default function SplitBillPage() {
   const [customPercents, setCustomPercents] = useState({});
 
   // Calculations Output
+  const [validationError, setValidationError] = useState("");
   const [transactions, setTransactions] = useState([]);
   const [recordedLoans, setRecordedLoans] = useState({}); // tracker for which transaction index was saved as loan
   const [submittingIds, setSubmittingIds] = useState({});
