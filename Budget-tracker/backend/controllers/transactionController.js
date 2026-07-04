@@ -1,9 +1,7 @@
-// controllers/transactionController.js
 import pool from "../config/db.js";
 import { addTransaction, getTransactions, deleteTransaction,updateTransaction  } from "../models/transactionModel.js";
 import { checkBudgetsAndNotify } from "../utils/budgetNotifications.js";
 
-// ✅ Add Transaction Controller
 export const addTransactionController = async (req, res, next) => {
   try {
     const { merchant, amount, category_id, transaction_date, description, currency, type } = req.body;
@@ -24,7 +22,6 @@ export const addTransactionController = async (req, res, next) => {
       currency || "INR"
     );
 
-    // Create a simple in-app notification for the new transaction (so UI shows immediate feedback)
     try {
       const title = `New transaction: ${merchant || description || "Transaction"}`;
       const message = `You spent ₹${Number(amount).toLocaleString("en-IN")} on ${merchant || description || "an item"}`;
@@ -36,26 +33,21 @@ export const addTransactionController = async (req, res, next) => {
       console.log("Inserted txn notification:", notifRes.rows[0]);
     } catch (notifErr) {
       console.warn("Failed to insert transaction notification:", notifErr?.message || notifErr);
-      // don't fail txn for this
     }
 
-    // Call budget check to possibly create budget warning/exceeded notifications
     try {
-      // newTransaction should be the inserted row returned by addTransaction
       await checkBudgetsAndNotify(userId, newTransaction);
       console.log("checkBudgetsAndNotify ran for user:", userId);
     } catch (budgetErr) {
       console.warn("Budget notification failed:", budgetErr?.message || budgetErr);
     }
 
-    // Return created transaction (keep original shape)
     res.status(201).json(newTransaction);
   } catch (error) {
     next(error);
   }
 };
 
-// ✅ Get Transactions Controller
 export const getTransactionsController = async (req, res, next) => {
   try {
     const userId = req.user?.id;
@@ -66,7 +58,6 @@ export const getTransactionsController = async (req, res, next) => {
   }
 };
 
-// ✅ Delete Transaction Controller
 
    export const deleteTransactionController = async (req, res, next) => {
   try {
@@ -81,7 +72,6 @@ export const getTransactionsController = async (req, res, next) => {
     const deleted = await deleteTransaction(transactionId, userId);
 
     if (!deleted) {
-      // If not deleted, check if row exists to decide 404 vs 403
       const existsRes = await pool.query(
         "SELECT user_id FROM transactions WHERE transaction_id = $1",
         [transactionId]
@@ -100,7 +90,6 @@ export const getTransactionsController = async (req, res, next) => {
   }
 };
 
-// ✅ Import Transactions Controller
 export const importTransactionsController = async (req, res, next) => {
   try {
     const { rows } = req.body;
@@ -120,7 +109,6 @@ export const importTransactionsController = async (req, res, next) => {
       "transaction_date"
     ];
 
-    // Validate CSV headers (for each row keys)
     for (const row of rows) {
       for (const key of Object.keys(row)) {
         if (!allowedColumns.includes(key)) {
@@ -182,7 +170,6 @@ export const updateTransactionController = async (req, res, next) => {
 
     console.info(`[UPDATE handler] called for id=${transactionId} by user=${userId} payload=`, payload);
 
-    // Attempt update
     const updated = await updateTransaction(transactionId, payload, userId);
 
     if (!updated) {

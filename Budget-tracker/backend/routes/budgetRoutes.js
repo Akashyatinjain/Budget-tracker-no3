@@ -67,11 +67,8 @@ router.post("/", verifyToken, async (req, res, next) => {
       console.warn("Budget create notification failed:", notifErr);
     }
 
-    // ----- 4) Check if user already exceeded this new budget -----
     try {
-      // call the same helper that checks exceed
       console.log("[BUDGET] Running exceed check after budget creation...");
-      // after creating budget
       await checkBudgetsAndNotify(userId, { category_id, amount, month });
     } catch (exErr) {
       console.warn("Budget exceed check failed:", exErr);
@@ -89,10 +86,13 @@ router.delete("/:id", verifyToken, async (req, res, next) => {
   try {
     const { id } = req.params;
     const userId = req.user.user_id;
-    await pool.query("DELETE FROM budgets WHERE budget_id=$1 AND user_id=$2", [
-      id,
-      userId,
-    ]);
+    const result = await pool.query(
+      "DELETE FROM budgets WHERE id=$1 AND user_id=$2",
+      [id, userId]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Budget not found" });
+    }
     res.json({ msg: "Budget deleted" });
   } catch (err) {
     next(err);

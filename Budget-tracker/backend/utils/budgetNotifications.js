@@ -29,18 +29,18 @@ export async function checkBudgetsAndNotify(userId, insertedObj) {
     let budgetsRes;
     if (insertedObj && insertedObj.month && insertedObj.amount) {
       budgetsRes = await pool.query(
-        `SELECT budget_id, user_id, amount, category_id, period_type, period_start_day, active, description, month
+        `SELECT COALESCE(budget_id, id) AS budget_id, user_id, amount, category_id, period_type, period_start_day, active, description, month
          FROM budgets
          WHERE user_id = $1
            AND (category_id IS NULL OR category_id = $2)
            AND month = $3
-         ORDER BY budget_id DESC
+         ORDER BY COALESCE(budget_id, id) DESC
          LIMIT 1`,
         [userId, catParam, String(insertedObj.month)]
       );
     } else {
       budgetsRes = await pool.query(
-        `SELECT budget_id, user_id, amount, category_id, period_type, period_start_day, active, description, month
+        `SELECT COALESCE(budget_id, id) AS budget_id, user_id, amount, category_id, period_type, period_start_day, active, description, month
          FROM budgets
          WHERE user_id = $1 AND active = true
            AND (category_id IS NULL OR category_id = $2)`,

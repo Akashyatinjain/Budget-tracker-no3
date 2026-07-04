@@ -1,4 +1,3 @@
-// server.js
 import express from "express";
 import bcrypt from "bcryptjs";
 import passport from "passport";
@@ -31,7 +30,6 @@ const saltRounds = 15;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 const BASE_URL = process.env.BASE_URL || `http://localhost:${port}`;
 
-// ================= Middleware =================
 const allowedOrigins = [
   'http://localhost:5173',
   'https://your-deployed-site-url.com',
@@ -59,7 +57,7 @@ app.use(
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      maxAge: 24 * 60 * 60 * 1000, 
     },
   })
 );
@@ -68,18 +66,16 @@ app.use(passport.session());
 
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/users", userRoutes);
-app.use('/api/budgets', budgetRoutes); // Add this line
+app.use('/api/budgets', budgetRoutes); 
 app.use("/api/currencies", currenciesRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use('/api/users', settingsRouter);
 app.use('/api/reports', reportsRouter);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/friend-loans", friendLoanRoutes);
-// ---------------- Helper: sign JWT & set cookie ----------------
-// ...existing code...
 function createAndSetToken(res, user) {
   const token = jwt.sign(
-    { user_id: user.user_id, email: user.email }, // use user_id consistently
+    { user_id: user.user_id, email: user.email }, 
     process.env.JWT_SECRET,
     { expiresIn: "7d" }
   );
@@ -92,7 +88,6 @@ function createAndSetToken(res, user) {
 
   return token;
 }
-// ...existing code...
 
 app.get("/transactions", verifyToken, async (req, res, next) => {
   try {
@@ -107,7 +102,6 @@ app.get("/transactions", verifyToken, async (req, res, next) => {
         [req.user.id]
       );
     } catch (joinErr) {
-      // Fallback: categories table may use 'id' instead of 'category_id'
       result = await pool.query(
         `SELECT t.*, c.name AS category_name 
          FROM transactions t
@@ -139,12 +133,12 @@ app.get("/categories", verifyToken, async (req, res, next) => {
 
 app.post("/transactions", verifyToken, async (req, res, next) => {
   try {
-    console.log("POST /transactions req.user:", req.user); // <-- debug
+    console.log("POST /transactions req.user:", req.user); 
     const {
       category_id, type, amount, currency, description, merchant, transaction_date,
     } = req.body;
     const userId = req.user?.user_id ?? req.user?.id;
-    console.log("Resolved userId:", userId); // <-- debug
+    console.log("Resolved userId:", userId); 
 
     const result = await pool.query(
       `INSERT INTO transactions
@@ -155,7 +149,6 @@ app.post("/transactions", verifyToken, async (req, res, next) => {
     );
  const insertedTxn = result.rows[0];
 
-    // --- existing notification creation (kept) ---
     let createdNotification = null;
     try {
       const title = `New transaction: ${merchant || description || "Transaction"}`;
@@ -171,12 +164,10 @@ app.post("/transactions", verifyToken, async (req, res, next) => {
       console.warn("Failed to insert notification:", notifErr?.message || notifErr);
     }
 
-    // --- NEW: check budgets and create budget notifications if thresholds crossed ---
     try {
       await checkBudgetsAndNotify(userId, insertedTxn);
     } catch (budgetErr) {
       console.warn("Budget notification failed:", budgetErr?.message || budgetErr);
-      // don't fail the transaction because of budget notification failure
     }
 
     res.status(201).json({ transaction: insertedTxn, notification: createdNotification });
@@ -199,7 +190,6 @@ app.post("/sign-up", async (req, res, next) => {
         error: "Password must be at least 6 characters long",
       });
 
-    // Check if username or email already exists
     const userCheck = await pool.query(
       "SELECT * FROM users WHERE email=$1 OR username=$2",
       [email, username]
@@ -229,7 +219,6 @@ app.post("/sign-up", async (req, res, next) => {
   }
 });
 
-// ================= SIGN IN =================
 app.post("/sign-in", async (req, res, next) => {
   try {
     const { emailOrName, password } = req.body;
@@ -264,7 +253,6 @@ app.post("/sign-in", async (req, res, next) => {
   }
 });
 
-// ================= Google OAuth =================
 passport.serializeUser((user, done) => done(null, user.user_id));
 passport.deserializeUser(async (id, done) => {
   try {
@@ -315,7 +303,6 @@ passport.use(
   )
 );
 
-// Google routes
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 app.get(
   "/auth/google/callback",
@@ -327,10 +314,8 @@ app.get(
   }
 );
 
-// Health check
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 
-// Debug endpoint: create a test notification for the authenticated user
 app.post("/api/debug/create-budget-notif", verifyToken, async (req, res, next) => {
   try {
     const userId = req.user?.user_id ?? req.user?.id;
@@ -346,13 +331,10 @@ app.post("/api/debug/create-budget-notif", verifyToken, async (req, res, next) =
   }
 });
 
-// Global Error Handler Middleware registered at the end
 app.use(errorHandler);
 
-// ================= Database Initialization =================
 async function ensureTables() {
   try {
-    // Ensure notification_settings table exists
     await pool.query(`
       CREATE TABLE IF NOT EXISTS notification_settings (
         id SERIAL PRIMARY KEY,
@@ -363,12 +345,10 @@ async function ensureTables() {
     `);
     console.log("✅ notification_settings table ensured");
 
-    // Ensure categories table has category_id column (some deployments may use 'id' instead)
     const catCols = await pool.query(
       `SELECT column_name FROM information_schema.columns WHERE table_name='categories' AND column_name='category_id'`
     );
     if (catCols.rows.length === 0) {
-      // Check if 'id' column exists and rename it to category_id
       const idCol = await pool.query(
         `SELECT column_name FROM information_schema.columns WHERE table_name='categories' AND column_name='id'`
       );
@@ -382,12 +362,11 @@ async function ensureTables() {
   }
 }
 
-// Start server
-const PORT = process.env.PORT || 5000; // Render provides PORT
+const PORT = process.env.PORT || 5000; 
 ensureTables().then(() => {
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 }).catch(() => {
   app.listen(PORT, () => console.log(`Server running on port ${PORT} (DB init had warnings)`));
 });
 
-export default app;
+export default app;

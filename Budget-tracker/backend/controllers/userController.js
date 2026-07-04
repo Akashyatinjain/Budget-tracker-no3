@@ -10,7 +10,6 @@ import {
   deleteUser,
 } from "../models/userModel.js";
 
-// ✅ Signup Controller
 export const registerUser = async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
@@ -19,23 +18,19 @@ export const registerUser = async (req, res, next) => {
       return res.status(400).json({ msg: "Email and password are required" });
     }
 
-    // 1️⃣ Check existing user
     const existing = await findUserByEmail(email);
     if (existing) {
       return res.status(400).json({ msg: "Email already registered" });
     }
 
-    // 2️⃣ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3️⃣ Create user
     const newUser = await createUser({
       username: username || email.split("@")[0],
       email,
       password: hashedPassword,
     });
 
-    // 4️⃣ Generate token
     const token = jwt.sign(
       { user_id: newUser.user_id, email: newUser.email, role: newUser.role || "user" },
       process.env.JWT_SECRET,
@@ -52,7 +47,6 @@ export const registerUser = async (req, res, next) => {
   }
 };
 
-// ✅ Login Controller
 export const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -61,19 +55,16 @@ export const loginUser = async (req, res, next) => {
       return res.status(400).json({ msg: "Email and password are required" });
     }
 
-    // 1️⃣ Find user
     const user = await findUserByEmail(email);
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
 
-    // 2️⃣ Compare password
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return res.status(401).json({ msg: "Invalid credentials" });
     }
 
-    // 3️⃣ Create JWT
     const token = jwt.sign(
       { user_id: user.user_id, email: user.email, role: user.role || "user" },
       process.env.JWT_SECRET,
@@ -96,7 +87,6 @@ export const loginUser = async (req, res, next) => {
   }
 };
 
-// ✅ Get Profile (Protected)
 export const getProfile = async (req, res, next) => {
   try {
     const user = await findUserById(req.user.user_id);
@@ -107,7 +97,6 @@ export const getProfile = async (req, res, next) => {
   }
 };
 
-// ✅ Update Profile (Protected)
 export const updateProfile = async (req, res, next) => {
   try {
     const user_id = req.user.user_id;
@@ -118,7 +107,6 @@ export const updateProfile = async (req, res, next) => {
   }
 };
 
-// ✅ Upload Profile Avatar (Protected)
 export const uploadAvatar = async (req, res, next) => {
   try {
     if (!req.file) {
@@ -153,7 +141,6 @@ export const uploadAvatar = async (req, res, next) => {
   }
 };
 
-// ✅ Change Password (Protected)
 export const changePassword = async (req, res, next) => {
   try {
     const user_id = req.user.user_id;
@@ -182,7 +169,6 @@ export const changePassword = async (req, res, next) => {
   }
 };
 
-// ✅ Delete Account (Protected)
 export const deleteAccount = async (req, res, next) => {
   try {
     const user_id = req.user.user_id;

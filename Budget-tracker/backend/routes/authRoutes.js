@@ -12,9 +12,6 @@ import verifyToken from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// =======================
-// Register User
-// =======================
 router.post(
   "/register",
   [
@@ -45,9 +42,7 @@ router.post(
   }
 );
 
-// =======================
-// Login User
-// =======================
+
 router.post(
   "/login",
   [

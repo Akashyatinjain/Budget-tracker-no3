@@ -1,4 +1,3 @@
-// backend/config/db.js
 import pkg from "pg";
 import dotenv from "dotenv";
 
@@ -23,10 +22,8 @@ console.log("  NODE_ENV:", process.env.NODE_ENV);
 let poolConfig;
 
 if (process.env.DATABASE_URL) {
-  // Use connection string mode (Render, Heroku)
   poolConfig = {
     connectionString: process.env.DATABASE_URL,
-    // If DB_SSL env is "true" enable ssl with rejectUnauthorized:false for common PaaS setups
     ssl: process.env.DB_SSL === "false" ? { rejectUnauthorized: false } : undefined,
     connectionTimeoutMillis: 5000,
     idleTimeoutMillis: 30000,
@@ -61,7 +58,6 @@ pool.on("connect", () => {
   console.log("✅ PostgreSQL connected successfully");
 });
 
-// Try a non-blocking connection probe (doesn't crash the process on failure)
 (async () => {
   try {
     const client = await pool.connect();
