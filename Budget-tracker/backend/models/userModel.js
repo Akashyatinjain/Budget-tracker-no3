@@ -1,6 +1,5 @@
 import pool from "../config/db.js";
 
-// ✅ Create a new user
 export const createUser = async ({ username, email, password }) => {
   const result = await pool.query(
     `INSERT INTO users (username, email, password_hash)
@@ -15,7 +14,6 @@ export const createUser = async ({ username, email, password }) => {
   return null;
 };
 
-// ✅ Find user by email (for login)
 export const findUserByEmail = async (email) => {
   const result = await pool.query(
     `SELECT * FROM users WHERE email = $1`,
@@ -24,7 +22,6 @@ export const findUserByEmail = async (email) => {
   return result.rows[0];
 };
 
-// Ensure all profile, avatar and role columns exist in PostgreSQL database
 (async () => {
   try {
     await pool.query(`
@@ -44,7 +41,6 @@ export const findUserByEmail = async (email) => {
   }
 })();
 
-// ✅ Find user by ID
 export const findUserById = async (user_id) => {
   const result = await pool.query(
     `SELECT * FROM users WHERE user_id = $1`,
@@ -52,14 +48,12 @@ export const findUserById = async (user_id) => {
   );
   if (result.rows[0]) {
     const { password_hash, ...safeUser } = result.rows[0];
-    // Normalize avatar property
     safeUser.avatar_url = safeUser.avatar_url || safeUser.avatar || safeUser.profile_picture || null;
     return safeUser;
   }
   return null;
 };
 
-// ✅ Get all users
 export const getAllUsers = async () => {
   const result = await pool.query(
     `SELECT user_id, username, email, first_name, last_name, role, avatar_url, avatar, created_at FROM users ORDER BY created_at DESC`
@@ -67,7 +61,6 @@ export const getAllUsers = async () => {
   return result.rows;
 };
 
-// ✅ Update user profile fields dynamically
 export const updateUser = async (user_id, fields = {}) => {
   const allowed = ["username", "first_name", "last_name", "phone", "currency", "language", "timezone", "avatar_url", "avatar", "profile_picture"];
   const setParts = [];
@@ -104,7 +97,6 @@ export const updateUser = async (user_id, fields = {}) => {
   return updatedUser;
 };
 
-// ✅ Update user password
 export const updateUserPassword = async (user_id, password_hash) => {
   const result = await pool.query(
     `UPDATE users SET password_hash = $1, updated_at = NOW() WHERE user_id = $2 RETURNING user_id`,
@@ -113,7 +105,6 @@ export const updateUserPassword = async (user_id, password_hash) => {
   return result.rows[0];
 };
 
-// ✅ Delete user
 export const deleteUser = async (user_id) => {
   await pool.query(`DELETE FROM users WHERE user_id = $1`, [user_id]);
   return { message: "User deleted successfully" };

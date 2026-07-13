@@ -1,6 +1,5 @@
 import pool from "../config/db.js"; // PostgreSQL connection pool
 
-// ✅ Add Transaction
 export const addTransaction = async (userId, merchant, amount, category_id, type, transaction_date, description, currency = "INR") => {
   const query = `
     INSERT INTO transactions 
@@ -13,7 +12,6 @@ export const addTransaction = async (userId, merchant, amount, category_id, type
   return result.rows[0];
 };
 
-// ✅ Get All Transactions
 export const getTransactions = async (userId) => {
   const query = `
   SELECT * FROM transactions
@@ -24,7 +22,6 @@ export const getTransactions = async (userId) => {
   return result.rows;
 };
 
-// ✅ Delete Transaction
 export const deleteTransaction = async (transactionId, userId = null) => {
   if (!transactionId) throw new Error("Missing transactionId for deleteTransaction");
 
@@ -47,9 +44,7 @@ export const updateTransaction = async (transactionId, fields = {}, userId = nul
 
   for (const key of allowed) {
     if (Object.prototype.hasOwnProperty.call(fields, key)) {
-      // cast amount to numeric if provided
       if (key === "amount" && fields[key] !== null && fields[key] !== undefined && fields[key] !== "") {
-        // ensure numeric
         const num = Number(fields[key]);
         if (!Number.isFinite(num)) throw new Error("Invalid amount value");
         setParts.push(`${key} = $${idx}`);

@@ -127,7 +127,6 @@ export default function HomePage() {
   const [openFaq, setOpenFaq] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
-  // Interactive Calculator State
   const [monthlySavings, setMonthlySavings] = useState(25000);
   const [savingsYears, setSavingsYears] = useState(10);
   const expectedReturnRate = 0.12; // 12% annual estimated return
@@ -151,7 +150,6 @@ export default function HomePage() {
     toast.success(`Switched to ${nextTheme === "light" ? "Light Mode" : "Dark Mode"}`);
   };
 
-  // Wealth calculation
   const totalMonths = savingsYears * 12;
   const totalInvested = monthlySavings * totalMonths;
   const futureWealth = Math.round(

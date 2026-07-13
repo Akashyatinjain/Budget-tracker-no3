@@ -1,4 +1,3 @@
-// TrendsPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect } from "react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
@@ -55,7 +54,6 @@ const TrendsPage = () => {
     return () => { document.body.style.overflow = "auto"; };
   }, [mobileSidebarOpen, showForecastModal]);
 
-  // Process chart data dynamically from backend transactions
   const processChartData = () => {
     const now = new Date();
     let months = [];
@@ -140,7 +138,6 @@ const TrendsPage = () => {
         }
       });
 
-      // Calculate top growing category between previous month & current month
       if (chartData.length >= 2) {
         let maxGrowth = -Infinity;
         categories.forEach(cat => {
@@ -180,7 +177,6 @@ const TrendsPage = () => {
 
   const insights = calculateInsights();
 
-  // Dynamic distribution function for category list
   const getCategoryDistribution = () => {
     const hasUserData = Array.isArray(transactions) && transactions.length > 0;
     if (!hasUserData) {

@@ -1,4 +1,3 @@
-// BudgetPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
@@ -152,7 +151,6 @@ const BudgetPage = () => {
   const formatCurrency = (a) =>
     `₹${Number(a || 0).toLocaleString("en-IN")}`;
 
-  // 100% Real Backend Budgets Array
   const displayBudgets = budgets;
 
   const totalBudget = displayBudgets.reduce((s, b) => s + +b.amount, 0);
@@ -160,7 +158,6 @@ const BudgetPage = () => {
   const remainingBudget = totalBudget - totalSpent;
   const usedPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
-  // Pie chart data structure
   const pieChartData = displayBudgets.map((b) => ({
     name: getCategoryName(b.category_id),
     value: +b.amount,

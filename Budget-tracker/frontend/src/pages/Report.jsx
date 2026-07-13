@@ -1,4 +1,3 @@
-// ReportsPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect, useRef } from "react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
@@ -240,7 +239,6 @@ const ReportsPage = () => {
       };
     }).filter(item => item.value > 0);
 
-    // Dynamic monthly trends directly from backend transactions
     const monthlyData = [];
     for (let i = 5; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -341,7 +339,6 @@ const ReportsPage = () => {
   const yAxisTicks = computeYAxisTicks(monthlyMax);
   const yAxisTop = yAxisTicks[yAxisTicks.length - 1] ?? 1;
 
-  // Animation Variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -359,7 +356,6 @@ const ReportsPage = () => {
     },
   };
 
-  // Stat Cards Data
   const statCards = [
     { 
       title: "Total Income", value: reportData.totalIncome, 
@@ -400,7 +396,6 @@ const ReportsPage = () => {
         throw new Error("Printable report container not found");
       }
 
-      // Capture element with html2canvas
       const canvas = await html2canvas(element, {
         scale: 2, // High resolution
         useCORS: true,
@@ -424,11 +419,9 @@ const ReportsPage = () => {
       let position = 0;
       let pageNumber = 1;
 
-      // Add first page
       pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight * ratio, undefined, "FAST");
       heightLeft -= canvasPageHeight;
 
-      // Add subsequent pages if content overflows A4
       while (heightLeft > 0) {
         position = -canvasPageHeight * pageNumber;
         pdf.addPage();
@@ -1234,7 +1227,6 @@ const ReportsPage = () => {
   );
 };
 
-// ====== SpendingPieChart Component (3. Doughnut Chart Legend with Percentages) ======
 function SmallCustomTooltip({ active, payload }) {
   if (!active || !payload || !payload.length) return null;
   const data = payload[0].payload;
@@ -1292,7 +1284,6 @@ function SpendingPieChart({ reportData }) {
     );
   }
 
-  // Calculate percentages cleanly
   const totalValue = reportData.categorySpending.reduce((acc, c) => acc + c.value, 0) || 1;
   const enrichedData = reportData.categorySpending.map(c => ({
     ...c,

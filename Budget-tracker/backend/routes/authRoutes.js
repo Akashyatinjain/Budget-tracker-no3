@@ -58,7 +58,6 @@ router.post(
       const user = await findUserByEmail(email);
       if (!user) return res.status(404).json({ msg: "User not found" });
 
-      // Compare password using bcrypt
       const bcrypt = await import("bcryptjs");
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) return res.status(401).json({ msg: "Invalid credentials" });
@@ -80,9 +79,7 @@ router.post(
   }
 );
 
-// =======================
-// Get Profile
-// =======================
+
 router.get("/me", verifyToken, async (req, res, next) => {
   try {
     const user = await findUserById(req.user.user_id);
@@ -93,9 +90,7 @@ router.get("/me", verifyToken, async (req, res, next) => {
   }
 });
 
-// =======================
-// Admin – Get All Users
-// =======================
+
 router.get("/all", verifyToken, async (req, res, next) => {
   try {
     if (req.user.role !== "admin") return res.status(403).json({ msg: "Access denied" });
@@ -106,9 +101,7 @@ router.get("/all", verifyToken, async (req, res, next) => {
   }
 });
 
-// =======================
-// Admin – Update User Role
-// =======================
+
 router.put("/role/:id", verifyToken, async (req, res, next) => {
   try {
     if (req.user.role !== "admin") return res.status(403).json({ msg: "Access denied" });

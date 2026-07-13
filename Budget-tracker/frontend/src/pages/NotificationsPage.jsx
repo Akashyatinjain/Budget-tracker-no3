@@ -1,4 +1,3 @@
-// NotificationsPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
@@ -75,7 +74,6 @@ const NotificationsPage = () => {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
 
-  // 1. Contextual Notification Types & Colors mapping
   const notificationTypes = {
     income: { label: "Income", color: "#10b981", icon: DollarSign, emoji: "💰", bgGradient: "from-emerald-500/10 to-teal-500/5", border: "border-l-emerald-500" },
     expense: { label: "Expense", color: "#f43f5e", icon: CreditCard, emoji: "💳", bgGradient: "from-rose-500/10 to-red-500/5", border: "border-l-rose-500" },
@@ -102,7 +100,6 @@ const NotificationsPage = () => {
     },
   };
 
-  // Generate enriched sample notifications for demonstration
   const generateSampleNotifications = () => [
     {
       id: 101,
@@ -281,7 +278,6 @@ const NotificationsPage = () => {
     }
   };
 
-  // 6. Bulk Actions Handlers
   const toggleSelectAll = () => {
     if (selectedIds.length === filteredNotifications.length) {
       setSelectedIds([]);
@@ -347,14 +343,12 @@ const NotificationsPage = () => {
     toast.success("📊 Notifications exported to CSV");
   };
 
-  // 7. Expandable Notification Card Toggle
   const toggleExpand = (id) => {
     setExpandedIds(prev => 
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
   };
 
-  // 5. Search & Filter Filtering
   const filteredNotifications = notifications.filter(notification => {
     const normType = notification.type === "transaction" ? "expense" : notification.type;
     const matchesFilter =
@@ -372,7 +366,6 @@ const NotificationsPage = () => {
     return matchesFilter && matchesSearch;
   });
 
-  // 4. Gmail Style Timeframe Grouping Helper
   const groupNotificationsByTimeframe = (items) => {
     const today = [];
     const yesterday = [];
@@ -430,7 +423,6 @@ const NotificationsPage = () => {
     return date.toLocaleDateString();
   };
 
-  // Animation Variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -448,7 +440,6 @@ const NotificationsPage = () => {
     },
   };
 
-  // 2. High Priority Card Satisfying Empty State
   const statCards = [
     { 
       title: "Total Notifications", value: notificationStats.total, 

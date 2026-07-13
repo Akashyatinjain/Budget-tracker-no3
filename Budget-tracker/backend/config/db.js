@@ -24,7 +24,7 @@ let poolConfig;
 if (process.env.DATABASE_URL) {
   poolConfig = {
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DB_SSL === "false" ? { rejectUnauthorized: false } : undefined,
+    ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : undefined,
     connectionTimeoutMillis: 5000,
     idleTimeoutMillis: 30000,
     max: 10,

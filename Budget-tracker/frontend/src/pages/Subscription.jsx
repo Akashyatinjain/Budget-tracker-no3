@@ -1,4 +1,3 @@
-// SubscriptionsPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
@@ -70,7 +69,6 @@ const SubscriptionsPage = () => {
 
 
 
-  // Realistic Demo Subscriptions if user database is empty
   const getSampleSubscriptions = () => [
     { id: 101, name: "Netflix Premium 4K", amount: 649, currency: "INR", billing_cycle: "monthly", category: "entertainment", next_billing_date: new Date(Date.now() + 86400000).toISOString().slice(0,10), status: "active", description: "Family UHD stream plan" },
     { id: 102, name: "Spotify Premium", amount: 119, currency: "INR", billing_cycle: "monthly", category: "music", next_billing_date: new Date(Date.now() + 86400000 * 5).toISOString().slice(0,10), status: "active", description: "Ad-free music offline" },
@@ -192,7 +190,6 @@ const SubscriptionsPage = () => {
     const totalYearly = totalMonthly * 12;
     const activeSubs = subscriptions.filter(s => s.status === "active").length;
     
-    // Calculate potential annual savings dynamically based on paused/cancelled or 15% optimization
     const pausedOrCancelledYearly = subscriptions
       .filter(s => s.status === "paused" || s.status === "cancelled" || s.status === "trial")
       .reduce((sum, s) => {
@@ -204,7 +201,6 @@ const SubscriptionsPage = () => {
 
     const potentialSavings = pausedOrCancelledYearly > 0 ? pausedOrCancelledYearly : Math.round(totalYearly * 0.15);
     
-    // Next renewal detail
     const sortedActive = [...subscriptions]
       .filter(s => s.status === "active" && s.next_billing_date)
       .sort((a,b) => new Date(a.next_billing_date) - new Date(b.next_billing_date));
@@ -238,7 +234,6 @@ const SubscriptionsPage = () => {
     return Math.ceil((billing - new Date()) / (1000 * 60 * 60 * 24));
   };
 
-  // Pie Chart category distribution data
   const pieChartData = categories.map(cat => {
     const catSubs = subscriptions.filter(s => s.category === cat.value && s.status === "active");
     const total = catSubs.reduce((sum, s) => sum + safeNumber(s.amount), 0);

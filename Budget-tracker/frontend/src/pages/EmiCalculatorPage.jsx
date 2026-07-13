@@ -1,4 +1,3 @@
-// EmiCalculatorPage.jsx - FinTrack EMI Calculator
 import React, { useState, useMemo, useEffect } from "react";
 import Header from "../components/Header";
 import AdvancedSidebar from "../components/Sidebar";
@@ -14,16 +13,13 @@ export default function EmiCalculatorPage() {
   const { user } = useAuth();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Calculator inputs
   const [principal, setPrincipal] = useState(1000000); // 10 Lakhs default
   const [interestRate, setInterestRate] = useState(9.5); // 9.5% p.a. default
   const [tenure, setTenure] = useState(5); // 5 Years default
   const [tenureType, setTenureType] = useState("years"); // "years" or "months"
 
-  // Amortization Schedule Tab View
   const [scheduleView, setScheduleView] = useState("yearly"); // "yearly" or "monthly"
 
-  // Calculations
   const calculations = useMemo(() => {
     const P = Number(principal);
     const annualRate = Number(interestRate);
@@ -42,12 +38,10 @@ export default function EmiCalculatorPage() {
 
     const r = annualRate / 12 / 100; // monthly interest rate
     
-    // EMI Formula: [P * r * (1+r)^n] / [(1+r)^n - 1]
     const emi = (P * r * Math.pow(1 + r, totalMonths)) / (Math.pow(1 + r, totalMonths) - 1);
     const totalPayment = emi * totalMonths;
     const totalInterest = totalPayment - P;
 
-    // Generate monthly amortization details
     let balance = P;
     const monthlyDetails = [];
     
@@ -67,7 +61,6 @@ export default function EmiCalculatorPage() {
       });
     }
 
-    // Generate yearly aggregation for amortization details
     const yearlyDetails = [];
     if (tenureType === "years" || totalMonths >= 12) {
       let year = 1;
@@ -79,7 +72,6 @@ export default function EmiCalculatorPage() {
         yearlyPrincipal += m.principalPaid;
         yearlyInterest += m.interestPaid;
 
-        // If end of year or final month
         if ((idx + 1) % 12 === 0 || idx + 1 === totalMonths) {
           const closingBalance = m.closingBalance;
           yearlyDetails.push({
@@ -109,7 +101,6 @@ export default function EmiCalculatorPage() {
 
   const { emi, totalPayment, totalInterest, monthlyDetails, yearlyDetails } = calculations;
 
-  // Chart Data
   const chartData = useMemo(() => {
     return [
       { name: "Principal Amount", value: Number(principal), color: "#6366f1" }, // Indigo
@@ -117,12 +108,10 @@ export default function EmiCalculatorPage() {
     ];
   }, [principal, totalInterest]);
 
-  // Format currency helper
   const formatCurrency = (val) => {
     return `₹${Math.round(val || 0).toLocaleString("en-IN")}`;
   };
 
-  // Lock background scroll when mobile sidebar open
   useEffect(() => {
     document.body.style.overflow = mobileSidebarOpen ? "hidden" : "auto";
     return () => {

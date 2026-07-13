@@ -1,4 +1,3 @@
-// FinanceDashboard.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
@@ -29,7 +28,6 @@ import {
   Award, Clock, Star, Gem, FileSpreadsheet
 } from "lucide-react";
 
-// ====== ImportButton Component ======
 function ImportButton() {
   const fileRef = useRef();
 
@@ -47,11 +45,8 @@ function ImportButton() {
       complete: async (result) => {
         const rows = result.data;
         try {
-          // ImportButton doesn't have direct dispatch access, so we use apiClient directly here
-          // The parent component will refetch after import via Redux
           const response = await apiClient.post("/api/transactions/import", { rows });
           toast.success(`Imported ${response.data.inserted ?? response.data.insertedRows ?? 0} rows successfully!`);
-          // Trigger page reload to refresh Redux store
           window.dispatchEvent(new Event("transactions-imported"));
         } catch (err) {
           console.error("Import failed:", err);
@@ -103,7 +98,6 @@ function ImportButton() {
   );
 }
 
-// ====== Main Dashboard Component ======
 const FinanceDashboard = () => {
   const { user, token } = useAuth();
   const dispatch = useDispatch();
@@ -126,7 +120,6 @@ const FinanceDashboard = () => {
     transaction_date: "",
   });
 
-  // ====== Categories ======
   const categories = [
     { id: 1, name: "Food & Dining",    color: "#f43f5e", icon: Coffee },
     { id: 2, name: "Shopping",         color: "#8b5cf6", icon: ShoppingBag },
@@ -164,7 +157,6 @@ const FinanceDashboard = () => {
     return cat ? cat.color : "#6b7280";
   };
 
-  // ====== Fetch Transactions via Redux ======
   const getMockTransactions = () => [
     { transaction_id: 1, merchant: "Punjab Grill",        category_id: 1, type: "expense", amount: 2450,  transaction_date: "2026-06-15" },
     { transaction_id: 2, merchant: "Monthly Salary",      category_id: 7, type: "income",  amount: 125000, transaction_date: "2026-06-01" },
@@ -176,7 +168,6 @@ const FinanceDashboard = () => {
     { transaction_id: 8, merchant: "MedPlus Pharmacy",    category_id: 6, type: "expense", amount: 780,   transaction_date: "2026-06-13" },
   ];
 
-  // ====== Custom Label for Pie Chart ======
   const CustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) => {
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
@@ -190,7 +181,6 @@ const FinanceDashboard = () => {
     );
   };
 
-  // ====== Export CSV ======
   const exportCSV = () => {
     const headers = ["Date", "Merchant", "Category", "Type", "Amount"];
     const csvData = transactions.map(t => [
@@ -215,7 +205,6 @@ const FinanceDashboard = () => {
     toast.success("CSV exported successfully!");
   };
 
-  // ====== Filters ======
   const filteredTransactions = Array.isArray(transactions)
     ? transactions.filter(transaction =>
         (transaction.merchant?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
@@ -231,7 +220,6 @@ const FinanceDashboard = () => {
     } else {
       setLoading(false);
     }
-    // Listen for import events from ImportButton
     const handleImport = () => dispatch(fetchTransactionsThunk());
     window.addEventListener("transactions-imported", handleImport);
     return () => window.removeEventListener("transactions-imported", handleImport);
@@ -242,7 +230,6 @@ const FinanceDashboard = () => {
     return parseFloat(transaction.amount) || 0;
   };
 
-  // ====== Calculations ======
   const totalIncome = Array.isArray(transactions)
     ? transactions.filter((t) => t?.type === "income").reduce((sum, t) => sum + getSafeAmount(t), 0)
     : 0;
@@ -256,7 +243,6 @@ const FinanceDashboard = () => {
   const goalProgress = Math.min((totalBalance / savingsGoal) * 100, 100);
   const savingsRate = totalIncome > 0 ? ((totalBalance / totalIncome) * 100) : 0;
 
-  // ====== Monthly Data ======
   const getMonthlyData = () => {
     if (!Array.isArray(transactions)) return [];
     const monthlyData = {};
@@ -282,7 +268,6 @@ const FinanceDashboard = () => {
     return Object.values(monthlyData).slice(-6);
   };
 
-  // ====== Weekly Spending ======
   const getWeeklySpending = () => {
     if (!Array.isArray(transactions)) {
       return Array.from({ length: 7 }, (_, i) => ({
@@ -313,7 +298,6 @@ const FinanceDashboard = () => {
     return weeklyData;
   };
 
-  // ====== Add Transaction ======
   const handleAddTransaction = async () => {
     try {
       await dispatch(addTransaction(newTransaction)).unwrap();
@@ -327,7 +311,6 @@ const FinanceDashboard = () => {
     }
   };
 
-  // ====== Expense by Category ======
   const expenseByCategory = Array.isArray(transactions)
     ? categories.map((cat) => ({
         name: cat.name,
@@ -338,12 +321,10 @@ const FinanceDashboard = () => {
       })).filter((c) => c.value > 0)
     : [];
 
-  // ====== Recent Transactions ======
   const recentTransactions = Array.isArray(filteredTransactions)
     ? filteredTransactions.slice().reverse().slice(0, 6)
     : [];
 
-  // ====== Responsive ======
   useEffect(() => {
     document.body.style.overflow = mobileSidebarOpen ? "hidden" : "auto";
   }, [mobileSidebarOpen]);
@@ -359,7 +340,6 @@ const FinanceDashboard = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // ====== Animation Variants ======
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {

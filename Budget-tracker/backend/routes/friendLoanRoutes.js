@@ -1,11 +1,9 @@
-// backend/routes/friendLoanRoutes.js
 import express from "express";
 import verifyToken from "../middlewares/authMiddleware.js";
 import pool from "../config/db.js";
 
 const router = express.Router();
 
-// ✅ Auto-initialize friend_loans table on start
 (async () => {
   try {
     await pool.query(`

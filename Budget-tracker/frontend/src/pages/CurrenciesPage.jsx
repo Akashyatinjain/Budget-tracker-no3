@@ -1,4 +1,3 @@
-// CurrenciesPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
@@ -252,7 +251,6 @@ const CurrenciesPage = () => {
     return isFinite(n) ? n : "N/A";
   };
 
-  // ====== Animation Variants ======
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -270,7 +268,6 @@ const CurrenciesPage = () => {
     },
   };
 
-  // ====== Stat Cards Data ======
   const statCards = [
     {
       label: "Default Currency",

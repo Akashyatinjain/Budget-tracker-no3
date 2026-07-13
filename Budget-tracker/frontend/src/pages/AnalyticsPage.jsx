@@ -1,4 +1,3 @@
-// AnalyticsPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Header from "../components/Header";
@@ -123,7 +122,6 @@ const AnalyticsPage = () => {
     ? [...incomeTxns].sort((a, b) => safeAmount(b) - safeAmount(a))[0] 
     : null;
 
-  // Quick Statistics: Highest Spending Day & Most Frequent Category
   const dailyExpenses = {};
   const catFrequency = {};
   filteredTransactions.forEach((t) => {
@@ -147,7 +145,6 @@ const AnalyticsPage = () => {
   const mostFrequentEntry = Object.entries(catFrequency).sort((a, b) => b[1] - a[1])[0];
   const mostFrequentCat = mostFrequentEntry ? [mostFrequentEntry[0], mostFrequentEntry[1]] : ["None", 0];
 
-  // Realistic Health Score based on actual user transactions
   const calcHealthScore = () => {
     const hasData = filteredTransactions.length > 0;
     if (!hasData) {
@@ -176,7 +173,6 @@ const AnalyticsPage = () => {
 
   const health = calcHealthScore();
 
-  // ====== Animation Variants ======
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },

@@ -1,4 +1,3 @@
-// SplitBillPage.jsx - FinTrack Bill Splitter
 import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
@@ -17,19 +16,16 @@ export default function SplitBillPage() {
   const dispatch = useDispatch();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Core Bill States
   const [billTitle, setBillTitle] = useState("");
   const [billAmount, setBillAmount] = useState("");
   const [currency, setCurrency] = useState("INR");
   
-  // Advanced Toggles
   const [showAdvancedSplit, setShowAdvancedSplit] = useState(false);
   const [showMultiplePayers, setShowMultiplePayers] = useState(false);
 
   const [splitMethod, setSplitMethod] = useState("equal"); // 'equal', 'exact', 'percentage'
   const [singlePayerIdx, setSinglePayerIdx] = useState(0); // Default: first person (You)
 
-  // Participant States
   const userName = user?.username || user?.name || user?.email?.split("@")[0] || "You";
   const [participantsCount, setParticipantsCount] = useState(3);
   const [participants, setParticipants] = useState([
@@ -38,11 +34,9 @@ export default function SplitBillPage() {
     { name: "Friend B", amountPaid: "" }
   ]);
 
-  // Split Shares (for exact and percentage splits)
   const [customShares, setCustomShares] = useState({});
   const [customPercents, setCustomPercents] = useState({});
 
-  // Calculations Output
   const [validationError, setValidationError] = useState("");
   const [transactions, setTransactions] = useState([]);
   const [recordedLoans, setRecordedLoans] = useState({}); // tracker for which transaction index was saved as loan
@@ -51,7 +45,6 @@ export default function SplitBillPage() {
     document.title = "Split Bills | FinTrack Budget Tracker";
   }, []);
 
-  // Sync participant fields when participant count changes
   useEffect(() => {
     setParticipants(prev => {
       const nextParticipants = [...prev];
@@ -67,7 +60,6 @@ export default function SplitBillPage() {
     });
   }, [participantsCount]);
 
-  // Currency symbols map
   const currencySymbols = {
     INR: "₹",
     USD: "$",
@@ -78,7 +70,6 @@ export default function SplitBillPage() {
 
   const getSymbol = () => currencySymbols[currency] || "₹";
 
-  // Handle participant field updates
   const updateParticipantName = (index, value) => {
     setParticipants(prev =>
       prev.map((p, idx) => (idx === index ? { ...p, name: value } : p))
@@ -91,7 +82,6 @@ export default function SplitBillPage() {
     );
   };
 
-  // Perform Calculations (Automatic Real-time)
   useEffect(() => {
     const totalBill = Number(billAmount);
     if (!totalBill || totalBill <= 0) {
@@ -100,7 +90,6 @@ export default function SplitBillPage() {
       return;
     }
 
-    // Determine Paid Amounts for each participant
     let paidAmounts = [];
     if (showMultiplePayers) {
       paidAmounts = participants.map(p => Number(p.amountPaid || 0));
@@ -116,7 +105,6 @@ export default function SplitBillPage() {
 
     setValidationError("");
 
-    // Compute shares based on method
     let shares = Array(participantsCount).fill(0);
 
     if (splitMethod === "equal" || !showAdvancedSplit) {
@@ -158,7 +146,6 @@ export default function SplitBillPage() {
       }
     }
 
-    // Compute net balances
     const balances = participants.map((p, idx) => {
       const paid = paidAmounts[idx];
       const share = shares[idx];
@@ -169,7 +156,6 @@ export default function SplitBillPage() {
       };
     });
 
-    // Simplify debts
     const debtors = balances
       .filter(b => b.balance < -0.01)
       .map(b => ({ ...b, balance: Math.abs(b.balance) }))
@@ -209,7 +195,6 @@ export default function SplitBillPage() {
     customShares, customPercents, showAdvancedSplit, showMultiplePayers, participantsCount
   ]);
 
-  // Record a transaction as a Friend Loan in the database
   const handleRecordLoan = async (index, txn) => {
     const friendName = txn.from;
     const loanAmount = txn.amount;
@@ -236,7 +221,6 @@ export default function SplitBillPage() {
     }
   };
 
-  // Card Variants
   const cardVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 24 } }

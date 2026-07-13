@@ -1,4 +1,3 @@
-// ...existing code...
 import express from "express";
 import verifyToken from "../middlewares/authMiddleware.js";
 import pool from "../config/db.js";
@@ -6,7 +5,6 @@ import { checkBudgetsAndNotify } from "../utils/budgetNotifications.js";
 
 const router = express.Router();
 
-// GET /api/budgets - list budgets
 router.get("/", verifyToken, async (req, res, next) => {
   try {
     const userId = req.user.user_id;
@@ -20,13 +18,11 @@ router.get("/", verifyToken, async (req, res, next) => {
   }
 });
 
-// POST /api/budgets - create budget
 router.post("/", verifyToken, async (req, res, next) => {
   try {
     const userId = req.user.user_id;
     const { category_id, amount, month, description } = req.body;
 
-    // ----- 1) Check duplicate month/category budgets -----
     const dup = await pool.query(
       `SELECT * FROM budgets 
        WHERE user_id=$1 AND category_id=$2 AND month=$3`,
@@ -39,7 +35,6 @@ router.post("/", verifyToken, async (req, res, next) => {
       });
     }
 
-    // ----- 2) Create budget -----
     const result = await pool.query(
       `INSERT INTO budgets (user_id, category_id, amount, month, description, created_at, updated_at)
        VALUES ($1,$2,$3,$4,$5, NOW(), NOW()) RETURNING *`,
@@ -48,7 +43,6 @@ router.post("/", verifyToken, async (req, res, next) => {
 
     const newBudget = result.rows[0];
 
-    // ----- 3) Send “budget created” notification -----
     try {
       await pool.query(
         `INSERT INTO notifications 
@@ -81,7 +75,6 @@ router.post("/", verifyToken, async (req, res, next) => {
   }
 });
 
-// DELETE /api/budgets/:id
 router.delete("/:id", verifyToken, async (req, res, next) => {
   try {
     const { id } = req.params;

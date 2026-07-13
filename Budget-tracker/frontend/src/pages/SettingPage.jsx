@@ -1,4 +1,3 @@
-// SettingPage.jsx - FinTrack Unified Enterprise Design System
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
@@ -266,7 +265,6 @@ const SettingsPage = () => {
     }
   };
 
-  // 3. Left Sidebar Tabs with Descriptions
   const tabs = [
     { id: "profile", label: "Profile & Identity", desc: "Personal info, avatar & regional units", icon: User },
     { id: "security", label: "Security & Auth", desc: "Password, 2FA & active sessions", icon: Lock },

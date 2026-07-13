@@ -1,4 +1,3 @@
-// FriendLoansPage.jsx - FinTrack Friend Loans Tracker
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
@@ -27,7 +26,6 @@ export default function FriendLoansPage() {
   const [error, setError] = useState("");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Form Modal State
   const [showModal, setShowModal] = useState(false);
   const [friendName, setFriendName] = useState("");
   const [amount, setAmount] = useState("");
@@ -36,11 +34,9 @@ export default function FriendLoansPage() {
   const [isReturned, setIsReturned] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Filters State
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // 'all', 'pending', 'returned'
 
-  // Fetch all loans
   const fetchLoans = () => {
     dispatch(fetchFriendLoans());
   };
@@ -58,7 +54,6 @@ export default function FriendLoansPage() {
     setError(reduxError || "");
   }, [reduxLoans, reduxLoading, reduxError]);
 
-  // Form Submit (Add new loan)
   const handleAddLoan = async (e) => {
     e.preventDefault();
     if (!friendName.trim()) {
@@ -87,13 +82,11 @@ export default function FriendLoansPage() {
       await dispatch(addFriendLoan(payload)).unwrap();
       toast.success("✨ Friend loan record added successfully!");
       setShowModal(false);
-      // Reset form
       setFriendName("");
       setAmount("");
       setLoanDate(new Date().toISOString().split("T")[0]);
       setNotes("");
       setIsReturned(false);
-      // Refetch
       dispatch(fetchFriendLoans());
     } catch (err) {
       console.error("Error adding loan:", err);
@@ -103,7 +96,6 @@ export default function FriendLoansPage() {
     }
   };
 
-  // Toggle Returned Status
   const handleToggleStatus = async (loan) => {
     try {
       const updatedStatus = !loan.is_returned;
@@ -125,7 +117,6 @@ export default function FriendLoansPage() {
     }
   };
 
-  // Delete Loan
   const handleDeleteLoan = async (loanId) => {
     if (!window.confirm("Are you sure you want to delete this loan record?")) {
       return;
@@ -140,7 +131,6 @@ export default function FriendLoansPage() {
     }
   };
 
-  // Stats Calculations
   const stats = React.useMemo(() => {
     const totalLent = loans.reduce((sum, item) => sum + Number(item.amount), 0);
     const totalReturned = loans
@@ -152,7 +142,6 @@ export default function FriendLoansPage() {
     return { totalLent, totalReturned, totalOwed, pendingCount };
   }, [loans]);
 
-  // Filtered Loans
   const filteredLoans = React.useMemo(() => {
     return loans.filter((item) => {
       const matchesSearch = item.friend_name
@@ -169,12 +158,10 @@ export default function FriendLoansPage() {
     });
   }, [loans, searchTerm, statusFilter]);
 
-  // Format Currency
   const formatCurrency = (val) => {
     return `₹${Number(val || 0).toLocaleString("en-IN")}`;
   };
 
-  // Format Date
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
     const d = new Date(dateStr);
@@ -185,7 +172,6 @@ export default function FriendLoansPage() {
     });
   };
 
-  // Animations configuration
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.05, delayChildren: 0.1 } },
@@ -196,7 +182,6 @@ export default function FriendLoansPage() {
     visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 350, damping: 25 } },
   };
 
-  // Lock background scroll when modal open
   useEffect(() => {
     document.body.style.overflow = mobileSidebarOpen || showModal ? "hidden" : "auto";
     return () => {

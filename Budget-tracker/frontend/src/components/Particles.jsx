@@ -3,7 +3,6 @@ import { Renderer, Camera, Geometry, Program, Mesh } from "ogl";
 
 const defaultColors = ["#ffffff", "#ffffff", "#ffffff"];
 
-// HEX → RGB
 const hexToRgb = (hex) => {
   hex = hex.replace(/^#/, "");
   if (hex.length === 3) {
@@ -19,7 +18,6 @@ const hexToRgb = (hex) => {
   return [r, g, b];
 };
 
-// GLSL vertex shader
 const vertex = /* glsl */ `
   attribute vec3 position;
   attribute vec4 random;
@@ -55,7 +53,6 @@ const vertex = /* glsl */ `
   }
 `;
 
-// GLSL fragment shader
 const fragment = /* glsl */ `
   precision highp float;
   
@@ -182,7 +179,6 @@ const Particles = ({
       program,
     });
 
-    // ✅ Fixed: blending & depth settings yaha rakho
     particles.transparent = true;
     particles.depthTest = false;
 
@@ -227,7 +223,6 @@ const Particles = ({
         container.removeChild(gl.canvas);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     particleCount,
     particleSpread,

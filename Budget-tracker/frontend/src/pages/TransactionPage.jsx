@@ -1,4 +1,3 @@
-// TransactionPage.jsx - FinTrack Unified Design System
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
@@ -226,7 +225,6 @@ const TransactionPage = () => {
       return merchant.includes(searchQuery.toString().toLowerCase());
     });
 
-  // Reset pagination on filter change
   useEffect(() => {
     setCurrentPage(1);
   }, [filter, categoryFilter, searchQuery]);
