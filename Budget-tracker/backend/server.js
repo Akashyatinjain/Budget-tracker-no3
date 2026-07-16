@@ -9,7 +9,7 @@ import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import session from "express-session";
-import  verifyToken  from "./middlewares/authMiddleware.js";
+import verifyToken from "./middlewares/authMiddleware.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import budgetRoutes from "./routes/budgetRoutes.js";
@@ -19,6 +19,7 @@ import settingsRouter from './routes/settingsRoute.js';
 import reportsRouter from './routes/reportsRoute.js';
 import notificationRoutes from "./routes/notificationRoutes.js";
 import { checkBudgetsAndNotify } from "./utils/budgetNotifications.js";
+import aiRoutes from "./routes/aiRoutes.js";
 import friendLoanRoutes from "./routes/friendLoanRoutes.js";
 
 dotenv.config();
@@ -57,7 +58,7 @@ app.use(
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60 * 1000, 
+      maxAge: 24 * 60 * 60 * 1000,
     },
   })
 );
@@ -66,16 +67,17 @@ app.use(passport.session());
 
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/users", userRoutes);
-app.use('/api/budgets', budgetRoutes); 
+app.use('/api/budgets', budgetRoutes);
 app.use("/api/currencies", currenciesRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use('/api/users', settingsRouter);
 app.use('/api/reports', reportsRouter);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/friend-loans", friendLoanRoutes);
+app.use("/api/ai", aiRoutes);
 function createAndSetToken(res, user) {
   const token = jwt.sign(
-    { user_id: user.user_id, email: user.email }, 
+    { user_id: user.user_id, email: user.email },
     process.env.JWT_SECRET,
     { expiresIn: "7d" }
   );
@@ -133,12 +135,12 @@ app.get("/categories", verifyToken, async (req, res, next) => {
 
 app.post("/transactions", verifyToken, async (req, res, next) => {
   try {
-    console.log("POST /transactions req.user:", req.user); 
+    console.log("POST /transactions req.user:", req.user);
     const {
       category_id, type, amount, currency, description, merchant, transaction_date,
     } = req.body;
     const userId = req.user?.user_id ?? req.user?.id;
-    console.log("Resolved userId:", userId); 
+    console.log("Resolved userId:", userId);
 
     const result = await pool.query(
       `INSERT INTO transactions
@@ -147,7 +149,7 @@ app.post("/transactions", verifyToken, async (req, res, next) => {
        RETURNING *`,
       [userId, category_id, type, amount, currency, description, merchant, transaction_date]
     );
- const insertedTxn = result.rows[0];
+    const insertedTxn = result.rows[0];
 
     let createdNotification = null;
     try {
@@ -156,7 +158,7 @@ app.post("/transactions", verifyToken, async (req, res, next) => {
       const notifRes = await pool.query(
         `INSERT INTO notifications (user_id, title, message, type, priority, action_url, created_at)
          VALUES ($1,$2,$3,$4,$5,$6, NOW()) RETURNING *`,
-        [userId, `New transaction: ${merchant||description}`, `You spent ₹${Number(amount).toLocaleString('en-IN')} on ${merchant||description}`, 'transaction', 'low', '/transactions']
+        [userId, `New transaction: ${merchant || description}`, `You spent ₹${Number(amount).toLocaleString('en-IN')} on ${merchant || description}`, 'transaction', 'low', '/transactions']
       );
       console.log('Notification created for txn:', notifRes.rows[0]);
       createdNotification = notifRes.rows[0];
@@ -319,7 +321,7 @@ app.get("/health", (req, res) => res.json({ status: "ok" }));
 app.post("/api/debug/create-budget-notif", verifyToken, async (req, res, next) => {
   try {
     const userId = req.user?.user_id ?? req.user?.id;
-    const { title="Debug Budget", message="Debug message", priority="medium" } = req.body;
+    const { title = "Debug Budget", message = "Debug message", priority = "medium" } = req.body;
     const r = await pool.query(
       `INSERT INTO notifications (user_id, title, message, type, priority, action_url, created_at)
        VALUES ($1,$2,$3,$4,$5,$6,NOW()) RETURNING *`,
@@ -362,7 +364,7 @@ async function ensureTables() {
   }
 }
 
-const PORT = process.env.PORT || 5000; 
+const PORT = process.env.PORT || 5000;
 ensureTables().then(() => {
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 }).catch(() => {

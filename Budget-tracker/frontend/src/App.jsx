@@ -23,6 +23,7 @@ import { Toaster } from 'react-hot-toast';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import AIAssistant from './components/AIAssistant';
 
 export const applyTheme = (theme) => {
   const root = document.documentElement;
@@ -54,6 +55,7 @@ function App() {
   return (
     <AuthProvider>
       <Toaster position="top-right" />
+      <AIAssistant />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
