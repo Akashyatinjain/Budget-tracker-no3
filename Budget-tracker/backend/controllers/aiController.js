@@ -25,14 +25,13 @@ export const getAIChatResponse = async (req, res, next) => {
 
     // 2. Fetch categories
     const categoriesRes = await pool.query(
-      "SELECT category_id, name, type FROM categories WHERE user_id = $1 OR user_id IS NULL",
-      [userId]
+      "SELECT category_id, name FROM categories"
     );
     const categories = categoriesRes.rows;
 
     // 3. Fetch budgets
     const budgetsRes = await pool.query(
-      `SELECT b.budget_id, b.amount, b.month, b.description, c.name AS category_name
+      `SELECT b.id AS budget_id, b.amount, b.month, b.description, c.name AS category_name
        FROM budgets b
        LEFT JOIN categories c ON b.category_id = c.category_id
        WHERE b.user_id = $1`,

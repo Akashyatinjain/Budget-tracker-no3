@@ -140,7 +140,12 @@ export default function AIAssistant() {
       ]);
     } catch (err) {
       console.error("AI Assistant error:", err);
-      const errMsg = err?.response?.data?.error || "Something went wrong while talking to the assistant.";
+      let errMsg = "Something went wrong while talking to the assistant.";
+      if (err?.response?.data) {
+        errMsg = err.response.data.error || err.response.data.message || err.response.data.msg || errMsg;
+      } else if (err?.message) {
+        errMsg = err.message;
+      }
       setErrorMsg(errMsg);
     } finally {
       setLoading(false);
