@@ -312,32 +312,133 @@ export function extractMerchantAndDescription(rawDesc) {
   };
 }
 
+const CATEGORY_IDS = {
+  FOOD: 1,
+  SHOPPING: 2,
+  TRANSPORT: 3,
+  ENTERTAINMENT: 4,
+  BILLS: 5,
+  HEALTHCARE: 6,
+  SALARY: 7,
+  INVESTMENT: 8,
+};
+
+const CATEGORY_KEYWORDS = [
+  {
+    id: CATEGORY_IDS.FOOD,
+    words: [
+      "food", "dining", "restaurant", "restro", "cafe", "coffee", "tea", "chai", "snack",
+      "swiggy", "zomato", "eatclub", "dominos", "pizza", "burger", "mcdonald", "kfc",
+      "bakery", "sweet", "sweets", "kitchen", "hotel", "dhaba", "juice", "icecream"
+    ],
+  },
+  {
+    id: CATEGORY_IDS.SHOPPING,
+    words: [
+      "shop", "shopping", "store", "retail", "mart", "market", "mall", "bazaar", "kirana",
+      "general store", "supermarket", "grocery", "dmart", "jiomart", "reliance", "smart bazaar",
+      "amazon", "flipkart", "myntra", "meesho", "ajio", "nykaa", "snapdeal", "bigbasket",
+      "fashion", "cloth", "clothes", "apparel", "footwear", "shoes", "bata", "zara",
+      "electronics", "mobile", "stationery"
+    ],
+  },
+  {
+    id: CATEGORY_IDS.TRANSPORT,
+    words: [
+      "transport", "travel", "uber", "ola", "rapido", "cab", "taxi", "auto", "rickshaw",
+      "metro", "railway", "train", "irctc", "bus", "flight", "airline", "fuel", "petrol",
+      "diesel", "cng", "hpcl", "bpcl", "indianoil", "shell", "parking", "toll", "fastag"
+    ],
+  },
+  {
+    id: CATEGORY_IDS.ENTERTAINMENT,
+    words: [
+      "entertainment", "movie", "cinema", "pvr", "inox", "cinepolis", "bookmyshow", "bms",
+      "netflix", "spotify", "prime video", "hotstar", "disney", "jiocinema", "zee5", "sonyliv",
+      "youtube premium", "gaming", "game", "steam", "playstation", "xbox", "arcade", "event",
+      "concert", "show", "club", "fun"
+    ],
+  },
+  {
+    id: CATEGORY_IDS.BILLS,
+    words: [
+      "bill", "utility", "electric", "electricity", "power", "water", "gas", "recharge",
+      "mobile recharge", "postpaid", "prepaid", "broadband", "wifi", "internet", "airtel",
+      "jio", "vodafone", "vi ", "bsnl", "tata play", "dth", "rent", "maintenance", "emi",
+      "loan", "insurance", "sms charges", "bank charges", "charge", "fee"
+    ],
+  },
+  {
+    id: CATEGORY_IDS.HEALTHCARE,
+    words: [
+      "health", "healthcare", "pharmacy", "chemist", "medical", "medicine", "medplus",
+      "apollo", "netmeds", "1mg", "pharmeasy", "doctor", "hospital", "clinic", "diagnostic",
+      "lab", "pathology", "dental", "eye care"
+    ],
+  },
+  {
+    id: CATEGORY_IDS.SALARY,
+    words: [
+      "salary", "payroll", "wage", "wages", "income", "stipend", "bonus", "freelance",
+      "cashback", "refund", "reversal", "interest credit", "credit interest"
+    ],
+  },
+  {
+    id: CATEGORY_IDS.INVESTMENT,
+    words: [
+      "investment", "invest", "stock", "stocks", "share", "mutual fund", "sip", "zerodha",
+      "groww", "angel", "upstox", "coin", "crypto", "dividend", "nps", "pf", "epfo"
+    ],
+  },
+];
+
+export function inferCategoryFromText(merchant = "", description = "") {
+  const combined = `${merchant} ${description}`
+    .toLowerCase()
+    .replace(/[\/_\-.@]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const scores = new Map();
+
+  for (const group of CATEGORY_KEYWORDS) {
+    let score = 0;
+    for (const word of group.words) {
+      if (combined.includes(word)) {
+        score += word.length >= 6 ? 3 : 2;
+      }
+    }
+    if (score > 0) scores.set(group.id, score);
+  }
+
+  if (scores.size > 0) {
+    return [...scores.entries()].sort((a, b) => b[1] - a[1])[0][0];
+  }
+
+  const looksLikeUpiShopPayment =
+    combined.includes("upi") ||
+    combined.includes("paytmqr") ||
+    combined.includes("bharatpe") ||
+    combined.includes("phonepe") ||
+    combined.includes("gpay") ||
+    combined.includes("google pay") ||
+    /\bq\d{5,}\b/.test(combined);
+
+  if (looksLikeUpiShopPayment) return CATEGORY_IDS.SHOPPING;
+
+  return CATEGORY_IDS.BILLS;
+}
+
 export function resolveCategoryId(catInput, merchant = "", description = "") {
   if (catInput !== undefined && catInput !== null && String(catInput).trim() !== "") {
     const num = parseInt(catInput, 10);
     if (!isNaN(num) && num >= 1 && num <= 8) return num;
     const str = String(catInput).toLowerCase();
-    if (str.includes("food") || str.includes("din") || str.includes("rest") || str.includes("eat") || str.includes("grocer") || str.includes("cafe")) return 1;
-    if (str.includes("shop") || str.includes("store") || str.includes("cloth") || str.includes("retail") || str.includes("amazon") || str.includes("mall")) return 2;
-    if (str.includes("trans") || str.includes("uber") || str.includes("ola") || str.includes("cab") || str.includes("travel") || str.includes("bus") || str.includes("train") || str.includes("flight") || str.includes("fuel") || str.includes("petrol") || str.includes("auto")) return 3;
-    if (str.includes("enter") || str.includes("movie") || str.includes("cinema") || str.includes("game") || str.includes("event") || str.includes("show") || str.includes("fun")) return 4;
-    if (str.includes("bill") || str.includes("util") || str.includes("electr") || str.includes("water") || str.includes("gas") || str.includes("recharge") || str.includes("wifi") || str.includes("phone") || str.includes("mobile") || str.includes("rent") || str.includes("sms")) return 5;
-    if (str.includes("health") || str.includes("pharm") || str.includes("medic") || str.includes("doctor") || str.includes("hosp") || str.includes("care") || str.includes("lab")) return 6;
-    if (str.includes("salar") || str.includes("pay") || str.includes("wage") || str.includes("income") || str.includes("stipend") || str.includes("bonus")) return 7;
-    if (str.includes("invest") || str.includes("stock") || str.includes("fund") || str.includes("asset") || str.includes("share") || str.includes("dividend") || str.includes("crypto")) return 8;
+    const inferred = inferCategoryFromText(str, "");
+    if (inferred) return inferred;
   }
 
-  const combined = `${merchant} ${description}`.toLowerCase();
-  if (combined.includes("food") || combined.includes("swiggy") || combined.includes("zomato") || combined.includes("restaurant") || combined.includes("cafe") || combined.includes("starbucks") || combined.includes("mcdonald") || combined.includes("kfc") || combined.includes("pizza") || combined.includes("dominos") || combined.includes("bakery") || combined.includes("grill") || combined.includes("diner")) return 1;
-  if (combined.includes("amazon") || combined.includes("flipkart") || combined.includes("myntra") || combined.includes("fashion") || combined.includes("store") || combined.includes("retail") || combined.includes("mart") || combined.includes("dmart") || combined.includes("bata") || combined.includes("zara")) return 2;
-  if (combined.includes("uber") || combined.includes("ola") || combined.includes("rapido") || combined.includes("metro") || combined.includes("irctc") || combined.includes("flight") || combined.includes("petrol") || combined.includes("fuel") || combined.includes("shell") || combined.includes("hpcl") || combined.includes("bpcl") || combined.includes("indianoil")) return 3;
-  if (combined.includes("pvr") || combined.includes("inox") || combined.includes("cinema") || combined.includes("netflix") || combined.includes("spotify") || combined.includes("prime") || combined.includes("hotstar") || combined.includes("bookmyshow") || combined.includes("gaming") || combined.includes("game")) return 4;
-  if (combined.includes("bill") || combined.includes("electric") || combined.includes("power") || combined.includes("water") || combined.includes("broadband") || combined.includes("airtel") || combined.includes("jio") || combined.includes("vi ") || combined.includes("tata play") || combined.includes("bescom") || combined.includes("rent") || combined.includes("sms")) return 5;
-  if (combined.includes("pharmacy") || combined.includes("medplus") || combined.includes("apollo") || combined.includes("1mg") || combined.includes("netmeds") || combined.includes("doctor") || combined.includes("hospital") || combined.includes("clinic") || combined.includes("diagnostic") || combined.includes("health")) return 6;
-  if (combined.includes("salary") || combined.includes("payroll") || combined.includes("stipend") || combined.includes("wages") || combined.includes("credit interest")) return 7;
-  if (combined.includes("zerodha") || combined.includes("groww") || combined.includes("angel") || combined.includes("upstox") || combined.includes("mutual fund") || combined.includes("sip") || combined.includes("coin") || combined.includes("investment") || combined.includes("stocks")) return 8;
-
-  return 5;
+  return inferCategoryFromText(merchant, description);
 }
 
 export function normalizeRow(row) {

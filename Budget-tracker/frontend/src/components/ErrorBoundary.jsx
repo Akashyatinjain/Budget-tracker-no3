@@ -17,12 +17,13 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-gradient-to-b from-black via-[#0a0014] to-[#1a002a] flex items-center justify-center">
-          <div className="text-center p-8">
+        <div className="min-h-screen flex items-center justify-center bg-[var(--bg-color)] text-[var(--card-fg)]">
+          <div className="text-center p-8 bg-[var(--card-bg)] rounded-2xl border border-[var(--border-color)] shadow-2xl">
             <h2 className="text-2xl text-purple-400 mb-4">Something went wrong</h2>
+            <p className="text-[var(--card-fg)]/70 mb-6">An unexpected error occurred. Please try again.</p>
             <button
               onClick={() => this.setState({ hasError: false })}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 cursor-pointer"
+              className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all cursor-pointer"
             >
               Try again
             </button>

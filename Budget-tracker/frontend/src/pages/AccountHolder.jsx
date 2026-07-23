@@ -124,7 +124,7 @@ const AccountHolderPage = () => {
         onMobileClose={() => setMobileSidebarOpen(false)}
       />
 
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen min-w-0 w-full">
         <Header onMobileToggle={() => setMobileSidebarOpen(true)} />
 
         <main className="p-4 md:p-6 mt-16 flex flex-col gap-6">

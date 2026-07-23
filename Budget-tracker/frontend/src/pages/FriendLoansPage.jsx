@@ -205,7 +205,7 @@ export default function FriendLoansPage() {
         onMobileClose={() => setMobileSidebarOpen(false)}
       />
 
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen min-w-0 w-full">
         {/* Header Component */}
         <Header onMobileToggle={() => setMobileSidebarOpen(true)} />
 

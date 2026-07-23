@@ -7,7 +7,11 @@ const ProtectedRoute = ({ children }) => {
   const location = useLocation();
 
   if (loading) {
-    return <div className="min-h-screen bg-[#030712]" />;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#030712]">
+        <div className="w-10 h-10 border-4 border-t-purple-400 border-purple-200 rounded-full animate-spin" />
+      </div>
+    );
   }
 
   if (!isAuthenticated) {

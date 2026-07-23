@@ -10,6 +10,7 @@ import {
   Clock, Sparkles, ArrowUpRight, ArrowDownRight,
   Wallet, Receipt, SlidersHorizontal, RotateCcw,
   Calendar, Tag, FileText, CreditCard, ChevronLeft, ChevronRight,
+  ChevronsLeft, ChevronsRight,
   Import, FileSpreadsheet
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -34,7 +35,7 @@ const TransactionPage = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const [newTransaction, setNewTransaction] = useState({
     merchant: "",
@@ -265,9 +266,42 @@ const TransactionPage = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [filter, categoryFilter, searchQuery]);
+  }, [filter, categoryFilter, searchQuery, itemsPerPage]);
 
-  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage) || 1;
+  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / itemsPerPage));
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const getPaginationPages = (current, total) => {
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    const pages = [];
+    pages.push(1);
+
+    if (current > 3) {
+      pages.push("...");
+    }
+
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    if (current < total - 2) {
+      pages.push("...");
+    }
+
+    pages.push(total);
+    return pages;
+  };
+
   const paginatedTransactions = filteredTransactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const totalBalance = safeTransactions.reduce((sum, t) => {
@@ -357,7 +391,7 @@ const TransactionPage = () => {
         onMobileClose={() => setMobileSidebarOpen(false)}
       />
 
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen min-w-0 w-full">
         <Header onMobileToggle={() => setMobileSidebarOpen(true)} />
 
         <main className="p-3 md:p-6 mt-14 flex flex-col gap-4 max-w-[1600px] mx-auto w-full">
@@ -808,40 +842,92 @@ const TransactionPage = () => {
 
             {/* Pagination Controls */}
             {filteredTransactions.length > 0 && (
-              <div className="p-4 bg-white/[0.02] border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
-                <div>
-                  Showing <span className="text-white font-semibold">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-white font-semibold">{Math.min(currentPage * itemsPerPage, filteredTransactions.length)}</span> of <span className="text-white font-semibold">{filteredTransactions.length}</span> records
+              <div className="p-4 bg-white/[0.02] border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                  <div>
+                    Showing <span className="text-white font-semibold">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-white font-semibold">{Math.min(currentPage * itemsPerPage, filteredTransactions.length)}</span> of <span className="text-white font-semibold">{filteredTransactions.length}</span> records
+                  </div>
+                  <div className="flex items-center gap-1.5 border-l border-white/10 pl-3">
+                    <span className="text-[11px] text-slate-400">Per page:</span>
+                    <select
+                      value={itemsPerPage}
+                      onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                      aria-label="Records per page"
+                      className="bg-[#0d141e] border border-white/10 text-white text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-emerald-500 cursor-pointer"
+                    >
+                      <option value={8} className="bg-[#0d141e]">8</option>
+                      <option value={10} className="bg-[#0d141e]">10</option>
+                      <option value={15} className="bg-[#0d141e]">15</option>
+                      <option value={25} className="bg-[#0d141e]">25</option>
+                      <option value={50} className="bg-[#0d141e]">50</option>
+                      <option value={100} className="bg-[#0d141e]">100</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5">
+
+                <div className="flex items-center gap-1 flex-wrap justify-center">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(1)}
+                    aria-label="First page"
+                    title="First page"
+                    className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  >
+                    <ChevronsLeft className="w-4 h-4" />
+                  </button>
+
                   <button
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     aria-label="Previous page"
+                    title="Previous page"
                     className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      aria-label={`Go to page ${page}`}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                        currentPage === page
-                          ? "bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20"
-                          : "bg-white/5 border border-white/10 text-slate-400 hover:text-white"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
+
+                  {getPaginationPages(currentPage, totalPages).map((pageItem, idx) => {
+                    if (pageItem === "...") {
+                      return (
+                        <span key={`dots-${idx}`} className="px-2 py-1 text-slate-500 font-bold select-none">
+                          ...
+                        </span>
+                      );
+                    }
+                    return (
+                      <button
+                        key={pageItem}
+                        onClick={() => setCurrentPage(pageItem)}
+                        aria-label={`Go to page ${pageItem}`}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                          currentPage === pageItem
+                            ? "bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20"
+                            : "bg-white/5 border border-white/10 text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        {pageItem}
+                      </button>
+                    );
+                  })}
+
                   <button
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                     aria-label="Next page"
+                    title="Next page"
                     className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   >
                     <ChevronRight className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(totalPages)}
+                    aria-label="Last page"
+                    title="Last page"
+                    className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  >
+                    <ChevronsRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>

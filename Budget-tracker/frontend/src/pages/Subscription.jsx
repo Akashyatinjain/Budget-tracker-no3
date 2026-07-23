@@ -294,7 +294,7 @@ const SubscriptionsPage = () => {
         onMobileClose={() => setMobileSidebarOpen(false)} 
       />
 
-      <div className="flex-1 flex flex-col min-h-screen max-w-full overflow-x-hidden">
+      <div className="flex-1 flex flex-col min-h-screen min-w-0 max-w-full overflow-x-hidden">
         <Header onMobileToggle={() => setMobileSidebarOpen(true)} />
 
         <main className="p-3 md:p-6 mt-14 flex flex-col gap-4 max-w-[1600px] mx-auto w-full">

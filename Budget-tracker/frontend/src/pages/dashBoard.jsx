@@ -382,7 +382,7 @@ const FinanceDashboard = () => {
         onMobileClose={() => setMobileSidebarOpen(false)}
       />
 
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen min-w-0 w-full">
         <Header onMobileToggle={() => setMobileSidebarOpen(true)} />
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute top-20 left-1/4 h-1.5 w-1.5 rounded-full bg-emerald-400/60 animate-pulse"/>
