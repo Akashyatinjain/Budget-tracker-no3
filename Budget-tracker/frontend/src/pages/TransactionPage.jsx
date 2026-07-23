@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
@@ -9,9 +9,11 @@ import {
   TrendingUp, TrendingDown, DollarSign, Zap, Shield,
   Clock, Sparkles, ArrowUpRight, ArrowDownRight,
   Wallet, Receipt, SlidersHorizontal, RotateCcw,
-  Calendar, Tag, FileText, CreditCard, ChevronLeft, ChevronRight
+  Calendar, Tag, FileText, CreditCard, ChevronLeft, ChevronRight,
+  Import, FileSpreadsheet
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import apiClient from "../services/apiClient";
 import {
   fetchTransactions,
   addTransaction,
@@ -22,6 +24,8 @@ import {
 const TransactionPage = () => {
   const { user, token } = useAuth();
   const dispatch = useDispatch();
+  const fileRef = useRef(null);
+  const [isUploading, setIsUploading] = useState(false);
   const { items: transactions, loading: reduxLoading } = useSelector((state) => state.transactions);
   const [filter, setFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -94,6 +98,40 @@ const TransactionPage = () => {
       mobileSidebarOpen || showModal || showEditModal ? "hidden" : "auto";
     return () => { document.body.style.overflow = "auto"; };
   }, [mobileSidebarOpen, showModal, showEditModal]);
+
+  const handleImportFile = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const toastId = toast.loading(`Parsing & importing ${file.name}...`);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await apiClient.post("/api/transactions/import", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      toast.success(
+        response.data.message || `Successfully imported ${response.data.inserted || 0} transaction(s)!`,
+        { id: toastId }
+      );
+
+      dispatch(fetchTransactions());
+      window.dispatchEvent(new Event("transactions-imported"));
+    } catch (err) {
+      console.error("Import error:", err);
+      toast.error(
+        "Import failed: " + (err?.response?.data?.message || err?.response?.data?.error || err.message),
+        { id: toastId }
+      );
+    } finally {
+      setIsUploading(false);
+      e.target.value = "";
+    }
+  };
 
   const exportCSV = () => {
     if (!transactions || transactions.length === 0) {
@@ -341,10 +379,50 @@ const TransactionPage = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <label
+                className={`px-3 py-2 rounded-xl bg-emerald-50/90 dark:bg-emerald-500/20 border border-emerald-300/80 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/30 text-emerald-900 dark:text-emerald-300 font-semibold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer select-none ${isUploading ? "opacity-50 pointer-events-none" : ""}`}
+              >
+                <input
+                  type="file"
+                  accept=".csv, .pdf, .xlsx, .xls, .json, .txt, image/*"
+                  ref={fileRef}
+                  onChange={handleImportFile}
+                  disabled={isUploading}
+                  className="hidden"
+                />
+                <Import className={`w-4 h-4 text-emerald-600 dark:text-emerald-400 ${isUploading ? "animate-spin" : ""}`} />
+                <span>{isUploading ? "Importing..." : "Import PDF / CSV / File"}</span>
+              </label>
+
+              <button
+                type="button"
+                onClick={() => toast(
+                  "📁 Multi-Format Transaction Import:\n\n" +
+                  "• PDF Bank Statements (BoB, SBI, HDFC, ICICI, etc.)\n" +
+                  "• CSV Files (Flexible column names)\n" +
+                  "• Excel Spreadsheets (.xlsx, .xls)\n" +
+                  "• Receipt Images (PNG, JPG, WEBP)\n" +
+                  "• JSON or Text Files\n\n" +
+                  "✨ Transactions, amounts, dates & categories extracted automatically!"
+                )}
+                className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500/40 text-slate-200 font-semibold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                File Formats
+              </button>
+
+              <button
+                type="button"
+                onClick={exportCSV}
+                className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500/40 text-slate-200 font-semibold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+                <span>Export CSV</span>
+              </button>
+
               <button
                 onClick={() => setShowModal(true)}
-                className="rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-3 py-1.5 font-semibold text-xs text-white shadow-md shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all flex items-center gap-1.5 cursor-pointer"
+                className="rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-3 py-2 font-semibold text-xs text-white shadow-md shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <Plus size={14} />
                 Add Transaction

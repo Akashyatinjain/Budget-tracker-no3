@@ -1,5 +1,6 @@
 // routes/transactions.js
 import express from "express";
+import multer from "multer";
 import {
   addTransactionController,
   getTransactionsController,
@@ -10,14 +11,18 @@ import {
 import authMiddleware from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024 },
+});
 
 router.post("/", authMiddleware, addTransactionController);
 router.get("/", authMiddleware, getTransactionsController);
-router.delete("/:id", authMiddleware, deleteTransactionController);
 
-// POST /api/transactions/import
-router.post("/import", authMiddleware, importTransactionsController);
+// POST /api/transactions/import (supports JSON body or multipart/form-data file upload)
+router.post("/import", authMiddleware, upload.single("file"), importTransactionsController);
 router.delete("/:id", authMiddleware, deleteTransactionController);
 router.put("/:id", authMiddleware, updateTransactionController);
 
 export default router;
+

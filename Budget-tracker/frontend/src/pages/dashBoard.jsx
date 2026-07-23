@@ -29,70 +29,74 @@ import {
 } from "lucide-react";
 
 function ImportButton() {
+  const dispatch = useDispatch();
   const fileRef = useRef();
+  const [isUploading, setIsUploading] = useState(false);
 
-  const openFilePicker = () => {
-    if (fileRef.current) fileRef.current.click();
-  };
-
-  const handleFile = (e) => {
+  const handleFile = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: async (result) => {
-        const rows = result.data;
-        try {
-          const response = await apiClient.post("/api/transactions/import", { rows });
-          toast.success(`Imported ${response.data.inserted ?? response.data.insertedRows ?? 0} rows successfully!`);
-          window.dispatchEvent(new Event("transactions-imported"));
-        } catch (err) {
-          console.error("Import failed:", err);
-          toast.error("Import failed: " + (err?.response?.data?.message || err?.response?.data?.error || err.message));
-        }
-      },
-      error: (err) => {
-        console.error("CSV parse error:", err);
-        toast.error("CSV parse error: " + err.message);
-      },
-    });
+    setIsUploading(true);
+    const toastId = toast.loading(`Parsing & importing ${file.name}...`);
 
-    e.target.value = "";
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await apiClient.post("/api/transactions/import", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      toast.success(
+        response.data.message || `Successfully imported ${response.data.inserted || 0} transaction(s)!`,
+        { id: toastId }
+      );
+
+      dispatch(fetchTransactionsThunk());
+      window.dispatchEvent(new Event("transactions-imported"));
+    } catch (err) {
+      console.error("Import error:", err);
+      toast.error(
+        "Import failed: " + (err?.response?.data?.message || err?.response?.data?.error || err.message),
+        { id: toastId }
+      );
+    } finally {
+      setIsUploading(false);
+      e.target.value = "";
+    }
   };
 
   return (
     <>
-      <input
-        type="file"
-        accept=".csv"
-        ref={fileRef}
-        onChange={handleFile}
-        style={{ display: "none" }}
-      />
-      <button
-        onClick={openFilePicker}
-        className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-emerald-500/30 text-white font-semibold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+      <label
+        className={`px-4 py-2 rounded-xl bg-emerald-50/90 dark:bg-emerald-500/20 border border-emerald-300/80 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/30 text-emerald-900 dark:text-emerald-300 font-semibold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer select-none ${isUploading ? "opacity-50 pointer-events-none" : ""}`}
       >
-        <Import className="w-4 h-4 text-emerald-400" />
-        Import CSV
-      </button>
+        <input
+          type="file"
+          accept=".csv, .pdf, .xlsx, .xls, .json, .txt, image/*"
+          ref={fileRef}
+          onChange={handleFile}
+          disabled={isUploading}
+          className="hidden"
+        />
+        <Import className={`w-4 h-4 text-emerald-600 dark:text-emerald-400 ${isUploading ? "animate-spin" : ""}`} />
+        <span>{isUploading ? "Importing..." : "Import PDF / CSV / File"}</span>
+      </label>
       <button
+        type="button"
         onClick={() => toast(
-          "📌 Required CSV Columns:\n\n" +
-          "• category_id\n" +
-          "• type\n" +
-          "• amount\n" +
-          "• currency\n" +
-          "• description\n" +
-          "• merchant\n" +
-          "• transaction_date\n\n" +
-          "⚠️ Column names must match exactly!"
+          "📁 Multi-Format Transaction Import:\n\n" +
+          "• PDF Bank Statements\n" +
+          "• CSV Files (Flexible column names)\n" +
+          "• Excel Spreadsheets (.xlsx, .xls)\n" +
+          "• Receipt Images (PNG, JPG, WEBP)\n" +
+          "• JSON or Text Files\n\n" +
+          "✨ Transactions, amounts, dates & categories will be extracted automatically!"
         )}
-        className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-emerald-500/30 text-white font-semibold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+        className="px-4 py-2 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-emerald-500/40 text-slate-700 dark:text-slate-200 font-semibold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
       >
-        CSV Format
+        File Formats
       </button>
     </>
   );
@@ -386,8 +390,8 @@ const FinanceDashboard = () => {
           <div className="absolute top-72 right-1/3 h-2 w-2 rounded-full bg-teal-400/60 animate-pulse"/>
         </div>
         <main className="p-3 md:p-6 mt-14 flex flex-col gap-4 max-w-[1600px] mx-auto w-full">
-          <div className="absolute left-1/2 top-0 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[180px]" />
-          <div className="absolute bottom-0 right-0 h-[450px] w-[450px] rounded-full bg-cyan-500/10 blur-[180px]" />
+          <div className="pointer-events-none absolute left-1/2 top-0 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[180px]" />
+          <div className="pointer-events-none absolute bottom-0 right-0 h-[450px] w-[450px] rounded-full bg-cyan-500/10 blur-[180px]" />
           
           {/* ====== Page Header ====== */}
           <motion.div
