@@ -58,14 +58,94 @@ export default function AIAssistant() {
     // 4. Parse inline code (`code`)
     html = html.replace(/`(.*?)`/g, "<code class='px-1.5 py-0.5 rounded bg-white/10 text-emerald-400 font-mono text-xs'>$1</code>");
 
-    // 5. Parse line structure (Headers, Lists, Paragraphs)
+    // 5. Parse line structure (Headers, Lists, Paragraphs, Code Blocks, Tables)
     const lines = html.split("\n");
     let inList = false;
     let listType = null; // 'ul' or 'ol'
+    let inCodeBlock = false;
+    let inTable = false;
+    let tableHeaderDone = false;
     let processedLines = [];
 
     for (let i = 0; i < lines.length; i++) {
       let line = lines[i].trim();
+
+      // Handle Code Blocks (```)
+      if (line.startsWith("```")) {
+        if (inList) {
+          processedLines.push(`</${listType}>`);
+          inList = false;
+          listType = null;
+        }
+        if (inTable) {
+          processedLines.push(tableHeaderDone ? "</tbody></table></div>" : "</thead></table></div>");
+          inTable = false;
+          tableHeaderDone = false;
+        }
+        if (inCodeBlock) {
+          processedLines.push("</code></pre>");
+          inCodeBlock = false;
+        } else {
+          processedLines.push("<pre class='bg-gray-950 border border-white/10 p-3 rounded-xl text-[11px] font-mono my-2 overflow-x-auto text-violet-300'><code class='whitespace-pre'>");
+          inCodeBlock = true;
+        }
+        continue;
+      }
+
+      if (inCodeBlock) {
+        processedLines.push(line);
+        continue;
+      }
+
+      // Handle Tables (| ... |)
+      if (line.startsWith("|") && line.endsWith("|")) {
+        if (inList) {
+          processedLines.push(`</${listType}>`);
+          inList = false;
+          listType = null;
+        }
+
+        // Check if it is a separator row like |---|---|
+        const isSeparator = line.replace(/[\s|:\-]/g, "") === "";
+        if (isSeparator) {
+          if (inTable && !tableHeaderDone) {
+            processedLines.push("</thead><tbody class='divide-y divide-white/5'>");
+            tableHeaderDone = true;
+          }
+          continue;
+        }
+
+        const cells = line.split("|").slice(1, -1).map(c => c.trim());
+
+        if (!inTable) {
+          processedLines.push("<div class='overflow-x-auto my-3 rounded-xl border border-white/10 bg-white/[0.02] shadow-sm'>");
+          processedLines.push("<table class='min-w-full text-[11px] text-left text-gray-300'>");
+          processedLines.push("<thead class='bg-white/[0.04] text-[10px] text-gray-400 uppercase font-semibold'>");
+          processedLines.push("<tr>");
+          cells.forEach(cell => {
+            processedLines.push(`<th class='px-4 py-2 border-b border-white/10'>${cell}</th>`);
+          });
+          processedLines.push("</tr>");
+          inTable = true;
+          tableHeaderDone = false;
+        } else {
+          processedLines.push("<tr class='hover:bg-white/[0.02] transition-colors'>");
+          cells.forEach(cell => {
+            const tag = !tableHeaderDone ? "th" : "td";
+            const classes = !tableHeaderDone ? "px-4 py-2 border-b border-white/10 font-semibold text-gray-300" : "px-4 py-2 text-gray-300";
+            processedLines.push(`<${tag} class='${classes}'>${cell}</${tag}>`);
+          });
+          processedLines.push("</tr>");
+        }
+        continue;
+      }
+
+      // If we were in a table and this line is NOT a table row, close the table
+      if (inTable) {
+        processedLines.push(tableHeaderDone ? "</tbody></table></div>" : "</thead></table></div>");
+        inTable = false;
+        tableHeaderDone = false;
+      }
 
       // Bullet Lists (- or *)
       if (line.startsWith("- ") || line.startsWith("* ")) {
@@ -109,8 +189,15 @@ export default function AIAssistant() {
         }
       }
     }
+
     if (inList) {
       processedLines.push(`</${listType}>`);
+    }
+    if (inTable) {
+      processedLines.push(tableHeaderDone ? "</tbody></table></div>" : "</thead></table></div>");
+    }
+    if (inCodeBlock) {
+      processedLines.push("</code></pre>");
     }
 
     return processedLines.join("\n");

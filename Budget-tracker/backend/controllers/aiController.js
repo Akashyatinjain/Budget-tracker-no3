@@ -9,12 +9,6 @@ export const getAIChatResponse = async (req, res, next) => {
       return res.status(400).json({ error: "Message is required" });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return res.status(400).json({
-        error: "Gemini API key is not configured. Please add GEMINI_API_KEY to your backend .env file to enable the AI assistant."
-      });
-    }
 
     // 1. Fetch user profile details
     const userRes = await pool.query(
@@ -31,13 +25,16 @@ export const getAIChatResponse = async (req, res, next) => {
 
     // 3. Fetch budgets
     const budgetsRes = await pool.query(
-      `SELECT b.id AS budget_id, b.amount, b.month, b.description, c.name AS category_name
+      `SELECT b.*, c.name AS category_name
        FROM budgets b
        LEFT JOIN categories c ON b.category_id = c.category_id
        WHERE b.user_id = $1`,
       [userId]
     );
-    const budgets = budgetsRes.rows;
+    const budgets = budgetsRes.rows.map(row => ({
+      ...row,
+      budget_id: row.budget_id ?? row.id
+    }));
 
     // 4. Fetch subscriptions
     const subscriptionsRes = await pool.query(
@@ -78,6 +75,82 @@ export const getAIChatResponse = async (req, res, next) => {
     }
     const transactions = transactionsRes.rows;
 
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey.trim() === "") {
+      const queryLower = message.toLowerCase();
+      let replyText = "";
+
+      if (queryLower.includes("budget") || queryLower.includes("exceed") || queryLower.includes("limit")) {
+        if (budgets.length === 0) {
+          replyText = "### 📂 Budget Summary\n\nYou haven't set up any budget limits yet! Go to the **Budgets** page to set category-wise limits so I can help you monitor them.";
+        } else {
+          replyText = "### 📊 Budget Analysis (Local Mode)\n\nHere are your current category budgets vs actual spending:\n\n";
+          replyText += "| Category | Budget Limit | Actual Spent | Status |\n|---|---|---|---|\n";
+          budgets.forEach(b => {
+            const spent = transactions
+              .filter(t => t.type === "expense" && t.category_name === b.category_name)
+              .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+            const status = spent > parseFloat(b.amount) ? "🔴 Over budget!" : "🟢 Under budget";
+            replyText += `| **${b.category_name || "Other"}** | ₹${Number(b.amount).toLocaleString("en-IN")} | ₹${spent.toLocaleString("en-IN")} | ${status} |\n`;
+          });
+        }
+      } else if (queryLower.includes("subscription") || queryLower.includes("recurring") || queryLower.includes("active")) {
+        if (subscriptions.length === 0) {
+          replyText = "### 🔄 Subscriptions Summary\n\nNo active subscriptions found. You can add your recurring services (like Netflix, Spotify) on the **Subscriptions** page to track them.";
+        } else {
+          replyText = "### 🔄 Subscriptions Report (Local Mode)\n\nHere are your active recurring services:\n\n";
+          replyText += "| Subscription | Amount | Cycle | Next Bill Date | Status |\n|---|---|---|---|---|\n";
+          subscriptions.forEach(s => {
+            const nextBill = s.next_billing_date ? new Date(s.next_billing_date).toLocaleDateString() : "N/A";
+            replyText += `| **${s.name}** | ₹${Number(s.amount).toLocaleString("en-IN")} | ${s.billing_cycle} | ${nextBill} | \`${s.status}\` |\n`;
+          });
+        }
+      } else if (queryLower.includes("loan") || queryLower.includes("friend") || queryLower.includes("borrow") || queryLower.includes("lend")) {
+        if (loans.length === 0) {
+          replyText = "### 💸 Loans & Debts\n\nNo pending friend loans found! You can keep track of money you lent or borrowed on the **Friend Loans** page.";
+        } else {
+          replyText = "### 💸 Friends Loans Summary (Local Mode)\n\nHere is the log of money lent or borrowed:\n\n";
+          replyText += "| Friend | Amount | Date | Status | Notes |\n|---|---|---|---|---|\n";
+          loans.forEach(l => {
+            const status = l.is_returned ? "🟢 Returned" : "🔴 Pending repayment";
+            const dateStr = l.loan_date ? new Date(l.loan_date).toLocaleDateString() : "N/A";
+            replyText += `| **${l.friend_name}** | ₹${Number(l.amount).toLocaleString("en-IN")} | ${dateStr} | ${status} | ${l.notes || "-"} |\n`;
+          });
+        }
+      } else if (queryLower.includes("spending") || queryLower.includes("summarize") || queryLower.includes("summary") || queryLower.includes("transaction")) {
+        const totalIncome = transactions.filter(t => t.type === "income").reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+        const totalExpense = transactions.filter(t => t.type === "expense").reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+        const balance = totalIncome - totalExpense;
+
+        replyText = "### 📈 Financial Summary Report (Local Mode)\n\n";
+        replyText += `Here is a high-level summary of your financial records:\n\n`;
+        replyText += `- **Total Balance / Net Worth**: ${balance >= 0 ? "🟢" : "🔴"} ₹${balance.toLocaleString("en-IN")}\n`;
+        replyText += `- **Total Earnings (Income)**: ₹${totalIncome.toLocaleString("en-IN")}\n`;
+        replyText += `- **Total Spending (Expenses)**: ₹${totalExpense.toLocaleString("en-IN")}\n`;
+        replyText += `- **Total Records**: ${transactions.length} transactions stored.\n\n`;
+
+        if (transactions.length > 0) {
+          replyText += "#### 🕒 Recent Transactions:\n";
+          transactions.slice(0, 5).forEach(t => {
+            const prefix = t.type === "income" ? "+" : "-";
+            const dateStr = t.transaction_date ? new Date(t.transaction_date).toLocaleDateString() : "N/A";
+            replyText += `- **${t.merchant || t.description || "Transaction"}**: ${prefix}₹${Number(t.amount).toLocaleString("en-IN")} on ${dateStr} (\`${t.category_name || "Other"}\`)\n`;
+          });
+        }
+      } else {
+        replyText = `### 👋 Welcome to FinAI (Local Offline Mode)\n\n` +
+          `Hello **${userProfile.first_name || userProfile.username || "User"}**! I see that the **GEMINI_API_KEY** is not configured in the backend environment.\n\n` +
+          `But don't worry! I can still query your local data directly from the database to answer financial questions. Try asking me details about:\n\n` +
+          `1. **Budgets**: *"Am I exceeding any budgets?"*\n` +
+          `2. **Subscriptions**: *"What active subscriptions do I have?"*\n` +
+          `3. **Loans**: *"Show me a list of friend loans."*\n` +
+          `4. **Spending Summary**: *"Summarize my spending."*\n\n` +
+          `*Admin Tip: To enable full chat intelligence and conversational answers, add a valid \`GEMINI_API_KEY\` to the backend \`.env\` file.*`;
+      }
+
+      return res.status(200).json({ reply: replyText });
+    }
+
     // Create prompt parameters
     const currentDateTime = new Date().toISOString();
     const systemPrompt = `You are a helpful, professional, and friendly AI financial assistant integrated into the 'Budget-tracker' website.
@@ -103,15 +176,24 @@ Guidelines:
 5. If the user asks general financial advice, give sensible, simple, and safe advice, but relate it to their data if possible.
 6. Speak as a companion who is watching their budget and helping them build wealth.`;
 
-    // Map history to Gemini's format: [{ role: "user" | "model", parts: [{ text: string }] }]
+    // Filter history to ensure alternating user/model roles starting with user
     const contents = [];
+    let expectedRole = "user";
     if (history && Array.isArray(history)) {
       history.forEach(h => {
-        contents.push({
-          role: h.role === "user" ? "user" : "model",
-          parts: [{ text: h.text }]
-        });
+        const role = h.role === "user" ? "user" : "model";
+        if (role === expectedRole) {
+          contents.push({
+            role,
+            parts: [{ text: h.text }]
+          });
+          expectedRole = expectedRole === "user" ? "model" : "user";
+        }
       });
+    }
+
+    if (expectedRole === "model" && contents.length > 0) {
+      contents.pop();
     }
 
     // Push the current user's message

@@ -78,7 +78,9 @@ export const updateTransaction = async (transactionId, fields = {}, userId = nul
 export const deleteAllTransactions = async (userId) => {
   if (!userId) throw new Error("Missing userId for deleteAllTransactions");
   const query = `DELETE FROM transactions WHERE user_id = $1 RETURNING *;`;
+  console.log("[DELETE_ALL] Deleting all transactions for userId:", userId);
   const result = await pool.query(query, [userId]);
+  console.log("[DELETE_ALL] Deleted transaction count:", result.rows.length);
   return result.rows;
 };
 

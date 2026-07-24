@@ -99,11 +99,15 @@ export const deleteAllTransactionsController = async (req, res, next) => {
   try {
     const userId = req.user?.id ?? req.user?.user_id;
     if (!userId) {
+      console.error("[DELETE_ALL_CONTROLLER] No userId in request", { user: req.user });
       return res.status(401).json({ message: "Unauthorized" });
     }
+    console.log("[DELETE_ALL_CONTROLLER] Deleting all transactions for userId:", userId);
     const deleted = await deleteAllTransactions(userId);
+    console.log("[DELETE_ALL_CONTROLLER] Deleted transactions count:", deleted.length);
     return res.status(200).json({ message: "All transactions deleted successfully", count: deleted.length });
   } catch (error) {
+    console.error("[DELETE_ALL_CONTROLLER] Error:", error.message, error.stack);
     next(error);
   }
 };
