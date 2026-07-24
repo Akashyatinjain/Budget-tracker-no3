@@ -318,17 +318,55 @@ html.theme-light a[class*="bg-emerald"] {
 /* Import Button Light Mode Specific Fixes for Dashboard */
 html.theme-light .bg-emerald-50\/90,
 html.theme-light .bg-emerald-100 {
-  background-color: #f0fdf4 !important;
+  background-color: #dcfce7 !important;
 }
 
 html.theme-light button.text-emerald-900,
 html.theme-light label.text-emerald-900 {
-  color: #14532d !important;
+  color: #166534 !important;
 }
 
 html.theme-light button.border-emerald-300\/80,
 html.theme-light label.border-emerald-300\/80 {
-  border-color: #86efac !important;
+  border-color: #4ade80 !important;
+}
+
+/* File Formats Button - Brighter but less bright than Import Button */
+html.theme-light .bg-white\/5 {
+  background-color: #f8fafc !important;
+}
+
+html.theme-light .bg-white\/10 {
+  background-color: #f1f5f9 !important;
+}
+
+html.theme-light .text-slate-200 {
+  color: #1e293b !important;
+}
+
+html.theme-light .text-slate-300 {
+  color: #334155 !important;
+}
+
+html.theme-light .border-slate-200 {
+  border-color: #e2e8f0 !important;
+}
+
+html.theme-light .border-emerald-500\/40 {
+  border-color: #34d399 !important;
+}
+
+/* File Formats Button - Brighter variant for light theme */
+html.theme-light button[class*="File Formats"] {
+  background-color: #ecfdf5 !important;
+  border-color: #6ee7b7 !important;
+  color: #047857 !important;
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1), 0 2px 4px -1px rgba(16, 185, 129, 0.06) !important;
+}
+
+html.theme-light button[class*="File Formats"]:hover {
+  background-color: #d1fae5 !important;
+  border-color: #34d399 !important;
 }
 
 /* 10. Borders & Separators Overrides */

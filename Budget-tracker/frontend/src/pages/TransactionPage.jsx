@@ -20,6 +20,8 @@ import {
   addTransaction,
   updateTransaction,
   deleteTransaction,
+  deleteMultipleTransactions,
+  deleteAllTransactions,
 } from "../store/transactionSlice";
 
 const TransactionPage = () => {
@@ -47,6 +49,7 @@ const TransactionPage = () => {
     description: "",
   });
   const [editTransaction, setEditTransaction] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
 
   const categories = [
     { id: 1, name: "Food & Dining",    color: "#f43f5e", icon: "🍕" },
@@ -246,6 +249,53 @@ const TransactionPage = () => {
     }
   };
 
+  const handleToggleSelect = (id) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter((selectedId) => selectedId !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
+  };
+
+  const handleToggleSelectAll = () => {
+    const paginatedIds = paginatedTransactions.map((t) => t.transaction_id || t.id);
+    const allSelected = paginatedIds.every((id) => selectedIds.includes(id));
+    if (allSelected) {
+      setSelectedIds(selectedIds.filter((id) => !paginatedIds.includes(id)));
+    } else {
+      setSelectedIds([...new Set([...selectedIds, ...paginatedIds])]);
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.length === 0) return;
+    if (window.confirm(`Are you sure you want to delete the ${selectedIds.length} selected transaction(s)?`)) {
+      try {
+        await dispatch(deleteMultipleTransactions(selectedIds)).unwrap();
+        toast.success("Selected transactions deleted!");
+        setSelectedIds([]);
+        dispatch(fetchTransactions());
+      } catch (err) {
+        console.error("Delete selected transactions error:", err);
+        toast.error("Failed to delete selected transactions.");
+      }
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    if (window.confirm("⚠️ WARNING: This will permanently delete ALL of your transactions. This action CANNOT be undone. Are you sure you want to proceed?")) {
+      try {
+        await dispatch(deleteAllTransactions()).unwrap();
+        toast.success("All transactions deleted successfully!");
+        setSelectedIds([]);
+        dispatch(fetchTransactions());
+      } catch (err) {
+        console.error("Delete all transactions error:", err);
+        toast.error("Failed to delete all transactions.");
+      }
+    }
+  };
+
   const safeTransactions = Array.isArray(transactions) ? transactions : [];
 
   const filteredTransactions = safeTransactions
@@ -415,7 +465,7 @@ const TransactionPage = () => {
 
             <div className="flex flex-wrap items-center gap-2">
               <label
-                className={`px-3 py-2 rounded-xl bg-emerald-50/90 dark:bg-emerald-500/20 border border-emerald-300/80 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/30 text-emerald-900 dark:text-emerald-300 font-semibold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer select-none ${isUploading ? "opacity-50 pointer-events-none" : ""}`}
+                className={`px-3 py-2 rounded-full bg-[#f0fdf4] border border-[#10b981] text-[#047857] hover:bg-[#d1fae5] font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer select-none ${isUploading ? "opacity-50 pointer-events-none" : ""}`}
               >
                 <input
                   type="file"
@@ -425,7 +475,7 @@ const TransactionPage = () => {
                   disabled={isUploading}
                   className="hidden"
                 />
-                <Import className={`w-4 h-4 text-emerald-600 dark:text-emerald-400 ${isUploading ? "animate-spin" : ""}`} />
+                <Import className={`w-4 h-4 text-[#10b981] ${isUploading ? "animate-spin" : ""}`} />
                 <span>{isUploading ? "Importing..." : "Import PDF / CSV / File"}</span>
               </label>
 
@@ -440,7 +490,7 @@ const TransactionPage = () => {
                   "• JSON or Text Files\n\n" +
                   "✨ Transactions, amounts, dates & categories extracted automatically!"
                 )}
-                className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500/40 text-slate-200 font-semibold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-2 rounded-full bg-white border border-[#e2e8f0] text-[#0f172a] hover:bg-[#f8fafc] font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 File Formats
               </button>
@@ -448,15 +498,35 @@ const TransactionPage = () => {
               <button
                 type="button"
                 onClick={exportCSV}
-                className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500/40 text-slate-200 font-semibold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-2 rounded-full bg-white border border-[#e2e8f0] text-[#0f172a] hover:bg-[#f8fafc] font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+                <FileSpreadsheet className="w-4 h-4 text-[#10b981]" />
                 <span>Export CSV</span>
+              </button>
+
+              {selectedIds.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleDeleteSelected}
+                  className="px-3 py-2 rounded-full bg-rose-600 text-white hover:bg-rose-700 font-bold text-xs shadow-md shadow-rose-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4 text-white" />
+                  <span>Delete Selected ({selectedIds.length})</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={handleDeleteAll}
+                className="px-3 py-2 rounded-full bg-[#fdf2f2] border border-[#f87171] text-[#b91c1c] hover:bg-[#fee2e2] font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4 text-[#ef4444]" />
+                <span>Delete All</span>
               </button>
 
               <button
                 onClick={() => setShowModal(true)}
-                className="rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-3 py-2 font-semibold text-xs text-white shadow-md shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-2 rounded-full bg-gradient-to-r from-[#10b981] to-[#a3e635] text-[#064e3b] font-bold text-xs shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <Plus size={14} />
                 Add Transaction
@@ -644,6 +714,14 @@ const TransactionPage = () => {
                 {/* STICKY HEADER */}
                 <thead className="sticky top-0 z-10 bg-[#07101f]/95 backdrop-blur-md border-b border-white/10 shadow-md">
                   <tr className="text-slate-400 text-xs uppercase">
+                    <th className="py-3.5 px-5 text-left font-semibold w-10">
+                      <input
+                        type="checkbox"
+                        checked={paginatedTransactions.length > 0 && paginatedTransactions.every(t => selectedIds.includes(t.transaction_id || t.id))}
+                        onChange={handleToggleSelectAll}
+                        className="rounded border-white/10 bg-white/5 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 focus:outline-none w-4 h-4 cursor-pointer"
+                      />
+                    </th>
                     <th className="py-3.5 px-5 text-left font-semibold">Merchant</th>
                     <th className="py-3.5 px-5 text-left font-semibold">Category</th>
                     <th className="py-3.5 px-5 text-left font-semibold">Date</th>
@@ -665,6 +743,15 @@ const TransactionPage = () => {
                           transition={{ delay: index * 0.02 }}
                           className="hover:bg-white/[0.04] hover:scale-[1.001] transition-all duration-150 group cursor-pointer"
                         >
+                          <td className="py-3.5 px-5 w-10">
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.includes(id)}
+                              onChange={() => handleToggleSelect(id)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="rounded border-white/10 bg-white/5 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 focus:outline-none w-4 h-4 cursor-pointer"
+                            />
+                          </td>
                           <td className="py-3.5 px-5">
                             <div className="flex items-center gap-3">
                               {/* Category-based icon display for merchant */}
@@ -737,7 +824,7 @@ const TransactionPage = () => {
                     })
                   ) : (
                     <tr>
-                      <td colSpan="6" className="text-center py-16">
+                      <td colSpan="7" className="text-center py-16">
                         {/* Welcoming Empty State */}
                         <div className="flex flex-col items-center justify-center text-slate-400 max-w-sm mx-auto">
                           <div className="p-4 rounded-2xl bg-emerald-500/10 text-emerald-400 mb-3 border border-emerald-500/20 shadow-lg">
@@ -763,7 +850,6 @@ const TransactionPage = () => {
               </table>
             </div>
 
-            {/* Mobile Cards */}
             <div className="md:hidden divide-y divide-white/5">
               {paginatedTransactions.length > 0 ? (
                 paginatedTransactions.map((t, index) => {
@@ -775,9 +861,16 @@ const TransactionPage = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.02 }}
-                      className="p-4 hover:bg-white/[0.04] transition-colors"
+                      className="p-4 hover:bg-white/[0.04] transition-colors flex items-center gap-3"
                     >
-                      <div className="flex justify-between items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(id)}
+                        onChange={() => handleToggleSelect(id)}
+                        className="rounded border-white/10 bg-white/5 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 focus:outline-none w-4 h-4 cursor-pointer flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start gap-3">
                         <div className="flex items-start gap-3 flex-1 min-w-0">
                           <div className="text-xl p-2 rounded-xl bg-white/5 border border-white/5 flex-shrink-0">
                             {getCategoryIcon(t.category_id)}
@@ -834,7 +927,8 @@ const TransactionPage = () => {
                           </motion.button>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
+                  </motion.div>
                   );
                 })
               ) : null}

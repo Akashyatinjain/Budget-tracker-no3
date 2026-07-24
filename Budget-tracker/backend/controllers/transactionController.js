@@ -1,5 +1,5 @@
 import pool from "../config/db.js";
-import { addTransaction, getTransactions, deleteTransaction, updateTransaction } from "../models/transactionModel.js";
+import { addTransaction, getTransactions, deleteTransaction, updateTransaction, deleteAllTransactions, deleteMultipleTransactions } from "../models/transactionModel.js";
 import { checkBudgetsAndNotify } from "../utils/budgetNotifications.js";
 import ExcelJS from "exceljs";
 import Papa from "papaparse";
@@ -90,6 +90,36 @@ export const deleteTransactionController = async (req, res, next) => {
     }
 
     return res.status(200).json({ message: "Transaction deleted successfully", transaction: deleted });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteAllTransactionsController = async (req, res, next) => {
+  try {
+    const userId = req.user?.id ?? req.user?.user_id;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const deleted = await deleteAllTransactions(userId);
+    return res.status(200).json({ message: "All transactions deleted successfully", count: deleted.length });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteMultipleTransactionsController = async (req, res, next) => {
+  try {
+    const userId = req.user?.id ?? req.user?.user_id;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: "Invalid transaction ids" });
+    }
+    const deleted = await deleteMultipleTransactions(ids, userId);
+    return res.status(200).json({ message: `${deleted.length} transactions deleted successfully`, deleted });
   } catch (error) {
     next(error);
   }

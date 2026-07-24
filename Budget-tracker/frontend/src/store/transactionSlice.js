@@ -51,6 +51,28 @@ export const deleteTransaction = createAsyncThunk(
       return rejectWithValue(err.response?.data?.message || err.message);
     }
   }
+);export const deleteMultipleTransactions = createAsyncThunk(
+  "transactions/deleteMultipleTransactions",
+  async (ids, { rejectWithValue }) => {
+    try {
+      await apiClient.post("/api/transactions/delete-multiple", { ids });
+      return ids;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
+export const deleteAllTransactions = createAsyncThunk(
+  "transactions/deleteAllTransactions",
+  async (_, { rejectWithValue }) => {
+    try {
+      await apiClient.delete("/api/transactions/all");
+      return;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
 );
 
 export const importTransactions = createAsyncThunk(
@@ -112,8 +134,19 @@ const transactionSlice = createSlice({
       // deleteTransaction
       .addCase(deleteTransaction.fulfilled, (state, action) => {
         state.items = state.items.filter(
-          (t) => String(t.id) !== String(action.payload)
+          (t) => String(t.transaction_id || t.id) !== String(action.payload)
         );
+      })
+      // deleteMultipleTransactions
+      .addCase(deleteMultipleTransactions.fulfilled, (state, action) => {
+        const deletedIds = action.payload.map(id => String(id));
+        state.items = state.items.filter(
+          (t) => !deletedIds.includes(String(t.transaction_id || t.id))
+        );
+      })
+      // deleteAllTransactions
+      .addCase(deleteAllTransactions.fulfilled, (state) => {
+        state.items = [];
       })
       // importTransactions
       .addCase(importTransactions.fulfilled, (state) => {

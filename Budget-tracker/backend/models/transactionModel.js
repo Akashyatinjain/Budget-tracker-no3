@@ -74,3 +74,20 @@ export const updateTransaction = async (transactionId, fields = {}, userId = nul
   const result = await pool.query(query, values);
   return result.rows[0] || null;
 };
+
+export const deleteAllTransactions = async (userId) => {
+  if (!userId) throw new Error("Missing userId for deleteAllTransactions");
+  const query = `DELETE FROM transactions WHERE user_id = $1 RETURNING *;`;
+  const result = await pool.query(query, [userId]);
+  return result.rows;
+};
+
+export const deleteMultipleTransactions = async (transactionIds, userId) => {
+  if (!userId) throw new Error("Missing userId for deleteMultipleTransactions");
+  if (!Array.isArray(transactionIds) || transactionIds.length === 0) {
+    return [];
+  }
+  const query = `DELETE FROM transactions WHERE user_id = $1 AND transaction_id = ANY($2) RETURNING *;`;
+  const result = await pool.query(query, [userId, transactionIds]);
+  return result.rows;
+};

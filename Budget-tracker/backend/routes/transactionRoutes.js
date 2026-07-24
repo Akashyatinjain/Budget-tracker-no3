@@ -6,7 +6,9 @@ import {
   getTransactionsController,
   deleteTransactionController,
   importTransactionsController,
-  updateTransactionController
+  updateTransactionController,
+  deleteAllTransactionsController,
+  deleteMultipleTransactionsController
 } from "../controllers/transactionController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 
@@ -21,6 +23,8 @@ router.get("/", authMiddleware, getTransactionsController);
 
 // POST /api/transactions/import (supports JSON body or multipart/form-data file upload)
 router.post("/import", authMiddleware, upload.single("file"), importTransactionsController);
+router.delete("/all", authMiddleware, deleteAllTransactionsController);
+router.post("/delete-multiple", authMiddleware, deleteMultipleTransactionsController);
 router.delete("/:id", authMiddleware, deleteTransactionController);
 router.put("/:id", authMiddleware, updateTransactionController);
 
