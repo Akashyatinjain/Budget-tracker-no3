@@ -67,10 +67,14 @@ function ImportButton() {
     }
   };
 
+  const getButtonClasses = () => {
+  return `px-4 py-2 rounded-xl bg-emerald-50/90 dark:bg-emerald-500/20 border border-emerald-300/80 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/30 text-emerald-900 dark:text-emerald-300 font-semibold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer select-none ${isUploading ? "opacity-50 pointer-events-none" : ""}`;
+};
+
   return (
     <>
       <label
-        className={`px-4 py-2 rounded-xl bg-emerald-50/90 dark:bg-emerald-500/20 border border-emerald-300/80 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/30 text-emerald-900 dark:text-emerald-300 font-semibold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer select-none ${isUploading ? "opacity-50 pointer-events-none" : ""}`}
+        className={getButtonClasses()}
       >
         <input
           type="file"
@@ -94,7 +98,7 @@ function ImportButton() {
           "• JSON or Text Files\n\n" +
           "✨ Transactions, amounts, dates & categories will be extracted automatically!"
         )}
-        className="px-4 py-2 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-emerald-500/40 text-slate-700 dark:text-slate-200 font-semibold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+        className="px-4 py-2 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-emerald-500/40 text-slate-700 dark:text-slate-200 font-semibold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer theme-light:text-slate-900"
       >
         File Formats
       </button>
@@ -899,41 +903,15 @@ backdrop-blur-xl border border-white/10 rounded-xl text-white placeholder-gray-5
                 </div>
 
                 <div className="flex justify-end gap-3 mt-6">
-                  <button
-                    onClick={() => setShowAddModal(false)}
-                    className="
-rounded-2xl
-bg-gradient-to-r
-from-emerald-500
-via-green-500
-to-lime-400
-px-5
-py-3
-font-semibold
-shadow-xl
-shadow-emerald-500/30
-hover:shadow-emerald-500/60
-transition-all
-"
-                  >
-                    Cancel
-                  </button>
+<button
+                  onClick={() => setShowAddModal(false)}
+                  className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-5 py-3 font-semibold shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/60 transition-all"
+                >
+                  Cancel
+                </button>
                   <button
                     onClick={handleAddTransaction}
-                    className="
-rounded-2xl
-bg-gradient-to-r
-from-emerald-500
-via-green-500
-to-lime-400
-px-5
-py-3
-font-semibold
-shadow-xl
-shadow-emerald-500/30
-hover:shadow-emerald-500/60
-transition-all
-"
+                    className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 px-5 py-3 font-semibold shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/60 transition-all"
                   >
                     Add Transaction
                   </button>

@@ -315,6 +315,22 @@ html.theme-light a[class*="bg-emerald"] {
   color: #ffffff !important;
 }
 
+/* Import Button Light Mode Specific Fixes for Dashboard */
+html.theme-light .bg-emerald-50\/90,
+html.theme-light .bg-emerald-100 {
+  background-color: #f0fdf4 !important;
+}
+
+html.theme-light button.text-emerald-900,
+html.theme-light label.text-emerald-900 {
+  color: #14532d !important;
+}
+
+html.theme-light button.border-emerald-300\/80,
+html.theme-light label.border-emerald-300\/80 {
+  border-color: #86efac !important;
+}
+
 /* 10. Borders & Separators Overrides */
 html.theme-light .border-white\/10,
 html.theme-light .border-white\/5,
