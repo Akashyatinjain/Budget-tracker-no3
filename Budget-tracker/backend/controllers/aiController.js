@@ -75,8 +75,10 @@ export const getAIChatResponse = async (req, res, next) => {
     }
     const transactions = transactionsRes.rows;
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey.trim() === "") {
+    const mistralKey = process.env.MISTRAL_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY;
+
+    if ((!mistralKey || mistralKey.trim() === "") && (!geminiKey || geminiKey.trim() === "")) {
       const queryLower = message.toLowerCase();
       let replyText = "";
 
@@ -139,13 +141,13 @@ export const getAIChatResponse = async (req, res, next) => {
         }
       } else {
         replyText = `### 👋 Welcome to FinAI (Local Offline Mode)\n\n` +
-          `Hello **${userProfile.first_name || userProfile.username || "User"}**! I see that the **GEMINI_API_KEY** is not configured in the backend environment.\n\n` +
+          `Hello **${userProfile.first_name || userProfile.username || "User"}**! Neither **MISTRAL_API_KEY** nor **GEMINI_API_KEY** is configured in the backend environment.\n\n` +
           `But don't worry! I can still query your local data directly from the database to answer financial questions. Try asking me details about:\n\n` +
           `1. **Budgets**: *"Am I exceeding any budgets?"*\n` +
           `2. **Subscriptions**: *"What active subscriptions do I have?"*\n` +
           `3. **Loans**: *"Show me a list of friend loans."*\n` +
           `4. **Spending Summary**: *"Summarize my spending."*\n\n` +
-          `*Admin Tip: To enable full chat intelligence and conversational answers, add a valid \`GEMINI_API_KEY\` to the backend \`.env\` file.*`;
+          `*Admin Tip: Add MISTRAL_API_KEY to the backend .env file to enable full conversational AI.*`;
       }
 
       return res.status(200).json({ reply: replyText });
@@ -176,7 +178,51 @@ Guidelines:
 5. If the user asks general financial advice, give sensible, simple, and safe advice, but relate it to their data if possible.
 6. Speak as a companion who is watching their budget and helping them build wealth.`;
 
-    // Filter history to ensure alternating user/model roles starting with user
+    // 1. If Mistral API key is available, call Mistral AI endpoint
+    if (mistralKey && mistralKey.trim() !== "") {
+      const messages = [
+        { role: "system", content: systemPrompt }
+      ];
+
+      if (history && Array.isArray(history)) {
+        history.forEach(h => {
+          messages.push({
+            role: h.role === "user" ? "user" : "assistant",
+            content: h.text
+          });
+        });
+      }
+
+      messages.push({
+        role: "user",
+        content: message
+      });
+
+      const mistralRes = await fetch("https://api.mistral.ai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${mistralKey.trim()}`
+        },
+        body: JSON.stringify({
+          model: "mistral-small-latest",
+          messages,
+          temperature: 0.7
+        })
+      });
+
+      if (!mistralRes.ok) {
+        const errText = await mistralRes.text();
+        console.error("Mistral API error response:", errText);
+        return res.status(502).json({ error: "Failed to communicate with Mistral AI API. Please check your API key validity." });
+      }
+
+      const data = await mistralRes.json();
+      const replyText = data.choices?.[0]?.message?.content || "I'm sorry, I couldn't generate a response.";
+      return res.status(200).json({ reply: replyText });
+    }
+
+    // 2. Fallback to Gemini 1.5 Flash if Gemini key is supplied
     const contents = [];
     let expectedRole = "user";
     if (history && Array.isArray(history)) {
@@ -196,14 +242,12 @@ Guidelines:
       contents.pop();
     }
 
-    // Push the current user's message
     contents.push({
       role: "user",
       parts: [{ text: message }]
     });
 
-    // Make the direct API request to Gemini 1.5 Flash
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey.trim()}`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -220,7 +264,7 @@ Guidelines:
     if (!response.ok) {
       const errText = await response.text();
       console.error("Gemini API error response:", errText);
-      return res.status(502).json({ error: "Failed to communicate with Gemini API. Please check your network or key validity." });
+      return res.status(502).json({ error: "Failed to communicate with Gemini API. Please check network or key validity." });
     }
 
     const data = await response.json();

@@ -464,7 +464,7 @@ export default function AIAssistant() {
                 </button>
               </div>
               <span className="text-[9px] text-center text-gray-600">
-                FinAI can make mistakes. Powered by Gemini 1.5 Flash.
+                FinAI can make mistakes. Powered by Mistral AI.
               </span>
             </div>
           </motion.div>
