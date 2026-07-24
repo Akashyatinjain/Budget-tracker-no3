@@ -838,7 +838,7 @@ const TransactionPage = () => {
                           </p>
                           <button
                             onClick={() => setShowModal(true)}
-                            className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-xs font-bold text-slate-950 shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all flex items-center gap-1.5 cursor-pointer"
+                            className="px-3 py-2 rounded-full bg-gradient-to-r from-[#10b981] to-[#a3e635] text-[#064e3b] font-bold text-xs shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5 cursor-pointer"
                           >
                             <Plus size={14} /> Add Transaction
                           </button>

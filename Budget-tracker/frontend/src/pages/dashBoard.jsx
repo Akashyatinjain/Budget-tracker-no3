@@ -22,7 +22,7 @@ import {
   TrendingUp, TrendingDown, Wallet,
   Target, Calendar, ArrowUpRight,
   ArrowDownRight, PieChart as PieChartIcon,
-  BarChart3, Download, PlusCircle, Import, Search,
+  BarChart3, Download, Plus, Import, Search,
   Sparkles, Shield, Zap, Crown, Activity,
   CreditCard, Home, ShoppingBag, Coffee,
   Award, Clock, Star, Gem, FileSpreadsheet
@@ -68,7 +68,7 @@ function ImportButton() {
   };
 
   const getButtonClasses = () => {
-    return `px-4 py-2 rounded-full bg-[#f0fdf4] border border-[#10b981] text-[#047857] hover:bg-[#d1fae5] font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer select-none ${isUploading ? "opacity-50 pointer-events-none" : ""}`;
+    return `px-3 py-2 rounded-full bg-[#f0fdf4] border border-[#10b981] text-[#047857] hover:bg-[#d1fae5] font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer select-none ${isUploading ? "opacity-50 pointer-events-none" : ""}`;
   };
 
   return (
@@ -98,7 +98,7 @@ function ImportButton() {
           "• JSON or Text Files\n\n" +
           "✨ Transactions, amounts, dates & categories will be extracted automatically!"
         )}
-        className="px-4 py-2 rounded-full bg-white border border-[#e2e8f0] text-[#0f172a] hover:bg-[#f8fafc] font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+        className="px-3 py-2 rounded-full bg-white border border-[#e2e8f0] text-[#0f172a] hover:bg-[#f8fafc] font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
       >
         File Formats
       </button>
@@ -416,16 +416,16 @@ const FinanceDashboard = () => {
               <ImportButton />
               <button
                 onClick={exportCSV}
-                className="px-4 py-2 rounded-full bg-white border border-[#e2e8f0] text-[#0f172a] hover:bg-[#f8fafc] font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-2 rounded-full bg-white border border-[#e2e8f0] text-[#0f172a] hover:bg-[#f8fafc] font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <FileSpreadsheet className="w-4 h-4 text-[#10b981]" />
                 Export CSV
               </button>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="px-4 py-2 rounded-full bg-gradient-to-r from-[#10b981] to-[#a3e635] text-[#064e3b] font-bold text-xs shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-2 rounded-full bg-gradient-to-r from-[#10b981] to-[#a3e635] text-[#064e3b] font-bold text-xs shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                <PlusCircle className="w-4 h-4 text-[#064e3b]" />
+                <Plus className="w-4 h-4 text-[#064e3b]" />
                 Add Transaction
               </button>
             </div>
